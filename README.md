@@ -1,10 +1,12 @@
 # akt - ancestry and kinship toolkit
 ##License
 
-akt is freely available under the GPL3 license.
+AKT is freely available under the [GPL3 license](https://github.com/Illumina/agg/blob/master/LICENSE). AKT is not commercially supported.
 
-akt relies on HTSlib and Eigen. [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) is a header-only 
-library for matrix algebra released under the MPL2 license - see the link (https://www.mozilla.org/en-US/MPL/2.0/). 
+AKT relies on HTSlib and Eigen. 
+
+[Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) is a header-only library for matrix algebra released under the [MPL2 license](https://www.mozilla.org/en-US/MPL/2.0/). 
+
 [HTSlib](http://www.htslib.org/) is a library for efficently parsing vcf/bcf files released under the MIT/Expat License.
 ##Installation instructions
 
@@ -20,45 +22,11 @@ akt uses the syntax
 ```
 To see a list of available tools use
 ```
-
-Program:	akt (Ancestry and Kinship Tools)
-Version:	796fdc6
-Contact:	rarthur@illumina.com
-
-Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
-
-Usage:	akt <command> [options]
-
-	pca                      principal component analysis
-	kin                      detect average IBD sharing
-	relatives                discover pedigrees
-	ibd                      detect segments shared IBD
-	mendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees
-	cluster                  perform cluster analyses
-	LDplot                   output correlation matrix
-	stats                    calculate AF and LD metrics
-
+generate_readme.sh: line 8: ../akt: No such file or directory
 ```
 ##kin
 ```
-Calculate IBD stats from a VCF
-Usage:
-./akt kin in.bcf -T sites.vcf.gz
-Expects input.bcf to contain genotypes.
-User must specify a file containing allele frequencies with -R!
-	 -k --minkin:			threshold for relatedness output (none)
-	 -u --unnorm:			If present don't normalize
-	 -c --calc:			calculate AF from data
-	 -h --thin:			keep every t variants
-	 -T --targets-file:		intersecting VCF
-	 -n --nthreads: 		num threads
-	 -a --aftag:			allele frequency tag
-	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
-	 -s --samples:			list of samples
-	 -S --samples-file:		list of samples, file
-	 -f --pairfile:			file containing sample pairs
-	 -m --maf:			minimum MAF
+generate_readme.sh: line 9: ../akt: No such file or directory
 
 ```
 * -k : Output only pairs with kinship coefficient more than this.
@@ -97,18 +65,7 @@ The algorithm used to calculate IBD is taken from [PLINK](http://www.ncbi.nlm.ni
 
 ##relatives
 ```
-Discover relatives from IBD
-Usage:
-./akt relatives ibdfile
-	 -k --kmin:			threshold for relatedness (0.05)
-	 -i --its:			number of iterations to find unrelated (10)
-	 -g --graphout:			if present output pedigree graph files
-	 -p --prefix:			output file prefix (out)
-arrow types     : solid black	= parent-child
-                : dotted black	= siblings
-                : blue 		= second order
-                : red		= duplicates
-                : directed	= from parent to child
+generate_readme.sh: line 10: ../akt: No such file or directory
 
 ```
 * -k : Only keep links with kinship above this threshold (searches in this set for duplicate, parent-child and sibling links).
@@ -145,17 +102,7 @@ in the `.fam` file specifies how many potential parents the sample had.
 
 ##mendel
 ```
-
-About:   akt mendel - profiles duo/trios
-Usage:   ./akt mendel input.bcf -p pedigree.fam
-
-Options:
-    -p, --pedigree              pedigree information in plink .fam format
-    -o, --out                   output a site only vcf.gz annotated with site specific error rates
-    -i, --include               variant filters to apply eg. -i 'TYPE==snp && QUAL>=10 && DP<100000 && HWE<10' 
-    -t, --targets [^]<region>   Set regions. Exclude regions with "^" prefix
-    -r, --regions <region>      restrict to comma-separated list of regions
-    -R, --regions-file <file>   restrict to regions listed in a file
+generate_readme.sh: line 11: ../akt: No such file or directory
 ```
 * -o : Site only vcf annotated with mendel error rates
 * -i : Apply filters see [bcftools expressions](https://samtools.github.io/bcftools/bcftools.html#expressions)
@@ -193,23 +140,7 @@ PG NA12893 NA12877 NA12878      1 -9
 ```
 ##pca
 ```
-Performs principal component analysis on a vcf/bcf
-Usage:
-./akt pca input.bcf
-	 -T --targets-file:		intersecting VCF
-	 -o --output:			output vcf
-	 -O --outputfmt:		output vcf format
-	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
-	 -s --samples:			list of samples
-	 -S --samples-file:		list of samples, file
-	 -h --thin:			keep every t variants
-	 -m --maf:			minimum MAF
-	 -w --weight:			VCF with weights for PCA
-	 -N --npca:			first N principle components
-	 -a --alg:			exact SVD (slow)
-	 -C --covdef:			definition of SVD matrix: 0=(G-mu) 1=(G-mu)/sqrt(p(1-p)) 2=diag-G(2-G) default(1)
-	 -e --extra:			extra vectors for Red SVD
+generate_readme.sh: line 12: ../akt: No such file or directory
 
 ```
 * -T : Indexed VCF file containing intersecting sites and relevant site info. 
@@ -253,21 +184,7 @@ you want to project new samples onto those weights
 ```
 ##cluster
 ```
-Clustering on text files
-Usage:   ./akt cluster input.txt
-	 -k --K:			number of clusters
-	 -i --seed:			random seed for starting values
-	 -a --alg:			clustering algorithm 0 = k++means, 1 = gaussian mixture, 2 = density method
-	 -c --cols:			column range to read
-	 -C --cfile:			initial guess for cluster centres in text file
-	 -o --outputcfile:		assigned cluster centres
-	 -c --cols:			which columns to use e.g. 2-4
-	 -I --maxits:			max number of iterations to use: a=0,1
-	 -d --dc:			radius for density method: a=2
-	 -p --rho_min:			min density for cluster centre: a=2
-	 -D --delta_min:		min radius for cluster centre: a=2
-	 --density-plot:		plot the density and finish: a=2
-	 -e --silhouette:		calculate silhouette score
+generate_readme.sh: line 13: ../akt: No such file or directory
 ```
 * -k : Number of clusters. Examine the data to guess this or analyse silhouette scores.
 * -i : Random seed.
@@ -322,22 +239,7 @@ Unassigned data points are always put in cluster 0. The silhouette score for una
 
 ##stats
 ```
-Calculate correlation across a population
-Usage:
-./akt stats input_filename.vcf
-Expects input_filename.vcf to contain hard genotypes
-	 -F --flank:			size of left and right flanking region (1000bp)
-	 -b --block:			-F argument is number of markers instead of number of base pairs
-	 -x --afonly:			calculate allele freq only
-	 -c --output_cor:		output sitewise correlation (false)
-	 -C --output_cormin:		output sitewise correlation greater than (0)
-	 -a --aftag:			allele frequency tag
-	 -o --output:			output vcf
-	 -O --outputfmt:		output vcf format
-	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
-	 -s --samples:			list of samples
-	 -S --samples-file:		list of samples, file
+generate_readme.sh: line 14: ../akt: No such file or directory
 ```
 * -F : Correlation with variants in a window of size f base pairs to left and right or each variant. 
 * -b : The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.
@@ -368,26 +270,7 @@ sites closer than 10000bp to the left and right. The LD metric is described in [
 
 ##ibd
 ```
-Find IBD regions from a VCF
-Usage:
-./akt ibd in.bcf -p sites.bcf
-Expects input_filename.vcf to contain hard genotypes
-	 -T --targets-file:		intersecting VCF
-	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
-	 -s --samples:			list of samples
-	 -S --samples-file:		list of samples, file
-	 -h --thin:			keep every t variants
-	 -a --aftag:			allele frequency tag
-	 -f --pairfile:			file containing sample pairs
-	 -n --nthreads: 		num threads
-	 -m --maf:			minimum MAF
-	 -e --error: 			If no GQ then this is error probability(1e-3)
-	 -M --thresh: 			likelihood output threshold (default 50)
-	 -L --length: 			length output threshold (default 100000)
-	 -w --wsize: 			window size (default 20)
-	 -x --maxerr: 			stop when encountering a window with this many ( 0/0 , 1/1 ) pairs (default 2)
-	 -l --lsize: 			try to join long regions closer than this (default 100000)
+generate_readme.sh: line 15: ../akt: No such file or directory
 ```
 * -T : Indexed VCF file containing intersecting sites and relevant site info. 
 * -r : Comma-separated list of regions, chr:from-to.
@@ -428,14 +311,7 @@ a reasonable job of identifying IBD shared segments longer than about 1Mb from u
 
 ##LDplot
 ```
-Calculate correlation across a population
-Usage:
-./akt ldplot input_filename.vcf
-Expects input_filename.vcf to contain hard genotypes only
-	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
-	 -s --samples:			list of samples
-	 -S --samples-file:		list of samples, file
+generate_readme.sh: line 16: ../akt: No such file or directory
 ```
 * -r : Comma-separated list of regions, chr:from-to.
 * -R : File containing 3 columns: CHROM, POS and POS_TO. 
@@ -452,10 +328,7 @@ gnuplot> plot 'sigma' matrix with image
 ```
 ##admix
 ```
-Approximate admixture fractions
-Usage:   ./akt admix input.txt -C centres -c 2-3 
-	 -c --cols:			column range to read
-	 -C --cfile:			initial guess for cluster centres in text file
+generate_readme.sh: line 17: ../akt: No such file or directory
 
 ```
 * -c : Which columns in input file to use.
@@ -515,7 +388,7 @@ First we attempt to identify cryptic relations. Run
 To calculate average ibd for all pairs in the dataset. Use more than 4 processors if you have them! `test_kin` contains 
 IBD and kinship coefficients for all 93528 possible pairs, most of which are not closely related.
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_kin.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_kin.png)
 
 
 The `relatives` tool identifies hidden relatives.
@@ -528,7 +401,7 @@ neato test.allgraph -Tpng -O
 eog test.allgraph.png
 ```
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test.allgraph.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test.allgraph.png)
 
 `relatives` also attempts to provide more information about the pedigree structure in each relative group that it finds. 
 These are output as graph files `test.Fam*.graph`. Sometimes there is not enough information to tell 
@@ -538,13 +411,13 @@ represents this as a double arrow.
 ```
 dot test.Fam0.graph -Tpng -O
 ```
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test.Fam0.graph.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test.Fam0.graph.png)
 
 some families can be resolved correctly
 ```
 dot test.Fam134.graph -Tpng -O
 ```
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test.Fam134.graph.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test.Fam134.graph.png)
 
 Running the command
 ```
@@ -576,104 +449,57 @@ to (Euclidean distance) in (IBD0,IBD1) space. More complicated approaches may be
 distributions, but for now expect nuclear families to
 be well resolved but a network of cousins is probably going to be missed.
 
-##Profiling Mendelian inheritance/errors
-###Micro-array data
-Here is an example of using the `mendel` sub-command on some 1000G micro-array data:
+##Profiling Mendelian inheritance
+The `relatives` analysis in the previous section provided us with a set of likely pedigrees:
+```
+$ head test.fam 
+Fam0	NA18909	0	0	0	0
+Fam0	NA18911	NA18909	0	0	1
+Fam1	HG00533	0	0	0	0
+Fam1	HG00534	0	0	0	0
+Fam1	HG00535	HG00533	HG00534	0	2
+Fam2	HG00536	0	0	0	0
+Fam2	HG00537	0	0	0	0
+Fam2	HG00538	HG00536	HG00537	0	2
+Fam3	HG00619	0	0	0	0
+Fam3	HG00620	0	0	0	0
+```
+We can profile Mendelian inheritance in these pedigrees via the `akt mendel` command. This allows us to double-check the discovered pedigrees are correct ie. they have very few Mendelian inconsistent genotypes. It also provides a useful quality-control metric, in that variants with high amounts of Mendel inconsistency are likely to be problematic.
+
+First we run the `mendel` subcommand using the `.fam` file and the genotype BCF as input:
+```
+$ akt mendel -p test.fam ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf > mendel.out
+Read 405 individuals from n433.fam
+Found 405 in both the pedigree and bcf.
+Found 129 trios and 9 duos
+Reading input from ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf
+34258858 variants checked
+```
+
+The output is very granular, with one line per every possible parental genotype configuration. We can summarise the output using a provided R script:
 
 ```
-##download the pedigree information for Corriel samples
-$ wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130606_sample_info/20130606_g1k.ped
-$ head 20130606_g1k.ped
-Family ID       Individual ID   Paternal ID     Maternal ID     Gender  Phenotype       Population      Relationship    Siblings        Second Order    Third Order     Other Comments
-BB01    HG01879 0       0       1       0       ACB     father  0       0       0       0
-BB01    HG01880 0       0       2       0       ACB     mother  0       0       0       0
-BB01    HG01881 HG01879 HG01880 2       0       ACB     child   0       0       0       0
-BB02    HG01882 0       0       1       0       ACB     father  0       0       0       0
-BB02    HG01883 0       0       2       0       ACB     mother  0       0       0       0
-BB02    HG01888 HG01882 HG01883 1       0       ACB     child   0       0       0       0
-BB03    HG01884 HG01885 HG01956 2       0       ACB     child   0       0       0       0
-BB03    HG01885 0       0       1       0       ACB     father  0       0       0       0
-BB03    HG01956 0       0       2       0       ACB     mother  0       0       0       0
-
-##awk it into the desired format.
-$ awk '{if(NR>1) print $1,$2,$3,$4,$5,$5}' 20130606_g1k.ped  > 20130606_g1k.fam 
-
-## simultaneously download some microarry data and convert it from slow .vcf.gz to fast .bcf
-$ bcftools view ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip/ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz -Ob -o ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.bcf
-
-##calculate detailed Mendelian information for every trio/duo
-$ akt mendel -p 20130606_g1k.fam -t  ^X,Y,MT /illumina/build/1000GenomesReference/20130502/hd_genotype_chip/ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.bcf > omni.mendel
-
-##summarise this information with provided R script
-$ Rscript ~/akt/scripts/mendel.R omni.mendel
+$ Rscript  akt_dir/scripts/mendel.R mendel.out
 
 Trio summary:
- DAD MUM        RR       RA       AA error_rate    het_rate
-  AA  AA      3895    39762 63538036 0.06866285  0.06253687
-  AA  RA     36533 17873121 17935077 0.10192014 49.86261719
-  AA  RR     63393 16613905    25430 0.53178738 99.46821262
-  RA  AA     19586 17787859 17880807 0.05488081 49.84233747
-  RA  RA  16371612 32688850 16340080 0.00000000 49.98253684
-  RA  RR  38631332 38378382    29038 0.03769272 49.81698302
-  RR  AA     42369 16606740    40788 0.49824753 99.50175247
-  RR  RA  38804918 38629349    48960 0.06318787 49.85511122
-  RR  RR 549391958   115017     7163 0.02223419  0.02093067
+ DAD MUM         RR       RA       AA error_rate     het_rate
+  AA  AA        136     4429 79364648 0.00575160  0.005580249
+  AA  RA      12119 19194531 18892662 0.03180897 50.380256210
+  AA  RR      32000 18995403    14511 0.24425591 99.755744092
+  RA  AA      11356 19123054 19040795 0.02974706 50.092865251
+  RA  RA   18954076 37544501 18483645 0.00000000 50.071203545
+  RA  RR   56846315 54590875    20426 0.01832625 48.979044196
+  RR  AA      29879 19097905    15895 0.23910764 99.760892355
+  RR  RA   56791975 54948701    21004 0.01879356 49.165958314
+  RR  RR 3823192009  1512923     3671 0.03965254  0.039556556
 
 Duo summary:
- DAD MUM       RR      RA      AA error_rate  het_rate
-   .  AA     8100 3505196 7463502 0.07379201 31.932773
-   .  RA  5996104 9509920 3506167 0.00000000 50.020116
-   .  RR 54221842 6077265    7914 0.01312285 10.077210
-  AA   .     2414 1127844 2553170 0.06553678 30.619412
-  RA   .  1849930 2967133 1115594 0.00000000 50.013561
-  RR   . 18112899 1843789    2585 0.01295137  9.237756
-
+ DAD MUM        RR       RA      AA  error_rate het_rate
+  AA   .      4628  2906054 6726522 0.048022227 30.15453
+  RA   .   7237430 10001156 2937120 0.000000000 49.57029
+  RR   . 264510589  7248782    4355 0.001602495  2.66731
 ```
-We can see that the rate of Mendel inconsistencies (error_rate) is very low and the heterozygous transmission rate is very close to the expected 50%. That is because this is micro-array data that is very well behaved.
-
-###Sequencing data
-Sequencing data is more challenging. We can profile Mendelian inheritance/errors under different filters to get a rough sense on what filters are appropriate. Mendel allows us to do this easily with its `-i` argument. Here is simple example on the aformentioned CEPH1463 pedigree joint-called with freebayes on 50X 2x100bp data aligned with bwa.
-
-Lets start by examining SNPs without any filters:
-
-```
-$ akt mendel -p pg.fam -i 'TYPE="snp"' ceph1463.freebayes.chr20.bcf > ceph1463.mendel
-$ Rscript ~/akt/scripts/mendel.R ceph1463.mendel
-
-Trio summary:
- DAD MUM     RR     RA     AA error_rate   het_rate
-  AA  AA    132    197 178893  0.1835712  0.1099195
-  AA  RA    217  58842  61530  0.1799501 48.7954954
-  AA  RR   1170  57324    701  3.1607399 96.8392601
-  RA  AA    163  50916  52485  0.1573906 49.1638021
-  RA  RA  56347 174318  46333  0.0000000 62.9311403
-  RA  RR 154785 149032    372  0.1222924 48.9932246
-  RR  AA   1112  57281    560  2.8361576 97.1638424
-  RR  RA 156107 149012    381  0.1247136 48.7764321
-  RR  RR 804907  18349    673  2.3086941  2.2270123
-
-```
-
-Not great. High error rates and vastly inflated triple heterozygous patterns. Let's try a few simple filters:
-
-```
-$ akt mendel -p pg.fam -i 'AB>=0.2 && AB<=0.8 && DP>500 && QUAL>=30 && DP<1300 & NS==17 & TYPE="snp"' ceph1463.freebayes.chr20.bcf > ceph1463.flt1.mendel
-$ Rscript ~/akt/scripts/mendel.R ceph1463.flt1.mendel
-
-Trio summary:
- DAD MUM     RR     RA    AA error_rate    het_rate
-  AA  AA      3     53 71057 0.07874791  0.07452927
-  AA  RA     60  57908 60514 0.05064060 48.87493459
-  AA  RR     92  56506    44 0.24010452 99.75989548
-  RA  AA     27  49913 51554 0.02660256 49.17827655
-  RA  RA  50411 131104 45469 0.00000000 57.75913721
-  RA  RR 137049 140408    90 0.03242694 50.58890927
-  RR  AA    100  56500    44 0.25421933 99.74578067
-  RR  RA 139121 139801   117 0.04192962 50.10088196
-  RR  RR 329183   2699    29 0.82190708  0.81316980
-```
-
-things are much improved, although the transmission rate for cases where both parents are heterozygous is still way off. **Note:** we are not suggesting this as a recommended filter, just highlighting how `mendel` can be used to quickly evaluate different filter settings.
+Everything looks consistent here, there are low (<0.5%) rates of Mendel inconsistencies and the transmission rate of heterozygous variants is close to 50% where appropriate. This is not suprising since this data set is of high quality.
 ##Discovering Ancestry
 1000Genomes contained data from European, African, East Asian and American samples. The American samples
 are expected to be admixed with a lot of European ancestry. We therefore expect principle component analysis to give us
@@ -693,8 +519,8 @@ Alternatively we can project samples onto 1000Genomes phase3 princple components
 
 Plotting the projections of all samples onto the first three principle components gives
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_pca12.png)
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_pca32.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_pca12.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_pca32.png)
 
 The colours are assigned based on the known ancestry provided by 1000Genomes, showing that the first principle components
 do a good job of classifying samples based on ancestry for African and East Asian samples. European samples
@@ -711,7 +537,7 @@ radius 1 around each point to estimate local density. The second command does cl
 deduced from `phase1_dplot`. We use a cutoff for peaks of 700 and set the minimum density to -1, so that
 all points are classified.
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_cluster.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_cluster.png)
 
 We classify the data into 5 groups corresponding the the 1000G superpopulations. If we don't insist on
 classifying all the data we can localise the clusters to where the data is densest.
@@ -720,7 +546,7 @@ classifying all the data we can localise the clusters to where the data is dense
 ./akt cluster test_pca -c 2-3 -a 2 -d 1 -p 0 -D 700 > test_allclusters1
 ```
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_cluster1.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_cluster1.png)
 
 Cluster0 is the group of samples which were unclassified.
 ##Allele Frequency and Correlation
@@ -764,7 +590,7 @@ java -jar ibdseq.r1206.jar gt=EAS.test.20.vcf.gz out=Seq.EAS.test.20
 ```
 Comparing the IBD segments gives
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/segment.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/segment.png)
 
 Where the yscale is arbitrary and the xscale is position along chromosome 20. We show the segments 
 as reported by IBDseq in red and by akt in black. For each of the 5 pairs examined 
@@ -784,7 +610,7 @@ and memory consuming.
 plot 'test_sigma' matrix with image
 ```
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_sigma.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_sigma.png)
 
 A value near 1 indicates very strong positive correlation (variants always present together)
 and a value near -1 indicates string negative correlation (variants never present together). 
@@ -797,7 +623,7 @@ the paper of [Zheng and Weir](http://www.sciencedirect.com/science/article/pii/S
 simple method to find this linear transformation. For example by looking at the plot below (projecting onto the first two
 1000G principle components and removing the SAS samples for clarity.)
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_pcaproj12.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_pcaproj12.png)
 
 We can see that the centre of the African cluster is near (-49,-4), the European cluster near (-13,27) and the East Asian
 cluster near (-25-30). Let these points represent 100% African, European and East Asian respectively. To transform
@@ -813,7 +639,7 @@ then run
 ./akt admix test_pcaproj -c 2-3 -C centre.txt > test_admix
 ```
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_admix.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_admix.png)
 
 The transformation specified in
 data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopulations
@@ -823,6 +649,6 @@ data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopula
 ./akt admix test_pcaproj -c 2-6 -C data/1000G.pca_to_admix > test_alladmix
 ```
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_alladmix.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_alladmix.png)
 
 
