@@ -1,0 +1,13 @@
+-o : Output to vcf.
+-O : Output format of vcf b=compressed bcf, z=compressed vcf.
+-s : Comma-separated list of samples to include or exclude if prefixed with "^".
+-S : File of sample names to include or exclude if prefixed with "^". One sample per line.
+-r : Comma-separated list of regions, chr:from-to.
+-R : File containing 3 columns: CHROM, POS and POS_TO. 
+-T : Indexed VCF file containing intersecting sites and relevant site info. 
+-n : Number of threads to use. 
+-a : Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF. 
+-f : File containing pairs of samples to compute, 2 column: Sample1 Sample2. 
+-h : Hop this many markers forward from last accepted marker. 
+--enable-pi : Enable threaded input reader. Requires regions or regions-file. 
+-m : Minimum MAF a site to be counted. When reading: if AF > 0.5 checks 1-AF > m. 
