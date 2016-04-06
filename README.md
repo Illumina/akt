@@ -22,11 +22,45 @@ akt uses the syntax
 ```
 To see a list of available tools use
 ```
-generate_readme.sh: line 8: ../akt: No such file or directory
+
+Program:	akt (Ancestry and Kinship Tools)
+Version:	ba2655b
+Contact:	rarthur@illumina.com
+
+Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
+
+Usage:	akt <command> [options]
+
+	pca                      principal component analysis
+	kin                      detect average IBD sharing
+	relatives                discover pedigrees
+	ibd                      detect segments shared IBD
+	mendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees
+	cluster                  perform cluster analyses
+	LDplot                   output correlation matrix
+	stats                    calculate AF and LD metrics
+
 ```
 ##kin
 ```
-generate_readme.sh: line 9: ../akt: No such file or directory
+Calculate IBD stats from a VCF
+Usage:
+./akt kin in.bcf -T sites.vcf.gz
+Expects input.bcf to contain genotypes.
+User must specify a file containing allele frequencies with -R!
+	 -k --minkin:			threshold for relatedness output (none)
+	 -u --unnorm:			If present don't normalize
+	 -c --calc:			calculate AF from data
+	 -h --thin:			keep every t variants
+	 -T --targets-file:		intersecting VCF
+	 -n --nthreads: 		num threads
+	 -a --aftag:			allele frequency tag
+	 -r --regions:			chromosome region
+	 -R --regions-file:		list of regions, file
+	 -s --samples:			list of samples
+	 -S --samples-file:		list of samples, file
+	 -f --pairfile:			file containing sample pairs
+	 -m --maf:			minimum MAF
 
 ```
 * -k : Output only pairs with kinship coefficient more than this.
@@ -65,7 +99,18 @@ The algorithm used to calculate IBD is taken from [PLINK](http://www.ncbi.nlm.ni
 
 ##relatives
 ```
-generate_readme.sh: line 10: ../akt: No such file or directory
+Discover relatives from IBD
+Usage:
+./akt relatives ibdfile
+	 -k --kmin:			threshold for relatedness (0.05)
+	 -i --its:			number of iterations to find unrelated (10)
+	 -g --graphout:			if present output pedigree graph files
+	 -p --prefix:			output file prefix (out)
+arrow types     : solid black	= parent-child
+                : dotted black	= siblings
+                : blue 		= second order
+                : red		= duplicates
+                : directed	= from parent to child
 
 ```
 * -k : Only keep links with kinship above this threshold (searches in this set for duplicate, parent-child and sibling links).
@@ -102,7 +147,17 @@ in the `.fam` file specifies how many potential parents the sample had.
 
 ##mendel
 ```
-generate_readme.sh: line 11: ../akt: No such file or directory
+
+About:   akt mendel - profiles duo/trios
+Usage:   ./akt mendel input.bcf -p pedigree.fam
+
+Options:
+    -p, --pedigree              pedigree information in plink .fam format
+    -o, --out                   output a site only vcf.gz annotated with site specific error rates
+    -i, --include               variant filters to apply eg. -i 'TYPE==snp && QUAL>=10 && DP<100000 && HWE<10' 
+    -t, --targets [^]<region>   Set regions. Exclude regions with "^" prefix
+    -r, --regions <region>      restrict to comma-separated list of regions
+    -R, --regions-file <file>   restrict to regions listed in a file
 ```
 * -o : Site only vcf annotated with mendel error rates
 * -i : Apply filters see [bcftools expressions](https://samtools.github.io/bcftools/bcftools.html#expressions)
@@ -140,7 +195,23 @@ PG NA12893 NA12877 NA12878      1 -9
 ```
 ##pca
 ```
-generate_readme.sh: line 12: ../akt: No such file or directory
+Performs principal component analysis on a vcf/bcf
+Usage:
+./akt pca input.bcf
+	 -T --targets-file:		intersecting VCF
+	 -o --output:			output vcf
+	 -O --outputfmt:		output vcf format
+	 -r --regions:			chromosome region
+	 -R --regions-file:		list of regions, file
+	 -s --samples:			list of samples
+	 -S --samples-file:		list of samples, file
+	 -h --thin:			keep every t variants
+	 -m --maf:			minimum MAF
+	 -w --weight:			VCF with weights for PCA
+	 -N --npca:			first N principle components
+	 -a --alg:			exact SVD (slow)
+	 -C --covdef:			definition of SVD matrix: 0=(G-mu) 1=(G-mu)/sqrt(p(1-p)) 2=diag-G(2-G) default(1)
+	 -e --extra:			extra vectors for Red SVD
 
 ```
 * -T : Indexed VCF file containing intersecting sites and relevant site info. 
@@ -184,7 +255,21 @@ you want to project new samples onto those weights
 ```
 ##cluster
 ```
-generate_readme.sh: line 13: ../akt: No such file or directory
+Clustering on text files
+Usage:   ./akt cluster input.txt
+	 -k --K:			number of clusters
+	 -i --seed:			random seed for starting values
+	 -a --alg:			clustering algorithm 0 = k++means, 1 = gaussian mixture, 2 = density method
+	 -c --cols:			column range to read
+	 -C --cfile:			initial guess for cluster centres in text file
+	 -o --outputcfile:		assigned cluster centres
+	 -c --cols:			which columns to use e.g. 2-4
+	 -I --maxits:			max number of iterations to use: a=0,1
+	 -d --dc:			radius for density method: a=2
+	 -p --rho_min:			min density for cluster centre: a=2
+	 -D --delta_min:		min radius for cluster centre: a=2
+	 --density-plot:		plot the density and finish: a=2
+	 -e --silhouette:		calculate silhouette score
 ```
 * -k : Number of clusters. Examine the data to guess this or analyse silhouette scores.
 * -i : Random seed.
@@ -239,7 +324,22 @@ Unassigned data points are always put in cluster 0. The silhouette score for una
 
 ##stats
 ```
-generate_readme.sh: line 14: ../akt: No such file or directory
+Calculate correlation across a population
+Usage:
+./akt stats input_filename.vcf
+Expects input_filename.vcf to contain hard genotypes
+	 -F --flank:			size of left and right flanking region (1000bp)
+	 -b --block:			-F argument is number of markers instead of number of base pairs
+	 -x --afonly:			calculate allele freq only
+	 -c --output_cor:		output sitewise correlation (false)
+	 -C --output_cormin:		output sitewise correlation greater than (0)
+	 -a --aftag:			allele frequency tag
+	 -o --output:			output vcf
+	 -O --outputfmt:		output vcf format
+	 -r --regions:			chromosome region
+	 -R --regions-file:		list of regions, file
+	 -s --samples:			list of samples
+	 -S --samples-file:		list of samples, file
 ```
 * -F : Correlation with variants in a window of size f base pairs to left and right or each variant. 
 * -b : The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.
@@ -270,7 +370,26 @@ sites closer than 10000bp to the left and right. The LD metric is described in [
 
 ##ibd
 ```
-generate_readme.sh: line 15: ../akt: No such file or directory
+Find IBD regions from a VCF
+Usage:
+./akt ibd in.bcf -p sites.bcf
+Expects input_filename.vcf to contain hard genotypes
+	 -T --targets-file:		intersecting VCF
+	 -r --regions:			chromosome region
+	 -R --regions-file:		list of regions, file
+	 -s --samples:			list of samples
+	 -S --samples-file:		list of samples, file
+	 -h --thin:			keep every t variants
+	 -a --aftag:			allele frequency tag
+	 -f --pairfile:			file containing sample pairs
+	 -n --nthreads: 		num threads
+	 -m --maf:			minimum MAF
+	 -e --error: 			If no GQ then this is error probability(1e-3)
+	 -M --thresh: 			likelihood output threshold (default 50)
+	 -L --length: 			length output threshold (default 100000)
+	 -w --wsize: 			window size (default 20)
+	 -x --maxerr: 			stop when encountering a window with this many ( 0/0 , 1/1 ) pairs (default 2)
+	 -l --lsize: 			try to join long regions closer than this (default 100000)
 ```
 * -T : Indexed VCF file containing intersecting sites and relevant site info. 
 * -r : Comma-separated list of regions, chr:from-to.
@@ -311,7 +430,14 @@ a reasonable job of identifying IBD shared segments longer than about 1Mb from u
 
 ##LDplot
 ```
-generate_readme.sh: line 16: ../akt: No such file or directory
+Calculate correlation across a population
+Usage:
+./akt ldplot input_filename.vcf
+Expects input_filename.vcf to contain hard genotypes
+	 -r --regions:			chromosome region
+	 -R --regions-file:		list of regions, file
+	 -s --samples:			list of samples
+	 -S --samples-file:		list of samples, file
 ```
 * -r : Comma-separated list of regions, chr:from-to.
 * -R : File containing 3 columns: CHROM, POS and POS_TO. 
@@ -328,7 +454,10 @@ gnuplot> plot 'sigma' matrix with image
 ```
 ##admix
 ```
-generate_readme.sh: line 17: ../akt: No such file or directory
+Approximate admixture fractions
+Usage:   ./akt admix input.txt -C centres -c 2-3 
+	 -c --cols:			column range to read
+	 -C --cfile:			initial guess for cluster centres in text file
 
 ```
 * -c : Which columns in input file to use.
