@@ -5,7 +5,7 @@ the paper of [Zheng and Weir](http://www.sciencedirect.com/science/article/pii/S
 simple method to find this linear transformation. For example by looking at the plot below (projecting onto the first two
 1000G principle components and removing the SAS samples for clarity.)
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_pcaproj12.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_pcaproj12.png)
 
 We can see that the centre of the African cluster is near (-49,-4), the European cluster near (-13,27) and the East Asian
 cluster near (-25-30). Let these points represent 100% African, European and East Asian respectively. To transform
@@ -21,7 +21,7 @@ then run
 ./akt admix test_pcaproj -c 2-3 -C centre.txt > test_admix
 ```
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_admix.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_admix.png)
 
 The transformation specified in
 data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopulations
@@ -31,6 +31,6 @@ data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopula
 ./akt admix test_pcaproj -c 2-6 -C data/1000G.pca_to_admix > test_alladmix
 ```
 
-![alt text](https://git.illumina.com/Bioinformatics/akt/blob/master/docs/test_alladmix.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_alladmix.png)
 
 
