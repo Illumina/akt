@@ -17,13 +17,20 @@
 #include <limits>
 #include <stdlib.h> 
 #include <iterator>
-#include <omp.h>
 #include <map>
 #include <list>
 #include <algorithm>
 #include <set>
 #include <stdexcept>     
 #include "samples.hpp"
+
+#ifdef _OPENMP
+   #include <omp.h>
+#else
+   #define omp_get_thread_num() 0
+   #define omp_get_num_threads() 0
+static void inline omp_set_num_threads(int nthreads) {} 
+#endif
 
 extern "C" {
 #include "htslib/synced_bcf_reader.h"

@@ -1,7 +1,10 @@
 CC=gcc
 CXX=g++
-CXXFLAGS = -O3 -DNDEBUG -fopenmp
-CFLAGS = -O3 -DNDEBUG -fopenmp
+
+OMP=-fopenmp
+
+CXXFLAGS = -O3 -DNDEBUG $(OMP)
+CFLAGS = -O3 -DNDEBUG $(OMP)
 
 all: akt
 
@@ -12,16 +15,16 @@ IFLAGS = -I$(HTSDIR)  -I./
 LFLAGS = -lz -lm
 
 
-default: CXXFLAGS = -O3 -DNDEBUG -fopenmp
-default: CFLAGS = -O3 -DNDEBUG -fopenmp
+default: CXXFLAGS = -O3 -DNDEBUG $(OMP)
+default: CFLAGS = -O3 -DNDEBUG $(OMP)
 default: all
 
-debug: CXXFLAGS = -g -O1 -fopenmp
-debug: CFLAGS =  -g -O1 -fopenmp
+debug: CXXFLAGS = -g -O1 $(OMP)
+debug: CFLAGS =  -g -O1 $(OMP)
 debug: all
 
-profile: CXXFLAGS = -pg -O3 -fopenmp
-profile: CFLAGS =  -pg -O3 -fopenmp
+profile: CXXFLAGS = -pg -O3 $(OMP)
+profile: CFLAGS =  -pg -O3 $(OMP)
 profile: all
 
 ##generates a version
@@ -37,35 +40,33 @@ version.h:
 
 ##bcftools code
 filter.o: filter.c filter.h
-	$(CC) $(CFLAGS) $(IFLAGS) -c $<  
+	$(CC)  $(IFLAGS) -c $<  
 version.o: version.c filter.h version.h
-	$(CC) $(CFLAGS) $(IFLAGS) -c $<  
+	$(CC)  $(IFLAGS) -c $<  
 ##akt code
 relatives.o: relatives.cpp 
-	$(CXX)  $(CXXFLAGS) -c relatives.cpp $(IFLAGS)
+	$(CXX) -c relatives.cpp $(IFLAGS)
 vcfpca.o: vcfpca.cpp 
-	$(CXX)  $(CXXFLAGS) -c vcfpca.cpp $(IFLAGS)
+	$(CXX) -c vcfpca.cpp $(IFLAGS)
 cluster.o: cluster.cpp 
-	$(CXX)  $(CXXFLAGS) -c cluster.cpp $(IFLAGS)
+	$(CXX) -c cluster.cpp $(IFLAGS)
 kin.o: kin.cpp 
-	$(CXX)  $(CXXFLAGS) -c kin.cpp $(IFLAGS)
+	$(CXX) -c kin.cpp $(IFLAGS)
 ibd.o: ibd.cpp 
-	$(CXX)  $(CXXFLAGS) -c ibd.cpp $(IFLAGS)
+	$(CXX) -c ibd.cpp $(IFLAGS)
 pedigree.o: pedigree.cpp pedigree.h
-	$(CXX)  $(CXXFLAGS) -c $< $(IFLAGS)
+	$(CXX) -c $< $(IFLAGS)
 mendel.o: pedigree.h mendel.cpp 
-	$(CXX)  $(CXXFLAGS) -c mendel.cpp $(IFLAGS)
+	$(CXX) -c mendel.cpp $(IFLAGS)
 stats.o: stats.cpp 
-	$(CXX)  $(CXXFLAGS) -c stats.cpp $(IFLAGS)
+	$(CXX) -c stats.cpp $(IFLAGS)
 reader.o: reader.cpp 
-	$(CXX)  $(CXXFLAGS) -c reader.cpp $(IFLAGS)
+	$(CXX) -c reader.cpp $(IFLAGS)
 ldplot.o: ldplot.cpp 
-	$(CXX)  $(CXXFLAGS) -c ldplot.cpp $(IFLAGS)
+	$(CXX) -c ldplot.cpp $(IFLAGS)
 admix.o: admix.cpp 
-	$(CXX)  $(CXXFLAGS) -c admix.cpp $(IFLAGS)
+	$(CXX)	 -c admix.cpp $(IFLAGS)
 akt: version.h akt.cpp admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(HTSLIB)
 	$(CXX)  -o akt akt.cpp admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
-
 clean:
 	rm *.o akt version.h
-
