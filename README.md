@@ -8,7 +8,8 @@ AKT relies on HTSlib and Eigen. [Eigen](http://eigen.tuxfamily.org/index.php?tit
 ##Installation instructions
 
 ```
-git clone git@git.illumina.com:Bioinformatics/akt.git
+git clone https://github.com/Illumina/akt.git
+cd akt/
 make
 ```
 
@@ -21,7 +22,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	ba2655b
+Version:	b029ded
 Contact:	rarthur@illumina.com
 
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.

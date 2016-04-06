@@ -1,6 +1,7 @@
 ##Installation instructions
 
 ```
-git clone git@git.illumina.com:Bioinformatics/akt.git
+git clone https://github.com/Illumina/akt.git
+cd akt/
 make
 ```
