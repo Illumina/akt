@@ -1,3 +1,5 @@
+# akt - ancestry and kinship toolkit
+See http://illumina.github.io/akt/index.html for documentation.
 
 ##License
 
