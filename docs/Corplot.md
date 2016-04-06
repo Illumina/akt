@@ -10,7 +10,7 @@ and memory consuming.
 plot 'test_sigma' matrix with image
 ```
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_sigma.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_sigma.png)
 
 A value near 1 indicates very strong positive correlation (variants always present together)
 and a value near -1 indicates string negative correlation (variants never present together). 

@@ -6,7 +6,7 @@ First we attempt to identify cryptic relations. Run
 To calculate average ibd for all pairs in the dataset. Use more than 4 processors if you have them! `test_kin` contains 
 IBD and kinship coefficients for all 93528 possible pairs, most of which are not closely related.
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_kin.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_kin.png)
 
 
 The `relatives` tool identifies hidden relatives.
@@ -19,7 +19,7 @@ neato test.allgraph -Tpng -O
 eog test.allgraph.png
 ```
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test.allgraph.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test.allgraph.png)
 
 `relatives` also attempts to provide more information about the pedigree structure in each relative group that it finds. 
 These are output as graph files `test.Fam*.graph`. Sometimes there is not enough information to tell 
@@ -29,13 +29,13 @@ represents this as a double arrow.
 ```
 dot test.Fam0.graph -Tpng -O
 ```
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test.Fam0.graph.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test.Fam0.graph.png)
 
 some families can be resolved correctly
 ```
 dot test.Fam134.graph -Tpng -O
 ```
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test.Fam134.graph.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test.Fam134.graph.png)
 
 Running the command
 ```
