@@ -1,4 +1,4 @@
-# akt - ancestry and kinship toolkit
+
 ##License
 
 AKT is freely available under the [GPL3 license](https://github.com/Illumina/agg/blob/master/LICENSE). AKT is not commercially supported.
