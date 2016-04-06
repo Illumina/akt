@@ -1,6 +1,8 @@
 #!/bin/bash
 
 echo -e "# akt - ancestry and kinship toolkit" > ../README.md
+echo See http://illumina.github.io/akt/index.html for documentation. >>   ../README.md
+echo   > ../README.md
 cat License.md >> ../README.md
 cat Install.md >> ../README.md
 echo >> ../README.md
