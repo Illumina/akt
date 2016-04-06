@@ -514,7 +514,7 @@ First we attempt to identify cryptic relations. Run
 To calculate average ibd for all pairs in the dataset. Use more than 4 processors if you have them! `test_kin` contains 
 IBD and kinship coefficients for all 93528 possible pairs, most of which are not closely related.
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_kin.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_kin.png)
 
 
 The `relatives` tool identifies hidden relatives.
@@ -527,7 +527,7 @@ neato test.allgraph -Tpng -O
 eog test.allgraph.png
 ```
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test.allgraph.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test.allgraph.png)
 
 `relatives` also attempts to provide more information about the pedigree structure in each relative group that it finds. 
 These are output as graph files `test.Fam*.graph`. Sometimes there is not enough information to tell 
@@ -537,13 +537,13 @@ represents this as a double arrow.
 ```
 dot test.Fam0.graph -Tpng -O
 ```
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test.Fam0.graph.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test.Fam0.graph.png)
 
 some families can be resolved correctly
 ```
 dot test.Fam134.graph -Tpng -O
 ```
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test.Fam134.graph.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test.Fam134.graph.png)
 
 Running the command
 ```
@@ -645,8 +645,8 @@ Alternatively we can project samples onto 1000Genomes phase3 princple components
 
 Plotting the projections of all samples onto the first three principle components gives
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_pca12.png)
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_pca32.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_pca12.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_pca32.png)
 
 The colours are assigned based on the known ancestry provided by 1000Genomes, showing that the first principle components
 do a good job of classifying samples based on ancestry for African and East Asian samples. European samples
@@ -663,7 +663,7 @@ radius 1 around each point to estimate local density. The second command does cl
 deduced from `phase1_dplot`. We use a cutoff for peaks of 700 and set the minimum density to -1, so that
 all points are classified.
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_cluster.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_cluster.png)
 
 We classify the data into 5 groups corresponding the the 1000G superpopulations. If we don't insist on
 classifying all the data we can localise the clusters to where the data is densest.
@@ -672,7 +672,7 @@ classifying all the data we can localise the clusters to where the data is dense
 ./akt cluster test_pca -c 2-3 -a 2 -d 1 -p 0 -D 700 > test_allclusters1
 ```
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_cluster1.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_cluster1.png)
 
 Cluster0 is the group of samples which were unclassified.
 ##Allele Frequency and Correlation
@@ -716,7 +716,7 @@ java -jar ibdseq.r1206.jar gt=EAS.test.20.vcf.gz out=Seq.EAS.test.20
 ```
 Comparing the IBD segments gives
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/segment.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/segment.png)
 
 Where the yscale is arbitrary and the xscale is position along chromosome 20. We show the segments 
 as reported by IBDseq in red and by akt in black. For each of the 5 pairs examined 
@@ -736,7 +736,7 @@ and memory consuming.
 plot 'test_sigma' matrix with image
 ```
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_sigma.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_sigma.png)
 
 A value near 1 indicates very strong positive correlation (variants always present together)
 and a value near -1 indicates string negative correlation (variants never present together). 
@@ -749,7 +749,7 @@ the paper of [Zheng and Weir](http://www.sciencedirect.com/science/article/pii/S
 simple method to find this linear transformation. For example by looking at the plot below (projecting onto the first two
 1000G principle components and removing the SAS samples for clarity.)
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_pcaproj12.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_pcaproj12.png)
 
 We can see that the centre of the African cluster is near (-49,-4), the European cluster near (-13,27) and the East Asian
 cluster near (-25-30). Let these points represent 100% African, European and East Asian respectively. To transform
@@ -765,7 +765,7 @@ then run
 ./akt admix test_pcaproj -c 2-3 -C centre.txt > test_admix
 ```
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_admix.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_admix.png)
 
 The transformation specified in
 data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopulations
@@ -775,6 +775,6 @@ data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopula
 ./akt admix test_pcaproj -c 2-6 -C data/1000G.pca_to_admix > test_alladmix
 ```
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/test_alladmix.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_alladmix.png)
 
 

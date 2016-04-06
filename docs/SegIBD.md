@@ -23,7 +23,7 @@ java -jar ibdseq.r1206.jar gt=EAS.test.20.vcf.gz out=Seq.EAS.test.20
 ```
 Comparing the IBD segments gives
 
-![alt text](https://github.com/Illumina/akt/blob/master/docs/segment.png)
+![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/segment.png)
 
 Where the yscale is arbitrary and the xscale is position along chromosome 20. We show the segments 
 as reported by IBDseq in red and by akt in black. For each of the 5 pairs examined 
