@@ -411,5 +411,6 @@ int stats_main(int argc, char* argv[])
 	bcf_hdr_destroy(hdr);
 	bcf_hdr_destroy(new_hdr);
 	bcf_destroy1(rec);
+	return(0);
 }
 

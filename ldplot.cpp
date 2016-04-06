@@ -127,6 +127,6 @@ int ldplot_main(int argc, char* argv[])
 	while(!gt.empty()) free(gt.back()), gt.pop_back(); 
 
 	cout << Sigma << endl;
-	
+	return(0);
 }
 
