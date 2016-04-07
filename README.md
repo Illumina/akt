@@ -24,7 +24,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	b029ded
+Version:	041084b
 Contact:	rarthur@illumina.com
 
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
@@ -212,6 +212,7 @@ Usage:
 	 -a --alg:			exact SVD (slow)
 	 -C --covdef:			definition of SVD matrix: 0=(G-mu) 1=(G-mu)/sqrt(p(1-p)) 2=diag-G(2-G) default(1)
 	 -e --extra:			extra vectors for Red SVD
+	 -F --svfile:			File containing singular values
 
 ```
 * -T : Indexed VCF file containing intersecting sites and relevant site info. 
@@ -227,6 +228,7 @@ Usage:
 * -N : Number of principle components to calculate.
 * -a : Use JacobiSVD PCA algorithm, which is exact to float precision but very slow.
 * -e : Default PCA calculation is the inexact `RedSVD` algorithm, which requires this parameter. The higher the number the more accurate principle components will be obtained. 
+* -F : File to output the singular values.
 * -C : Which matrix to take the PCA of. 0 uses mean subtracted genotype matrix; 1 uses mean subtracted and normalized genotype
 matrix; 2 uses normalized covariance matrix with bias term subtracted from diagonal elements.  
 
