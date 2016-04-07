@@ -14,6 +14,9 @@ HTSLIB = $(HTSDIR)/libhts.a
 IFLAGS = -I$(HTSDIR)  -I./
 LFLAGS = -lz -lm
 
+no_omp: CXXFLAGS = -O3 -DNDEBUG 
+no_omp: CFLAGS = -O3 -DNDEBUG 
+no_omp: all
 
 default: CXXFLAGS = -O3 -DNDEBUG $(OMP)
 default: CFLAGS = -O3 -DNDEBUG $(OMP)
