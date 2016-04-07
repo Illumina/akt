@@ -50,6 +50,7 @@ int sampleInfo::readFromPlinkFam(string fname) {
     inf.ignore(10000,'\n');
   }
   cerr << "Read "<<N<<" individuals from "<<fname<<endl;
+  return(0);
 }
 
 int sampleInfo::buildIndex() {
