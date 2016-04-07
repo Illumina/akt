@@ -16,6 +16,7 @@ replace_pca_run
 * -N : Number of principle components to calculate.
 * -a : Use JacobiSVD PCA algorithm, which is exact to float precision but very slow.
 * -e : Default PCA calculation is the inexact `RedSVD` algorithm, which requires this parameter. The higher the number the more accurate principle components will be obtained. 
+* -F : File to output the singular values.
 * -C : Which matrix to take the PCA of. 0 uses mean subtracted genotype matrix; 1 uses mean subtracted and normalized genotype
 matrix; 2 uses normalized covariance matrix with bias term subtracted from diagonal elements.  
 

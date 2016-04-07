@@ -45,6 +45,7 @@ static void usage(){
     cerr << "\t -a --alg:			exact SVD (slow)" << endl;
     cerr << "\t -C --covdef:			definition of SVD matrix: 0=(G-mu) 1=(G-mu)/sqrt(p(1-p)) 2=diag-G(2-G) default(1)" << endl;
     cerr << "\t -e --extra:			extra vectors for Red SVD" << endl;
+    cerr << "\t -F --svfile:			File containing singular values" << endl;
     exit(1);
 }
         
@@ -269,7 +270,7 @@ for(int j2=j1; j2<N; ++j2){
  *
  */
 void calcpca(string input_name, bool o, string outf, const char* output_name, float m, int k, bool a, int npca, int extra,
-string regions, bool regions_is_file, string pfilename, sample_args sargs, int covn) {
+string regions, bool regions_is_file, string pfilename, sample_args sargs, int covn, string svfilename) {
 	
 	cerr << "Reading data..." << endl;
 	  
@@ -386,10 +387,15 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
     MatrixXf V(vsize, npca);
     
     ///Do the SVD of A
+    bool out_sv = false; 
+    ofstream out_file;
+    if(svfilename != ""){ out_sv = true; out_file.open ( svfilename.c_str() ); }
+		
     if(a){
 		JacobiSVD<MatrixXf> svd(A, ComputeThinU | ComputeThinV);
 		for(int j=0; j<npca; ++j){ 
 			P.col(j).noalias() = svd.matrixU().col(j) * svd.singularValues()(j) ;
+			if(out_sv){ out_file << svd.singularValues()(j) << "\n";  }
 		}
 		V.noalias() = svd.matrixV().block(0,0,vsize,npca);
     } else {
@@ -397,9 +403,13 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 		RedSVD::RedSVD<MatrixXf> svd(A, npca + e);
 		for(int j=0; j<npca; ++j){ 
 			P.col(j).noalias() = svd.matrixU().col(j) * svd.singularValues()(j) ;
+			if(out_sv){ out_file << svd.singularValues()(j) << "\n"; }
 		}
 		V.noalias() = svd.matrixV().block(0,0,vsize,npca);
 	} 
+
+	if(out_sv){ out_file.close(); }
+	
 	if(o){ 
 		
 		cerr <<"Printing coefficients to " << output_name << endl; 
@@ -534,7 +544,9 @@ int pca_main(int argc,char **argv) {
     int nthreads = -1;
 	int covn = 1;
 	
-    while ((c = getopt_long(argc, argv, "o:O:w:m:h:N:ae:r:R:s:S:T:C:",loptions,NULL)) >= 0) {  
+	string svfilename = "";
+	
+    while ((c = getopt_long(argc, argv, "o:O:w:m:h:N:ae:r:R:s:S:T:C:F:",loptions,NULL)) >= 0) {  
         switch (c)
         {
 		case 'o': o = true; out_filename = optarg; break;
@@ -551,6 +563,7 @@ int pca_main(int argc,char **argv) {
         case 'r': get_regions = true; regions = (optarg); used_r = true; break;
 		case 'R': get_regions = true; regions = (optarg); used_R = true; regions_is_file = true; break;
 		case 'T': pfilename = (optarg);  break;    
+		case 'F': svfilename = (optarg);  break;    
 
         case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
         case 'S': sargs.sample_names = (optarg); sargs.subsample = true; sargs.sample_is_file = 1; break;
@@ -575,7 +588,7 @@ int pca_main(int argc,char **argv) {
 	}
 	else{
 		cerr << "MAF lower bound: " << m << "\nThin: "<< thin <<" \nNumber principle components: "<<n<<endl;
-		calcpca(input,o,outf,out_filename,m,thin,a,n,e,regions,regions_is_file,pfilename,sargs, covn);
+		calcpca(input,o,outf,out_filename,m,thin,a,n,e,regions,regions_is_file,pfilename,sargs, covn, svfilename);
 	}
 
 
