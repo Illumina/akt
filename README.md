@@ -14,7 +14,7 @@ git clone https://github.com/Illumina/akt.git
 cd akt/
 make
 ```
-If you get a warning about '<omp.h> not found' (especially on Macs)
+If you get a warning about 'omp.h not found' (especially on Macs)
 you can try
 ```
 make no_omp
