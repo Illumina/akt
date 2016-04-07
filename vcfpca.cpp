@@ -285,6 +285,7 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 		if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 ){
 			cerr << "Failed to read the regions: " <<  regions << endl; exit(1);
 		}
+		if(regions_is_file){ pfilename = regions; }
 	}
 	
 	if(!(bcf_sr_add_reader (sr, input_name.c_str() ))){
@@ -324,7 +325,8 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 			
 			line =  bcf_sr_get_line(sr, 0);
 			ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);    
-			if(ngt < 0){ cerr << "Bad genotypes at " << line->pos+1 << endl; exit(1); }
+			if(ngt < 0){ cerr << "Bad genotypes at " << 
+				 bcf_hdr_id2name(sr->readers[0].header,line->rid) << ":" << line->pos+1 << endl; exit(1); }
 			
 			int mac = 0,nmiss=0;
 			for(int i=0;i<2*N;i++){
@@ -366,9 +368,12 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 	
 	bcf_sr_destroy(sr);	
 	free(gt_arr);	
-
-	cerr << "Kept " << nkept << " markers out of " << nline << endl;
+	
 	if( pfilename != "" ){ cerr << nkept << "/"<<npanel<<" of study markers were in the sites file"<<endl; }
+	else{
+			cerr << "Kept " << nkept << " markers out of " << nline << endl;
+	}
+
 	if( nkept == 0 ){ 
 		cerr << "ERROR: no intersecting SNPs found.  Check chromosome prefix matches on sites and input file." << endl; exit(1);
 	}
