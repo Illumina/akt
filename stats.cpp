@@ -411,5 +411,6 @@ int stats_main(int argc, char* argv[])
 	bcf_destroy1(rec);
 	
 	return (0);
+
 }
 
