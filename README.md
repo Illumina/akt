@@ -24,7 +24,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	041084b
+Version:	c03cb7b
 Contact:	rarthur@illumina.com
 
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
@@ -395,7 +395,6 @@ Expects input_filename.vcf to contain hard genotypes
 ```
 * -T : Indexed VCF file containing intersecting sites and relevant site info. 
 * -r : Comma-separated list of regions, chr:from-to.
-* -R : File containing 3 columns: CHROM, POS and POS_TO. 
 * -s : Comma-separated list of samples to include or exclude if prefixed with "^".
 * -S : File of sample names to include or exclude if prefixed with "^". One sample per line.
 * -h : Hop this many markers forward from last accepted marker. 

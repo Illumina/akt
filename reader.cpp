@@ -43,11 +43,11 @@ void readMatrix(ifstream &in, vector<vector <float> > &data, vector< vector<stri
 		if( d<0 ){ 
 			d = tokens.size(); 
 		} else {
-			if(dims == "" && tokens.size() != d){
+			if(dims == "" && tokens.size() != (size_t)d){
 				cerr << "ragged array elements at " << data.size() << endl; exit(1);
 			}
 		}
-		if( tokens.size()-dim[0]+1 < d ){ cerr << "too few array elements at " << data.size() << endl; exit(1); }
+		if( (int)tokens.size()-dim[0]+1 < d ){ cerr << "too few array elements at " << data.size() << endl; exit(1); }
 		
 		vector<string> tmps;
 		for(int i=0; i<dim[0]-1; ++i){ 
@@ -55,7 +55,7 @@ void readMatrix(ifstream &in, vector<vector <float> > &data, vector< vector<stri
 		} 
 		vector<float> tmp;
 		for(int i=dim[0]-1; i<dim[0]-1+d; ++i){ tmp.push_back( atof(tokens[i].c_str()) ); } //c++11 stod for reading
-		for(int i=dim[0]-1+d; i<tokens.size(); ++i){ 
+		for(int i=dim[0]-1+d; i<(int)tokens.size(); ++i){ 
 				tmps.push_back( tokens[i] );
 		} 
 

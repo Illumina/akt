@@ -58,7 +58,7 @@ int admix_main(int argc,char **argv) {
 	in_file.close();
 
 	int N = data.size();
-	int d = data[0].size();
+	size_t d = data[0].size();
 	
 	MatrixXf P(d,N);
 	for (int i=0; i<N; i++){ P.col(i) = VectorXf::Map(&data[i][0],d); }
@@ -87,12 +87,12 @@ int admix_main(int argc,char **argv) {
 	MatrixXf L(d,K);
 	VectorXf sub = VectorXf::Zero(d);
 	VectorXf perp = VectorXf::Random(d);
-	int subi;
+	int subi=-1;
 	
 	if(mu_data.size() == d){
 		mu.resize(d,K);
 		float av_len = 0;
-		for (int i=0; i<d; i++){ 
+		for (size_t i=0; i<d; i++){ 
 			mu.col(i) = VectorXf::Map(&mu_data[i][0],d); 
 			sub += ( mu.col(i) );
 			av_len += mu.col(i).norm();
@@ -102,9 +102,9 @@ int admix_main(int argc,char **argv) {
 		
 		MatrixXf sides(d,d);
 		
-		int ns = 0;
-		for(int i=0; i<d; ++i){
-			for(int j=i+1; j<d; ++j){
+		size_t ns = 0;
+		for(size_t i=0; i<d; ++i){
+			for(size_t j=i+1; j<d; ++j){
 				sides.col(ns++) = mu.col(i) - mu.col(j);
 				if(ns == d){break;}
 			}	
@@ -125,9 +125,9 @@ int admix_main(int argc,char **argv) {
 		//which one to subtract
 		subi = -1;
 		float min_norm = -logz; //inf
-		for(int k=0; k<prop_data.size(); ++k){
+		for(size_t k=0; k<prop_data.size(); ++k){
 			float norm = 0; 
-			for(int i=0; i<prop_data[k].size(); ++i){ norm += prop_data[k][i]*prop_data[k][i]; }
+			for(size_t i=0; i<prop_data[k].size(); ++i){ norm += prop_data[k][i]*prop_data[k][i]; }
 			if( norm < min_norm ){ min_norm = norm; subi = k; }
 		}
 		cerr << "Subtract minimum norm vector: line " << subi << " norm = " << min_norm << endl;
