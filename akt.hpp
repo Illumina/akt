@@ -27,8 +27,14 @@
 #ifdef _OPENMP
    #include <omp.h>
 #else
-   #define omp_get_thread_num() 0
-   #define omp_get_num_threads() 0
+static int inline omp_get_thread_num() {
+  std::cerr<<"WARNING: threading is disabled"<<endl;
+  return(0);
+}
+static int inline omp_get_num_threads() {
+  std::cerr<<"WARNING: threading is disabled"<<endl;
+  return(0);
+}
 static void inline omp_set_num_threads(int nthreads) {} 
 #endif
 
