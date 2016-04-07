@@ -43,33 +43,33 @@ version.h:
 
 ##bcftools code
 filter.o: filter.c filter.h
-	$(CC)  $(IFLAGS) -c $<  
+	$(CC)  $(CFLAGS) $(IFLAGS) -c $<  
 version.o: version.c filter.h version.h
-	$(CC)  $(IFLAGS) -c $<  
+	$(CC)  $(CFLAGS) $(IFLAGS) -c $<  
 ##akt code
 relatives.o: relatives.cpp 
-	$(CXX) -c relatives.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c relatives.cpp $(IFLAGS)
 vcfpca.o: vcfpca.cpp 
-	$(CXX) -c vcfpca.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS) -c vcfpca.cpp $(IFLAGS)
 cluster.o: cluster.cpp 
-	$(CXX) -c cluster.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c cluster.cpp $(IFLAGS)
 kin.o: kin.cpp 
-	$(CXX) -c kin.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c kin.cpp $(IFLAGS)
 ibd.o: ibd.cpp 
-	$(CXX) -c ibd.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c ibd.cpp $(IFLAGS)
 pedigree.o: pedigree.cpp pedigree.h
-	$(CXX) -c $< $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c $< $(IFLAGS)
 mendel.o: pedigree.h mendel.cpp 
-	$(CXX) -c mendel.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c mendel.cpp $(IFLAGS)
 stats.o: stats.cpp 
-	$(CXX) -c stats.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c stats.cpp $(IFLAGS)
 reader.o: reader.cpp 
-	$(CXX) -c reader.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c reader.cpp $(IFLAGS)
 ldplot.o: ldplot.cpp 
-	$(CXX) -c ldplot.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS)  -c ldplot.cpp $(IFLAGS)
 admix.o: admix.cpp 
-	$(CXX)	 -c admix.cpp $(IFLAGS)
+	$(CXX) $(CXXFLAGS) -c admix.cpp $(IFLAGS)
 akt: version.h akt.cpp admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(HTSLIB)
-	$(CXX)  -o akt akt.cpp admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+	$(CXX) $(CXXFLAGS)   -o akt akt.cpp admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h

@@ -3,7 +3,7 @@
 ##build akt
 cd ../
 make clean
-make
+make -j 4
 cd test/
 
 ##get data
@@ -26,7 +26,7 @@ time ../akt pca -w ../data/1000G.snps.nochr.vcf.gz $data  > pca2.txt
 Rscript ../scripts/1000G_pca.R pca2.txt 
 
 ##calculate kinship coefficients
-time ../akt kin -R ../data/1000G.snps.nochr.vcf.gz $data > kinship.txt
+time ../akt kin -n 4 -R ../data/1000G.snps.nochr.vcf.gz $data > kinship.txt
 
 ##find relatives
 time ../akt relatives -p n433 kinship.txt > relatives.out
