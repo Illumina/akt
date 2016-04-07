@@ -61,7 +61,7 @@ static void usage(){
 void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 	
 	int Nsamples;
-	int Npca;  
+	int Npca=0;  
 
 	vector<string> names;
 	
@@ -160,7 +160,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 					cerr << "Using " << nPC << " PCs from input file." << endl;
 					Npca = nPC;
 				  }
-				  if(PC[n].size() != nPC){
+				  if(PC[n].size() != (unsigned)nPC){
 					PC[n].assign(nPC,0.);
 				  }
 				  for(int i=0;i<nPC;i++){
@@ -215,7 +215,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 void DatatoMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, int M, int covn){
 	int ct = 0;
 	for(int i=0; i<M; ++i){
-		float mu = 0; 
+
 		for(int j=0; j<N; ++j){
 				A(j,i) = G[ct++];
 		} 
@@ -269,7 +269,7 @@ for(int j2=j1; j2<N; ++j2){
  * @param [in] pfile   		intersecting variant list
  *
  */
-void calcpca(string input_name, bool o, string outf, const char* output_name, float m, int k, bool a, int npca, int extra,
+void calcpca(string input_name, bool o, string outf, string output_name, float m, int k, bool a, int npca, int extra,
 string regions, bool regions_is_file, string pfilename, sample_args sargs, int covn, string svfilename) {
 	
 	cerr << "Reading data..." << endl;
@@ -324,7 +324,8 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 			
 			line =  bcf_sr_get_line(sr, 0);
 			ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);    
-
+			if(ngt < 0){ cerr << "Bad genotypes at " << line->pos+1 << endl; exit(1); }
+			
 			int mac = 0,nmiss=0;
 			for(int i=0;i<2*N;i++){
 				if(gt_arr[i]!=bcf_gt_missing){
@@ -443,10 +444,9 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 		bcf_hdr_add_sample(new_hdr, NULL);      /// update internal structures
 		bcf1_t *rec = bcf_init1() ;
 
-		htsFile *out_fh  = hts_open(output_name, outf.c_str());
+		htsFile *out_fh  = hts_open(output_name.c_str(), outf.c_str());
 		bcf_hdr_write(out_fh, new_hdr);
 
-		int *gt_arr=(int *)malloc(N*2*sizeof(int)),ngt=N*2,ngt_arr=N*2;
 		bcf1_t *line;///bcf/vcf line structure.
 	
 		int idx = 0;
@@ -458,9 +458,8 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 			if( read ){	//present in sites file and sample file.
 			
 				line =  bcf_sr_get_line(reader, 0); 
-				if( idx < sites.size() && sites[idx] == nline ){
-					ngt = bcf_get_genotypes(reader->readers[0].header, line, &gt_arr, &ngt_arr);  
-
+				if( (unsigned)idx < sites.size() && sites[idx] == nline ){
+					
 					rec->rid = line->rid;
 					rec->pos = line->pos;
 					rec->qual = line->qual;
@@ -529,7 +528,7 @@ int pca_main(int argc,char **argv) {
     int n=20; bool don = false;
     bool a=false;
     int e=200;
-    bool o=false; char* out_filename;
+    bool o=false; string out_filename="";
     bool w=false; string weight_filename;
     string outf = "w";
     
@@ -537,11 +536,11 @@ int pca_main(int argc,char **argv) {
 
     string pfilename = "";
 
-    bool get_regions = false; string regions = "";
+    string regions = "";
     bool regions_is_file = false;
     bool used_r = false;
     bool used_R = false;
-    int nthreads = -1;
+
 	int covn = 1;
 	
 	string svfilename = "";
@@ -560,8 +559,8 @@ int pca_main(int argc,char **argv) {
         case 'a': a = true; break;
         case 'e': e = atoi(optarg); break;
 
-        case 'r': get_regions = true; regions = (optarg); used_r = true; break;
-		case 'R': get_regions = true; regions = (optarg); used_R = true; regions_is_file = true; break;
+        case 'r': regions = (optarg); used_r = true; break;
+		case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
 		case 'T': pfilename = (optarg);  break;    
 		case 'F': svfilename = (optarg);  break;    
 

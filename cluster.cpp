@@ -97,14 +97,14 @@ void Cluster::densityCluster(int min_rho, float min_delta){
 	K = peak.size() + 1;	
 	centres.resize(K, d);
 	sizes = VectorXi::Zero(K); 
-	for(int i=0; i<peak.size(); ++i){
+	for(size_t i=0; i<peak.size(); ++i){
 			assignment[ peak[i] ] = i+1;
 			centres.row(i+1) = P.row(peak[i]);
 	}
 	
     sort(sorted_rho.data(), sorted_rho.data()+sorted_rho.size(), cf_idx); //sort to avoid backtracking
 
-	for(int i=0; i<sorted_rho.size(); ++i){	
+	for(size_t i=0; i<sorted_rho.size(); ++i){	
 			
 		vector<int>::iterator it = find (peak.begin(), peak.end(), sorted_rho[i][1]);
 		if( it != peak.end() ){ //found a peak
@@ -113,7 +113,7 @@ void Cluster::densityCluster(int min_rho, float min_delta){
 			//find nn of higher density
 			
 			float min_dist = numeric_limits<float>::infinity();
-			for(int j=0; j<sorted_rho.size(); ++j){
+			for(size_t j=0; j<sorted_rho.size(); ++j){
 				float dist = (P.row( sorted_rho[i][1] ) - P.row( sorted_rho[j][1] )).squaredNorm();
 				if( assignment[ sorted_rho[j][1] ] != 0 && i !=j && sorted_rho[j][0] >= sorted_rho[i][0] && dist < min_dist ){
 					min_dist = dist;
@@ -168,7 +168,7 @@ void Cluster::clustered_data_dump(vector<vector<string> > &labels){
 				if(silset){ cout << "\t" << sil(i); } 
 				cout << "\tCluster" << k << "\t"; 
 				if(labels[i].size() > 0){
-					for(int j=0; j<labels[i].size()-1; ++j){
+					for(size_t j=0; j<labels[i].size()-1; ++j){
 						cout << labels[i][j] << "\t";
 					}
 					cout << labels[i].back() << "\n";
@@ -186,7 +186,7 @@ void Cluster::cluster_to_file(ofstream& of, vector<vector<string> > &labels, int
 	
 	for(int i=0; i<N; i++){
 		if( assignment[i] == k){ 
-			for(int j=0; j<labels[i].size()-1; ++j){
+			for(size_t j=0; j<labels[i].size()-1; ++j){
 				of << labels[i][j] << "\t";
 			} of << labels[i].back() << "\n";
 		}
@@ -507,7 +507,7 @@ int cluster_main(int argc,char **argv) {
 		vector< vector<string> > mu_lab;
 		readMatrix(in_cfile, mu_data, mu_lab, "1-" + to_string(d) );
 		in_cfile.close();
-		if(mu_data[0].size() != d){
+		if( mu_data[0].size() != (size_t)d){
 			cerr << "Center init must be same dim as data" << endl; exit(1);
 		}
 		K = mu_data.size();

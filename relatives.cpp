@@ -108,7 +108,7 @@ int relatives_main(int argc, char* argv[])
 	graph Fdup; //contains duplicates only
 
 	int ct = 0; int rels = 0; int dups = 0;
-	for(int i=0; i<pnames.size(); i++){
+	for(size_t i=0; i<pnames.size(); i++){
 
 		int type = C.assignment[ct];
 		
@@ -141,7 +141,7 @@ int relatives_main(int argc, char* argv[])
 	Fdup.assign_disconnected(DFdup);
 	sort(DFdup.begin(), DFdup.end(), less_than_graph());
 
-	for(int i=0; i<DFdup.size(); ++i){
+	for(size_t i=0; i<DFdup.size(); ++i){
 		for(viter iter=DFdup[i].vlist.begin(); iter != DFdup[i].vlist.end(); ++iter){
 			cout << "Dup" << i << "\t" << (*iter).second->name << endl; 
 		}
@@ -154,7 +154,7 @@ int relatives_main(int argc, char* argv[])
 	map<string, string> fam_names;
 	vector< string > fam_labs;
 	
-	for(int i=0; i<DF.size(); ++i){
+	for(size_t i=0; i<DF.size(); ++i){
 		fam_labs.push_back("Fam" + to_string(i));
 		for(viter iter=DF[i].vlist.begin(); iter != DF[i].vlist.end(); ++iter){
 			fam_names[ (*iter).second->name ] = fam_labs.back();
@@ -170,12 +170,12 @@ int relatives_main(int argc, char* argv[])
 		}
 	}
 
-	for(int g=0; g<DF.size(); ++g){
+	for(size_t g=0; g<DF.size(); ++g){
 		
 		vector<string> nm = DF[g].names();
 		vector<string> unrelated;
 
-		int ms = 0;
+		size_t ms = 0;
 		for(int i=0; i<uits; ++i){
 			vector<string> ur; 
 			DF[g].unrelated(ur);	//Do this for long enough, you'll find the best set...
@@ -185,7 +185,7 @@ int relatives_main(int argc, char* argv[])
 			}
 		}
 		
-		for(int j=0; j<unrelated.size(); ++j){
+		for(size_t j=0; j<unrelated.size(); ++j){
 			cout << "Unrel" << uc << "\t" << unrelated[j] << endl; ++uc;
 		}			
 	}
@@ -201,7 +201,7 @@ int relatives_main(int argc, char* argv[])
 	in2.close();
 
 	cerr << Nsamples << " unique samples names" << endl;
-	if( Nsamples*(Nsamples-1)/2 != tibd.size() ){
+	if( Nsamples*(Nsamples-1)/2 != (int)tibd.size() ){
 		cerr << "Found " << tibd.size() << " total pairs when " << Nsamples*(Nsamples-1)/2 << " expected." << endl;
 		cerr << "\"akt relatives\" expects unfiltered output from \"akt kin\"." << endl;
 		exit(1);
@@ -212,12 +212,12 @@ int relatives_main(int argc, char* argv[])
 
 	//strip out singletons and non family ibd pairs.
 	int sz = 0;
-	for(int n=0; n<pnamesr.size(); ++n){
+	for(size_t n=0; n<pnamesr.size(); ++n){
 		//fam_names[ pnames[n][0] ] = which family this
 		//then find the index of this family
 		int pos1 = find( fam_labs.begin(), fam_labs.end(), fam_names[ pnamesr[n][0] ] ) - fam_labs.begin();
 		int pos2 = find( fam_labs.begin(), fam_labs.end(), fam_names[ pnamesr[n][1] ] ) - fam_labs.begin();
-		if( pos1 < fam_labs.size() && pos2 < fam_labs.size() ){
+		if( (size_t)pos1 < fam_labs.size() && (size_t)pos2 < fam_labs.size() ){
 			if( pos1 == pos2 ){	
 				all_names[ pos1 ].push_back( pnamesr[n] );
 				ibdr[ pos1 ].push_back( tibd[n] );	
@@ -231,8 +231,8 @@ int relatives_main(int argc, char* argv[])
 	
 	MatrixXf Pr(N+K,d);
 	ct = 0;	
-	for(int i=0; i<ibdr.size(); ++i){
-		for(int j=0; j<ibdr[i].size(); ++j){
+	for(size_t i=0; i<ibdr.size(); ++i){
+		for(size_t j=0; j<ibdr[i].size(); ++j){
 			Pr.row(ct) = VectorXf::Map(&ibdr[i][j][0],d);
 			++ct;
 		}
@@ -247,10 +247,10 @@ int relatives_main(int argc, char* argv[])
 	ct = 0;
 	ofstream out_file2 ( (prefix + "fam").c_str() );
 	
-	for(int n=0; n<all_names.size(); ++n){
+	for(size_t n=0; n<all_names.size(); ++n){
 			
 		graph H;
-		for(int m=0; m<all_names[n].size(); ++m){ 
+		for(size_t m=0; m<all_names[n].size(); ++m){ 
 			if( ! H.hasvertex(all_names[n][m][0]) ){ H.add(all_names[n][m][0]);}
 			if( ! H.hasvertex(all_names[n][m][1]) ){ H.add(all_names[n][m][1]); }
 		}
@@ -296,8 +296,8 @@ int relatives_main(int argc, char* argv[])
 					}
 				}
 				
-				for(int i=0; i<tmp.size(); ++i){
-					for(int j=i+1; j<tmp.size(); ++j){	
+				for(size_t i=0; i<tmp.size(); ++i){
+					for(size_t j=i+1; j<tmp.size(); ++j){	
 						
 						if( relationship[ tmp[i] + tmp[j] ] == 1 ){ //sibs -> this is the parent of 2 sibs
 
@@ -343,11 +343,11 @@ int relatives_main(int argc, char* argv[])
 					}
 				}
 
-				vector<int> parent;
+				vector<size_t> parent;
 				set<string> sib;
 				int sc = 0;
-				for(int i=0; i<tmp.size(); ++i){
-					for(int j=i+1; j<tmp.size(); ++j){
+				for(size_t i=0; i<tmp.size(); ++i){
+					for(size_t j=i+1; j<tmp.size(); ++j){
 						++sc;
 						if( relationship[ tmp[i] + tmp[j] ] == 4 ){ //unrelated => parents, 
 																//not 3 because 2 misclassified as 3 can happen
@@ -363,7 +363,7 @@ int relatives_main(int argc, char* argv[])
 					}
 				}
 				if(parent.size() == 2){
-					for(int i=0; i<tmp.size(); ++i){
+					for(size_t i=0; i<tmp.size(); ++i){
 						if( i != parent[0] && i != parent[1] ){
 														
 							if(H.linked(tname, tmp[i])){ H.unlink(tname, tmp[i]); }
@@ -378,7 +378,7 @@ int relatives_main(int argc, char* argv[])
 							H.link( tmp[i], (*iter).second->name, 0 );
 						}
 					}
-				} else if (parent.size() == 0 && sib.size() == 2*sc){ //all links are siblings => vertex is parent
+				} else if (parent.size() == 0 && (int)sib.size() == 2*sc){ //all links are siblings => vertex is parent
 					for (set<string>::iterator it=sib.begin(); it!=sib.end(); ++it){
 			
 						if(H.linked(tname, *it)){ H.unlink(tname, *it); }

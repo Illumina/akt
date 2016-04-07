@@ -38,8 +38,8 @@ void read_pairs(ifstream &in, vector< pair<string, string> > &relpairs, map<stri
 }
 
 void make_pair_list(vector< pair<string, string> > &relpairs, vector<string> names){
-	for(int j1=0; j1<names.size(); ++j1){
-	for(int j2=j1+1; j2<names.size(); ++j2){
+	for(size_t j1=0; j1<names.size(); ++j1){
+	for(size_t j2=j1+1; j2<names.size(); ++j2){
 		relpairs.push_back( make_pair(names[j1], names[j2]) );
 	}}
 }
@@ -93,7 +93,7 @@ int kin_main(int argc, char* argv[])
   };
 
   string pfilename = "";
-  bool get_regions = false; string regions = "";
+  string regions = "";
   bool norm = true;
   float min_kin = 0; bool tk = false;
   int thin = 1;
@@ -111,8 +111,8 @@ int kin_main(int argc, char* argv[])
   while ((c = getopt_long(argc, argv, "r:R:T:k:h:n:um:f:a:s:S:c",loptions,NULL)) >= 0) {  
     switch (c)
       {
-      case 'r': get_regions = true; regions = (optarg); used_r = true; break;
-      case 'R': get_regions = true; regions = (optarg); pfilename = (optarg); used_R = true; regions_is_file = true; break;
+      case 'r': regions = (optarg); used_r = true; break;
+      case 'R': regions = (optarg); pfilename = (optarg); used_R = true; regions_is_file = true; break;
       case 'T': target = true; pfilename = (optarg); break;
       case 'k': tk = true; min_kin = atof(optarg); break;
       case 'h': thin = atoi(optarg); break;
@@ -218,7 +218,8 @@ int kin_main(int argc, char* argv[])
 		if(bcf_sr_has_line(sr,0)) { //present in the study file
 			line =  bcf_sr_get_line(sr, 0);
 			ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);  
-
+			if(ngt < 0){ cerr << "Bad genotypes at " << line->pos+1 << endl; exit(1); }
+			
 			for(int i=0;i<2*N;i++){ 
 				if(gt_arr[i]==bcf_gt_missing || (bcf_gt_allele(gt_arr[i])<0) || (bcf_gt_allele(gt_arr[i])>2)  ){
 					gt_arr[i] = -1;
@@ -238,7 +239,7 @@ int kin_main(int argc, char* argv[])
 				} else {
 				  line2 =  bcf_sr_get_line(sr, 1);
 				  int ret = bcf_get_info_float(sr->readers[1].header, line2, (af_tag + "AF").c_str(), &af_ptr, &nval);
-				  if( nval != 1 ){ cerr << (af_tag + "AF") << " read error at " << line2->rid << ":" << line->pos+1 << endl; exit(1); }
+				  if( ret<0 || nval != 1 ){ cerr << (af_tag + "AF") << " read error at " << line2->rid << ":" << line->pos+1 << endl; exit(1); }
 				  p = af_ptr[0];
 				}
 				if( (p < 0.5) ? ( p > min_freq ) : (1-p > min_freq) ){ 	//min af
@@ -295,7 +296,7 @@ int kin_main(int argc, char* argv[])
   }
 
   #pragma omp parallel for	
-  for(int r=0; r<relpairs.size(); ++r){ //all sample pairs
+  for(size_t r=0; r<relpairs.size(); ++r){ //all sample pairs
 
 	int j1 = name_to_id[ relpairs[r].first  ]; //sample ids
 	int j2 = name_to_id[ relpairs[r].second ];
@@ -303,7 +304,7 @@ int kin_main(int argc, char* argv[])
 	IBD[0][j1][j2] = 0;
 	IBD[2][j1][j2] = 0;
 	IBD[3][j1][j2] = 0;
-	for(int i=0; i<bits[j1].size(); ++i){
+	for(size_t i=0; i<bits[j1].size(); ++i){
 		IBD[0][j1][j2] += (bits[j1][i][0] & bits[j2][i][2]).count() + (bits[j1][i][2] & bits[j2][i][0]).count();
 		IBD[2][j1][j2] += (bits[j1][i][0] & bits[j2][i][0]).count() + (bits[j1][i][1] & bits[j2][i][1]).count() + (bits[j1][i][2] & bits[j2][i][2]).count();
 		IBD[3][j1][j2] += (bits[j1][i][3] | bits[j2][i][3]).count();
@@ -328,7 +329,7 @@ int kin_main(int argc, char* argv[])
 	}
   }
 	
-  for(int r=0; r<relpairs.size(); ++r){ //all sample pairs
+  for(size_t r=0; r<relpairs.size(); ++r){ //all sample pairs
 
 	  int i = name_to_id[ relpairs[r].first  ]; //sample ids
 	  int j = name_to_id[ relpairs[r].second ];

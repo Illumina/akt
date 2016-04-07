@@ -4,7 +4,6 @@ replace_ibd_run
 ```
 * targetfile_option
 * regions_option
-* regionsfile_option
 * samples_option
 * samplesfile_option
 * thin_option

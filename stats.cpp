@@ -117,7 +117,7 @@ htsFile *out_fh, float ocmin
 		if(output_cor){
 			vector<float> cor_red;
 			vector<int> corp_red;
-			for(int i=0; i<cor.size(); ++i){
+			for(size_t i=0; i<cor.size(); ++i){
 				if( fabs(cor[i]) >= ocmin ){
 					cor_red.push_back(cor[i]);
 					corp_red.push_back(corp[i]);
@@ -161,11 +161,9 @@ int stats_main(int argc, char* argv[])
   
   string output = "out.vcf";
   string outputfmt = "w";
-  bool get_regions = false; string regions = "";
+  string regions = "";
   bool regions_is_file = false;
-  bool used_r = false;
-  bool used_R = false;
-  bool enable_pi = false;
+
   sample_args sargs;
   string af_tag = "";
   float ocmin = 0;
@@ -181,8 +179,8 @@ int stats_main(int argc, char* argv[])
         case 'o': output = (string)(optarg); break;
         case 'O': outputfmt += (string)(optarg); break;
         case 'a': af_tag = string(optarg)+"_"; break;
-		case 'r': get_regions = true; regions = (optarg); used_r = true; break;
-		case 'R': get_regions = true; regions = (optarg); used_R = true; regions_is_file = true; break;
+		case 'r': regions = (optarg); break;
+		case 'R': regions = (optarg); regions_is_file = true; break;
         case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
         case 'S': sargs.sample_names = (optarg); sargs.subsample = true; sargs.sample_is_file = 1; break;
         case '?': usage();
@@ -259,7 +257,7 @@ int stats_main(int argc, char* argv[])
 	list<float>::iterator af_it;
 	list<float>::iterator sig_it;
 	list<int>::iterator calc_it;
-	int last;
+	//int last;
 	int chr_id = -1;
 	
 	while(bcf_sr_next_line (sr) ) { 
@@ -316,7 +314,7 @@ int stats_main(int argc, char* argv[])
 						((do_block && distance( position.begin(), calc_it ) > flank ) ||
 						(!do_block && *calc_it - position.front() > flank ))
 						){ 
-							last = position.front(); 
+							//last = position.front(); 
 							G.pop_front();
 							af.pop_front();
 							sig.pop_front();
@@ -335,7 +333,7 @@ int stats_main(int argc, char* argv[])
 				
 				
 				calc_it = position.begin(); af_it = af.begin(); sig_it = sig.begin(); G_it = G.begin();
-				last = position.front(); 
+				//last = position.front(); 
 	
 			} else {
 				process_line( sr, line, N, gt_arr, ngt, ngt_arr, G, af, sig, position );
@@ -362,7 +360,7 @@ int stats_main(int argc, char* argv[])
 					((do_block && distance( position.begin(), calc_it ) > flank ) ||
 					(!do_block && *calc_it - position.front() > flank ))
 					){ 
-						last = position.front(); 
+						//last = position.front(); 
 						G.pop_front();
 						af.pop_front();
 						sig.pop_front();
@@ -394,7 +392,7 @@ int stats_main(int argc, char* argv[])
 		((do_block && distance( position.begin(), calc_it ) > flank ) ||
 		(!do_block && *calc_it - position.front() > flank ))
 		){ 
-			last = position.front(); 
+			//last = position.front(); 
 			G.pop_front();
 			af.pop_front();
 			sig.pop_front();
@@ -411,5 +409,7 @@ int stats_main(int argc, char* argv[])
 	bcf_hdr_destroy(hdr);
 	bcf_hdr_destroy(new_hdr);
 	bcf_destroy1(rec);
+	
+	return (0);
 }
 

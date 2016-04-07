@@ -68,17 +68,17 @@ bool trioMendel(int kid,int mum,int dad) {
     return(duoMendel(kid,mum));
 
   bool ret = true;
-  if(mum==0&dad==0)
+  if(mum==0&&dad==0)
     if(kid==0) ret=false;
-  if((mum==0&dad==1)|(mum==1&dad==0))
+  if((mum==0&&dad==1)|(mum==1&&dad==0))
     if(kid!=2) ret=false;
-  if((mum==0&dad==2)|(mum==2&dad==0))
+  if((mum==0&&dad==2)|(mum==2&&dad==0))
     if(kid==1) ret=false;
-  if(mum==1&dad==1)
+  if(mum==1&&dad==1)
     ret=false;
-  if((mum==1&dad==2)|(mum==2&dad==1))
+  if((mum==1&&dad==2)|(mum==2&&dad==1))
     if(kid!=0) ret=false;      
-  if(mum==2&dad==2)
+  if(mum==2&&dad==2)
     if(kid==2) ret=false;
 
   return(ret);
@@ -113,7 +113,7 @@ bcf1_t *bcf_copy_sans_format(bcf1_t *dst, bcf1_t *src) {
 
 
 int mendel(args & a) {
-  int debug=0;
+
 
   //open a file.
   bcf_srs_t *sr =  bcf_sr_init() ; 
@@ -139,9 +139,10 @@ int mendel(args & a) {
     filter = filter_init(hdr, a.include);
 
   //stuff for writing out an annotate vcf
-  int32_t *duo_counts,*trio_counts;
+  int32_t *duo_counts=NULL;
+  int32_t *trio_counts=NULL;
   htsFile *out_fh=NULL;
-  bcf_hdr_t *out_hdr;
+  bcf_hdr_t *out_hdr=NULL;
   if(a.outfile!=NULL) {
     out_hdr = bcf_hdr_subset(hdr,0,NULL,NULL); ///creates a new subsetted header (with 0 samples) from src_header
     bcf_hdr_add_sample(out_hdr, NULL);      /// update internal structures		
@@ -189,7 +190,7 @@ int mendel(args & a) {
 	    gt[i] =  genotype(gt_arr,i);
 
 	  for(int i=0;i<nsample;i++)  {
-	    int dad,mum;
+	    int dad=3,mum=3;
 	    if(ped.dadidx[i]!=-1)
 	      dad = ped.dadidx[i];
 	    if(ped.mumidx[i]!=-1) 

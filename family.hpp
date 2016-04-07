@@ -80,12 +80,12 @@ vertex* copy_vertex(vertex *in){
 	out->num_out = in->num_out;
 	out->dist = in->dist;
 	out->in.resize(0);
-	for(int i=0; i<in->in.size(); ++i){
+	for(size_t i=0; i<in->in.size(); ++i){
 			edge tmp(in->in[i].from_name, in->in[i].from_id, in->in[i].to_name, in->in[i].to_id, in->in[i].type );
 			out->in.push_back(tmp);
 	}
 	out->out.resize(0);
-	for(int i=0; i<in->out.size(); ++i){
+	for(size_t i=0; i<in->out.size(); ++i){
 			edge tmp(in->out[i].from_name, in->out[i].from_id, in->out[i].to_name, in->out[i].to_id, in->out[i].type );
 			out->out.push_back(tmp);
 	}	
@@ -331,10 +331,10 @@ void graph::remove_vertex(string name_){
 	
 	viter iter = vlist.find (name_); 
 	
-	for(int i=0; i<(*iter).second->out.size(); ++i){	//unlink out
+	for(size_t i=0; i<(*iter).second->out.size(); ++i){	//unlink out
 		unlink(name_, (*iter).second->out[i].to_name);	
 	}
-	for(int i=0; i<(*iter).second->in.size(); ++i){	//unlink out
+	for(size_t i=0; i<(*iter).second->in.size(); ++i){	//unlink out
 		unlink((*iter).second->out[i].from_name, name_);	
 	}
 	
@@ -360,7 +360,7 @@ void graph::link(string from_, string to_, int type=0){
 void graph::unlink(string from_, string to_){
 
 	bool waslinked = false;
-	for(int i=0; i<vlist[from_]->out.size(); ++i){
+	for(size_t i=0; i<vlist[from_]->out.size(); ++i){
 		if(vlist[from_]->out[i].to_name == to_){
 			//cout << "erase out " << vlist[from_]->out[i].to_name << endl;
 
@@ -370,7 +370,7 @@ void graph::unlink(string from_, string to_){
 			break;
 		}
 	}
-	for(int i=0; i<vlist[to_]->in.size(); ++i){
+	for(size_t i=0; i<vlist[to_]->in.size(); ++i){
 		if(vlist[to_]->in[i].from_name == from_){
 			//cout << "erase in " << vlist[to_]->in[i].from_name << endl;
 
@@ -390,19 +390,19 @@ void graph::reverse(string from_, string to_){
 	
 }
 bool graph::linked(string from_, string to_){
-	for(int i=0; i<vlist[from_]->out.size(); ++i){
+	for(size_t i=0; i<vlist[from_]->out.size(); ++i){
 		if(vlist[from_]->out[i].to_name == to_) return true;
 	}
-	for(int i=0; i<vlist[from_]->in.size(); ++i){
+	for(size_t i=0; i<vlist[from_]->in.size(); ++i){
 		if(vlist[from_]->in[i].from_name == to_) return true;
 	}
 	return false;
 }
 int graph::link_type(string from_, string to_){
-	for(int i=0; i<vlist[from_]->out.size(); ++i){
+	for(size_t i=0; i<vlist[from_]->out.size(); ++i){
 		if(vlist[from_]->out[i].to_name == to_) return vlist[from_]->out[i].type;
 	}
-	for(int i=0; i<vlist[from_]->in.size(); ++i){
+	for(size_t i=0; i<vlist[from_]->in.size(); ++i){
 		if(vlist[from_]->in[i].from_name == to_) return vlist[from_]->in[i].type;
 	}
 	return -1;
@@ -435,7 +435,7 @@ bool graph::descendant(string from, string to){
 		S.pop();
 		if( u->dist == -1 ){
 			u->dist = 0;
-			for(int i=0; i<u->out.size(); ++i){
+			for(size_t i=0; i<u->out.size(); ++i){
 					if( u->out[i].to_name == to){
 						return true;
 					}
@@ -455,10 +455,10 @@ void graph::unrelated(vector<string> &I){
 	while( !ns.empty() ){
 		
 		ns.erase( remove( ns.begin(), ns.end(), v->name ), ns.end() ); 
-		for(int i=0; i<v->out.size(); ++i){
+		for(size_t i=0; i<v->out.size(); ++i){
 			ns.erase( remove( ns.begin(), ns.end(), v->out[i].to_name ), ns.end() ); 
 		}
-		for(int i=0; i<v->in.size(); ++i){
+		for(size_t i=0; i<v->in.size(); ++i){
 			ns.erase( remove( ns.begin(), ns.end(), v->in[i].from_name ), ns.end() ); 
 		}
 		
@@ -487,7 +487,7 @@ int graph::num_disconnected(){
 		while( !Q.empty() ){
 			vertex* u = Q.front();
 			Q.pop();
-			for(int i=0; i<u->out.size(); ++i){
+			for(size_t i=0; i<u->out.size(); ++i){
 				if( vlist[u->out[i].to_name]->dist == -1 ){
 					vlist[u->out[i].to_name]->dist = u->dist+1;
 					Q.push(vlist[u->out[i].to_name]);
@@ -495,7 +495,7 @@ int graph::num_disconnected(){
 				}
 				
 			}
-			for(int i=0; i<u->in.size(); ++i){
+			for(size_t i=0; i<u->in.size(); ++i){
 				if( vlist[u->in[i].from_name]->dist == -1 ){
 					vlist[u->in[i].from_name]->dist = u->dist+1;
 					Q.push(vlist[u->in[i].from_name]);
@@ -529,7 +529,7 @@ void graph::assign_disconnected(vector<graph> &D){
 		while( !Q.empty() ){
 			vertex* u = Q.front();
 			Q.pop();
-			for(int i=0; i<u->out.size(); ++i){
+			for(size_t i=0; i<u->out.size(); ++i){
 				if( vlist[u->out[i].to_name]->dist == -1 ){
 					vlist[u->out[i].to_name]->dist = u->dist+1;
 					Q.push(vlist[u->out[i].to_name]);
@@ -537,7 +537,7 @@ void graph::assign_disconnected(vector<graph> &D){
 					ns.erase( remove( ns.begin(), ns.end(), Q.back()->name ), ns.end() ); 
 				}		
 			}
-			for(int i=0; i<u->in.size(); ++i){
+			for(size_t i=0; i<u->in.size(); ++i){
 				if( vlist[u->in[i].from_name]->dist == -1 ){
 					vlist[u->in[i].from_name]->dist = u->dist+1;
 					Q.push(vlist[u->in[i].from_name]);
@@ -555,7 +555,7 @@ void graph::assign_disconnected(vector<graph> &D){
 }
 bool graph::relatives(string from, string to){
 	
-	int nd = 0;
+
 	vector<string> ns = names();
 	
 	for(viter iter=vlist.begin(); iter != vlist.end(); ++iter){
@@ -570,14 +570,14 @@ bool graph::relatives(string from, string to){
 	while( !Q.empty() ){
 		vertex* u = Q.front();
 		Q.pop();
-		for(int i=0; i<u->out.size(); ++i){
+		for(size_t i=0; i<u->out.size(); ++i){
 			if( vlist[u->out[i].to_name]->dist == -1 ){
 				vlist[u->out[i].to_name]->dist = u->dist+1;
 				Q.push(vlist[u->out[i].to_name]);
 				if( Q.back()->name == to ){ return true; }
 			}
 		}
-		for(int i=0; i<u->in.size(); ++i){
+		for(size_t i=0; i<u->in.size(); ++i){
 			if( vlist[u->in[i].from_name]->dist == -1 ){
 				vlist[u->in[i].from_name]->dist = u->dist+1;
 				Q.push(vlist[u->in[i].from_name]);

@@ -21,11 +21,11 @@ public:
 	int begin;
 	int end;
 	
-	range() : begin(0), end(0), chrom(""){}
+	range() : chrom(""), begin(0), end(0) {}
 	range(string _chrom, int _begin, int _end) : chrom(_chrom), begin(_begin), end(_end) {}
 	range(string regions){
 		
-		int minpos, maxpos;
+
 
 		stringstream ss(regions);
 		string item;
@@ -52,7 +52,7 @@ public:
 		}
 
 	}
-	range(const range& other) : begin(other.begin), end(other.end), chrom(other.chrom){}
+	range(const range& other) : chrom(other.chrom), begin(other.begin), end(other.end){}
 	
 	vector<range> split(int n){
 		
