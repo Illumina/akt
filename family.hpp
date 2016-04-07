@@ -301,16 +301,9 @@ void graph::ped_print(ofstream& of, string fam){
 		int nu = 0;
 		vector<string> parents(2,"0");
 		for(vector<edge>::iterator it=(*iter).second->in.begin(); it!=(*iter).second->in.end(); ++it){
-			if( (*it).type == 0 ){ 
-				//of << (*it).from_name << "\t"; 
+			if( (*it).type == 0 || (*it).type == -1 ){ 
 				if(nu < 2){ parents[nu] = (*it).from_name; }
 				++nu; 
-			}
-			if( (*it).type == -1 ){ 
-				//of << (*it).from_name << "\t"; 
-				if(nu < 2){ parents[nu] = (*it).from_name; }
-				++nu; 
-				(*it).type == 0;
 			}
 		}
 		if(nu < 3){
