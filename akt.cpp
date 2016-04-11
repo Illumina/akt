@@ -58,6 +58,8 @@ int main(int argc, char **argv) {
     ldplot_main(argc, argv); 
   } else if(((string)argv[1]) == "admix") {
     admix_main(argc, argv); 
+  } else if(((string)argv[1]) == "metafreq") {
+    metafreq_main(argc, argv); 
   } 
   else {
     cerr << "Invalid command: " << argv[1] << endl;
