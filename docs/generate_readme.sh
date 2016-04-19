@@ -28,6 +28,8 @@ cat AF.md >> ../README.md
 cat SegIBD.md >> ../README.md
 cat Corplot.md >> ../README.md
 cat AdFrac.md >> ../README.md
+cat MF.md >> ../README.md
+
 
 declare -A options;
 options=(["-o"]="output_option"); 
