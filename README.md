@@ -512,7 +512,6 @@ and roughly equidistant from them. There are two possible choices of sign: the p
 Compare AFs between two cohorts
 Usage:
 akt metafreq a.vcf.gz b.vcf.gz -Oz -o meta.sites.vcf.gz
-Expects input.bcf to contain genotypes.
 	 -r --regions:			chromosome region
 	 -R --regions-file:		list of regions, file
 	 -T --targets-file:		intersecting VCF
