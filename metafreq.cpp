@@ -176,11 +176,11 @@ int metafreq_main(int argc, char* argv[])
 	bcf_hdr_add_sample(new_hdr, NULL);      /// update internal structures
 
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AF1,Number=A,Type=Float,Description=\"Allele frequency file1\">").c_str());
-	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AC1,Number=A,Type=Float,Description=\"Allele count file1\">").c_str());
-	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AN1,Number=A,Type=Float,Description=\"Allele number file1\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AC1,Number=A,Type=Integer,Description=\"Allele count file1\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AN1,Number=A,Type=Integer,Description=\"Allele number file1\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AF2,Number=A,Type=Float,Description=\"Allele frequency file2\">").c_str());
-	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AC2,Number=A,Type=Float,Description=\"Allele count file2\">").c_str());
-	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AN2,Number=A,Type=Float,Description=\"Allele number file2\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AC2,Number=A,Type=Integer,Description=\"Allele count file2\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AN2,Number=A,Type=Integer,Description=\"Allele number file2\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AF,Number=A,Type=Float,Description=\"Allele frequency combined\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "QF,Number=A,Type=Float,Description=\"Q-score from fisher's exact test\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "QX,Number=A,Type=Float,Description=\"Q-score from chi squared test\">").c_str());
@@ -324,8 +324,8 @@ int metafreq_main(int argc, char* argv[])
 		float p1f = p1;
 		float p2f = p2;
 
-					
-			//cout << "Writing " << line_copy->pos+1 << " " << npres1 << " " << npres2 << " " << sum1 << " " << sum2 << " " << p1f << " " << p2f << endl;
+		if(sum1 == 0 && sum2 == 0){ QF = 0; QX = 0; }
+		else{
 			
 			//Fisher
 			//      	file1 		file2
@@ -336,7 +336,8 @@ int metafreq_main(int argc, char* argv[])
 			update_cumulative_sum( log_cum , npres1+npres2); 							
 			double pval = fisher_prob( (npres1-sum1),(npres2-sum2), sum1, sum2, log_cum);
 			QF = min(100.0, -log10(pval) );
-						
+			
+			
 			//Chisquared test, with Yates's correction
 			double N = npres1 + npres2;
 			double a = (npres1-sum1);
@@ -356,39 +357,41 @@ int metafreq_main(int argc, char* argv[])
 			//\gamma(1/2,x/2) = sqrt(pi) erf( sqrt(x/2) )
 			double cpval = 1 - erf( chi*M_SQRT1_2 );
 			QX = min(100.0, -log10(cpval) );
-			
+		}
 		
-			//copy line record 'essentials'
-			rec->rid = bcf_hdr_name2id( new_hdr, bcf_hdr_id2name(sr->readers[uh].header, line_copy->rid) ); 	///two headers may have different representation of chr in hash table
-			rec->pos = line_copy->pos;
-			rec->qual = line_copy->qual;
-			rec->rlen = line_copy->rlen;
+		//copy line record 'essentials'
+		rec->rid = bcf_hdr_name2id( new_hdr, bcf_hdr_id2name(sr->readers[uh].header, line_copy->rid) ); 	///two headers may have different representation of chr in hash table
+		rec->pos = line_copy->pos;
+		rec->qual = line_copy->qual;
+		rec->rlen = line_copy->rlen;
 
-			bcf_update_id(new_hdr, rec, line_copy->d.id);
-			string ref = line_copy->d.allele[0];
-			string alt = line_copy->d.allele[1];
-			string alleles = ref + "," + alt;
-			bcf_update_alleles_str(new_hdr, rec, alleles.c_str());
+		bcf_update_id(new_hdr, rec, line_copy->d.id);
+		string ref = line_copy->d.allele[0];
+		string alt = line_copy->d.allele[1];
+		string alleles = ref + "," + alt;
+		bcf_update_alleles_str(new_hdr, rec, alleles.c_str());
 
-			//add AF annotations
-			bcf_update_info_float(new_hdr, rec, (af_tag + "AF1").c_str(), &p1f, 1);	
-			bcf_update_info_float(new_hdr, rec, (af_tag + "AC1").c_str(), &sum1, 1);	
-			bcf_update_info_float(new_hdr, rec, (af_tag + "AN1").c_str(), &npres1, 1);	
-			bcf_update_info_float(new_hdr, rec, (af_tag + "AF2").c_str(), &p2f, 1);	
-			bcf_update_info_float(new_hdr, rec, (af_tag + "AC2").c_str(), &sum2, 1);	
-			bcf_update_info_float(new_hdr, rec, (af_tag + "AN2").c_str(), &npres2, 1);	
-			bcf_update_info_float(new_hdr, rec, (af_tag + "AF").c_str(), &pav, 1);	
+		//add AF annotations
+		bcf_update_info_float(new_hdr, rec, (af_tag + "AF1").c_str(), &p1f, 1);	
+		bcf_update_info_int32(new_hdr, rec, (af_tag + "AC1").c_str(), &sum1, 1);	
+		bcf_update_info_int32(new_hdr, rec, (af_tag + "AN1").c_str(), &npres1, 1);	
+		bcf_update_info_float(new_hdr, rec, (af_tag + "AF2").c_str(), &p2f, 1);	
+		bcf_update_info_int32(new_hdr, rec, (af_tag + "AC2").c_str(), &sum2, 1);	
+		bcf_update_info_int32(new_hdr, rec, (af_tag + "AN2").c_str(), &npres2, 1);	
+		bcf_update_info_float(new_hdr, rec, (af_tag + "AF").c_str(), &pav, 1);	
 
-			if(QF <= 0){QF = 0;} //-0 annoying
-			bcf_update_info_float(new_hdr, rec, (af_tag + "QF").c_str(), &QF, 1);	
-			if(QX <= 0){QX = 0;} //-0 annoying
-			bcf_update_info_float(new_hdr, rec, (af_tag + "QX").c_str(), &QX, 1);	
-					
-			bcf_unpack(rec, BCF_UN_ALL);		
-			bcf_write1(out_fh, new_hdr, rec);
-			bcf_clear1(rec);	
+		//cout << "Writing " << line_copy->pos+1 << " " << npres1 << " " << npres2 << " " << sum1 << " " << sum2 << " " << p1f << " " << p2f << " " << QF << " " << QX << endl;
 
-			++kept;
+		if(QF <= 0){QF = 0;} //-0 annoying
+		bcf_update_info_float(new_hdr, rec, (af_tag + "QF").c_str(), &QF, 1);	
+		if(QX <= 0){QX = 0;} //-0 annoying
+		bcf_update_info_float(new_hdr, rec, (af_tag + "QX").c_str(), &QX, 1);	
+				
+		bcf_unpack(rec, BCF_UN_ALL);		
+		bcf_write1(out_fh, new_hdr, rec);
+		bcf_clear1(rec);	
+
+		++kept;
 		
 		
 		np1 = npres1;
