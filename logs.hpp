@@ -12,50 +12,9 @@ using namespace std;
 *	Constants			*
 ************************/
 const double logz = -numeric_limits<double>::infinity();
-const double logtwo = log(2);
-const double logh = log(0.5);
-const double logq = log(0.25);
 const double logten = log(10);
 
-
-const double Trans[3][3][3] = 
-{
-	{
-		{1,0,0},
-		{0.5,0.5,0},
-		{0,1,0}
-	},
-	{
-		{0.5,0.5,0},
-		{0.25,0.5,0.25},
-		{0,0.5,0.5}
-	},
-	{
-		{0,1,0},
-		{0,0.5,0.5},
-		{0,0,1}
-	}
-};
-
-const double LogTrans[3][3][3] = 
-{
-	{
-		{0,logz,logz},
-		{logh,logh,logz},
-		{logz,0,logz}
-	},
-	{
-		{logh,logh,logz},
-		{logq,logh,logq},
-		{logz,logh,logh}
-	},
-	{
-		{logz,0,logz},
-		{logz,logh,logh},
-		{logz,logz,0}
-	}
-};
-
+//log(a + b) = log(a ( 1 + b/a) ) = log(a) + log(1 + b/a)
 template<typename T> void log_sum(T &in, T add){
 
 	if(add == in && add == logz){ in = logz;}
