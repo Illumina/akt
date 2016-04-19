@@ -1,76 +1,102 @@
 #include "akt.hpp"
 #include "logs.hpp"
 #include <math.h>       /* erfc */
+#include <iomanip>
 
 using namespace std;
 
+/**
+ * @name    usage
+ * @brief   print out options
+ *
+ * List of input options
+ *
+ */
 static void usage(){
   cerr << "Compare AFs between two cohorts" << endl;	
   cerr << "Usage:" << endl;
-  cerr << "akt metafreq a.sites.vcf.gz b.sites.vcf.gz -Oz -o meta.sites.vcf.gz" << endl;
-  cerr << "Expects input.bcf to contain genotypes." << endl;
+  cerr << "akt metafreq a.vcf.gz b.vcf.gz -Oz -o meta.sites.vcf.gz" << endl;
+  umessage('r');
+  umessage('R');
+  umessage('T');
+  umessage('o');
+  umessage('O');
+  umessage('a');
   exit(1);
 }
 
-double normalCDF(double x)
-{
-   return 0.5 * erfc(-x * M_SQRT1_2);
-}
-
-void cumulative_sum( vector<double> &log_sum){
+//log(1!), log(2!), log(3!), ...
+void update_cumulative_sum( vector<double> &log_sum, int top){
 	
-	log_sum[0] = 0;
-	log_sum[1] = 0;
-	for(size_t i=2; i<=log_sum.size(); ++i){
-		log_sum[i] = log_sum[i-1] + log(i);
+	if(top <= 1 || log_sum.size() < 2 ){ log_sum.resize(2); log_sum[0] = 0; log_sum[1] = 0; }
+	
+	for(int i=log_sum.size()-1; i<top; ++i){
+		log_sum.push_back( log_sum.back() + log(i+1) );
 	}
 	
 }
 
-inline double log_binomialP(double k, unsigned long n, double p, vector<double> &log_cum){
-    return log_cum[n] - log_cum[k] - log_cum[n-k] + k*log(p) + (n-k)*log(1.0-p);
-} 
 
-inline double binomialP(double k, unsigned long n, double p, vector<double> &log_cum){
-	if(k > n || k < 0){return 0;}
-    return exp( log_binomialP(k, n, p, log_cum) );
-} 
 
-double binomialCDF_leq(double k, unsigned long n, double p, vector<double> &log_cum){
-	if(k > n || k < 0){return 0;}
-	double sum = logz;
-	for(int i=0; i<=k; ++i){ log_sum(sum, log_binomialP(i,n,p,log_cum) ); }
-    return exp(sum);
-} 
-double binomialCDF_geq(double k, unsigned long n, double p, vector<double> &log_cum){
-	if(k > n || k < 0){return 0;}
-	double sum = logz;
-	for(int i=k; i<=n; ++i){ log_sum(sum, log_binomialP(i,n,p,log_cum) ); }
-    return exp(sum);
-} 
+//contingency table
+//a b
+//c d
+//precomputed log sums for hypergeometric distribution
+//eps for finite precision comparison
+double fisher_prob(int a, int b, int c, int d, vector<double> &log_cum, double eps=1e-8){
+
+    //row sums
+	int r1 = a+b;
+	int r2 = c+d;
+	//col sums
+	int c1 = a+c;
+	int c2 = b+d;
+	//lowest marginal sum
+	int least = min( min(r1,r2), min(c1,c2));
+	int t = (least == r1) ? 0 : (least == r2) ? 1 : (least == c1 ) ? 2 : (least == c2) ? 3 : 4;
+	if(t == 4){cerr << "failed to find min marginal in fisher table" << endl; exit(1); }
+
+	//hypergeometric numerator
+	double num = log_cum[r1] + log_cum[r2] + log_cum[c1] + log_cum[c2] - log_cum[r1+r2];
+	//least 'extreme' probability
+	double cutoff = num - (log_cum[a]+log_cum[b]+log_cum[c]+log_cum[d]) + eps;
+
+	//Go through all the allowed tables computing their probability
+	int i=0;	
+	double prob = logz;
+	if(t == 0){ //stretch row1
+		while(i <= r1){
+			double term = num - (log_cum[i] + log_cum[ r1-i ] + log_cum[c1-i] + log_cum[ r2-c1+i]);
+			if(term <= cutoff){ log_sum( prob, term ); }
+			++i;
+		}      
+	} else if(t == 1){ //stretch row2
+		while(i <= r2){
+			double term = num - (log_cum[i] + log_cum[ r2-i ] + log_cum[c2-i] + log_cum[ r1-c2+i]);
+			if(term <= cutoff){ log_sum( prob, term ); }
+			++i;	          
+		}
+	} else if(t == 2){ //stretch col1
+		while(i <= c1){
+			double term = num - (log_cum[i] + log_cum[ r1-i ] + log_cum[c1-i] + log_cum[ r2-c1+i]);
+			if(term <= cutoff){ log_sum( prob, term ); }
+			++i;
+		
+		}
+	} else if(t == 3){ //stretch col2
+		while(i <= c2){
+			double term = num - (log_cum[i] + log_cum[ r2-i ] + log_cum[c2-i] + log_cum[ r1-c2+i]);
+			if(term <= cutoff){ log_sum( prob, term );  }
+			++i;	
+		}
+	} 
+	return exp(prob);
+	
+}
 
 int metafreq_main(int argc, char* argv[])
 {
 
-  /*vector<double> log_c(300,0);
-  cumulative_sum(log_c);
-
-  cout << binomialCDF_geq( 2*(100*0.2) - 7,100,0.2, log_c) << endl; 
-  cout << binomialCDF_leq(7,100,0.2, log_c) << endl; 
-  
-  cout << binomialP( 147, 192, 0.994792, log_c) << endl;
-  cout << binomialCDF_geq( 147, 192, 0.994792, log_c) << endl;
-  
-  exit(1);*/
-		
-  /*cout << normalCDF(0) << " " << log10( 2*normalCDF(0) )<< endl; 
-  cout << normalCDF(-1) << " " << log10( 2*normalCDF(-1) )<< endl; 
-  cout << normalCDF(-2) << " " << log10( 2*normalCDF(-2) )<< endl; 
-  cout << normalCDF(-3) << " " << log10( 2*normalCDF(-3) )<< endl; 
-  cout << normalCDF(-4) << " " << log10( 2*normalCDF(-4) )<< endl; 
-  cout << normalCDF(-5) << " " << log10( 2*normalCDF(-5) )<< endl; 
-  exit(1);*/
-  			
   int c;
   
   if(argc<3) usage();
@@ -112,9 +138,9 @@ int metafreq_main(int argc, char* argv[])
   if( used_r && used_R ){ cerr << "-r and -R cannot be used simultaneously" << endl; exit(1); }
 
   optind++;
-  string filename1 = argv[optind];
+  string filename1 = argv[optind];	//file1
   optind++;
-  string filename2 = argv[optind];
+  string filename2 = argv[optind];	//file2
 			
   int Nsamples;
   
@@ -141,190 +167,251 @@ int metafreq_main(int argc, char* argv[])
 	return 0;
   }
   
+
+  
   //Setup output
 	bcf_hdr_t *hdr = bcf_hdr_dup(sr->readers[0].header);
+	bcf_hdr_merge(hdr, sr->readers[1].header);
 	bcf_hdr_t *new_hdr = bcf_hdr_subset(hdr,0,NULL,NULL); ///creates a new subsetted header (with 0 samples) from src_header
 	bcf_hdr_add_sample(new_hdr, NULL);      /// update internal structures
 
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AF1,Number=A,Type=Float,Description=\"Allele frequency file1\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AC1,Number=A,Type=Float,Description=\"Allele count file1\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AN1,Number=A,Type=Float,Description=\"Allele number file1\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AF2,Number=A,Type=Float,Description=\"Allele frequency file2\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AC2,Number=A,Type=Float,Description=\"Allele count file2\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AN2,Number=A,Type=Float,Description=\"Allele number file2\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AF,Number=A,Type=Float,Description=\"Allele frequency combined\">").c_str());
-	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "QB,Number=A,Type=Float,Description=\"Q-score for different distributions - binomial variance\">").c_str());
-	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "QS,Number=A,Type=Float,Description=\"Q-score for different distributions - sample variance\">").c_str());
-	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "QE,Number=A,Type=Float,Description=\"Q-score exact binomial test\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "QF,Number=A,Type=Float,Description=\"Q-score from fisher's exact test\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "QX,Number=A,Type=Float,Description=\"Q-score from chi squared test\">").c_str());
 
 	htsFile *out_fh  = hts_open( output.c_str(), outputfmt.c_str() );
 	bcf_hdr_write(out_fh, new_hdr);
-	
+	bcf_hdr_destroy(hdr);
+
   
   int Nsamples1 = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples in pedigree
   int Nsamples2 = bcf_hdr_nsamples(sr->readers[1].header);	///number of samples in pedigree
   cerr << Nsamples1 << " samples in " << filename1 << endl;
   cerr << Nsamples2 << " samples in " << filename2 << endl;
 
-  vector<double> log_cum(2*max(Nsamples1, Nsamples2),0);
-  cumulative_sum( log_cum );
+  //largest factorial required is sum of all elements in  contingency table
+  vector<double> log_cum;
 
-
-  bcf1_t *line1, *line2;///bcf/vcf line structure.
-  bcf1_t *rec = bcf_init1() ;
+  bcf1_t *line1, *line2, *line_copy;///bcf/vcf line structure.
 
   int *gt_arr1=(int *)malloc(Nsamples1*2*sizeof(int)),ngt1=Nsamples1*2,ngt_arr1=Nsamples1*2;
   int *gt_arr2=(int *)malloc(Nsamples2*2*sizeof(int)),ngt2=Nsamples2*2,ngt_arr2=Nsamples2*2;
-  
+  int *ac_ptr=(int *)malloc(1*sizeof(int)); int nval = 1;
+  int *an_ptr=(int *)malloc(1*sizeof(int)); 
+
+  bcf1_t *rec = bcf_init1() ;
+
   int total = 0;
+  int found1 = 0;
+  int found2 = 0;
   int kept = 0;
   
-  				int zt = 0;
-				int bt = 0;
-				
+  int ma1 = 0;
+  int ma2 = 0;
+  int both = 0;
+  
+  int np1 = 0;
+  int np2 = 0;
+  
   while(bcf_sr_next_line (sr)) { 
+	  
+	++total;
 	
-	if( bcf_sr_has_line(sr,0) && bcf_sr_has_line(sr,1) ){ //in both
-			line1 =  bcf_sr_get_line(sr, 0);
-			line2 =  bcf_sr_get_line(sr, 1);
-			if( line1->n_allele == 2 && line2->n_allele == 2 ){
+	int nmiss1 = 0, npres1 = 0, sum1 = 0;
+	int nmiss2 = 0, npres2 = 0, sum2 = 0;
 
-				ngt1 = bcf_get_genotypes(sr->readers[0].header, line1, &gt_arr1, &ngt_arr1);  
-				if(ngt1 < 0){ cerr << "Bad genotypes at " << bcf_hdr_id2name(sr->readers[0].header,line1->rid)<<":"<<line1->pos+1 << " in " << filename1 << endl; exit(1); }
-				ngt2 = bcf_get_genotypes(sr->readers[1].header, line2, &gt_arr2, &ngt_arr2);  
-				if(ngt2 < 0){ cerr << "Bad genotypes at " << bcf_hdr_id2name(sr->readers[1].header,line2->rid)<<":"<<line2->pos+1 << " in " << filename2 << endl; exit(1); }
-					
-				int nmiss1 = 0, npres1 = 0;
-				double sum1 = 0, sumsq1 = 0;
-				for(int i=0;i<Nsamples1;++i){ 
-					if(
-					(gt_arr1[2*i]==bcf_gt_missing || (bcf_gt_allele(gt_arr1[2*i])<0) || (bcf_gt_allele(gt_arr1[2*i])>2) ) ||
-					(gt_arr1[2*i+1]==bcf_gt_missing || (bcf_gt_allele(gt_arr1[2*i+1])<0) || (bcf_gt_allele(gt_arr1[2*i+1])>2) ) 
-					){
+	bool masite = false;
+	
+	if( bcf_sr_has_line(sr,0) ){ //in first
+		line1 =  bcf_sr_get_line(sr, 0);
+		++found1;
+		if( line1->n_allele == 2 ){ //biallelic
+
+			ngt1 = bcf_get_genotypes(sr->readers[0].header, line1, &gt_arr1, &ngt_arr1);  
+			if(ngt1 < 0){ //didn't read genotypes, look for AC, AN
+				int ret = bcf_get_info_int32(sr->readers[0].header, line1, "AC", &ac_ptr, &nval);
+				if(ret < 0){
+					cerr << "No AC at " << bcf_hdr_id2name(sr->readers[0].header,line1->rid)<<":"<<line1->pos+1 << " in " << filename1 << endl; exit(1); 
+				}
+				ret = bcf_get_info_int32(sr->readers[0].header, line1, "AN", &an_ptr, &nval);
+				if(ret < 0){
+					cerr << "No AN at " << bcf_hdr_id2name(sr->readers[0].header,line1->rid)<<":"<<line1->pos+1 << " in " << filename1 << endl; exit(1); 
+				}
+				npres1 = an_ptr[0];
+				sum1 = ac_ptr[0];
+				nmiss1 = 0;
+			} else { //read genotypes, calculate AC, AN
+				for(int i=0;i<2*Nsamples1;++i){ 
+					if(gt_arr1[i]==bcf_gt_missing || (bcf_gt_allele(gt_arr1[i])<0) || (bcf_gt_allele(gt_arr1[2])>2)){
 						++nmiss1;
 					} else {
-						double gt = (bcf_gt_allele(gt_arr1[2*i]) + bcf_gt_allele(gt_arr1[2*i+1]))/2.0;
-						sum1 += gt;
-						sumsq1 += gt*gt;
+						sum1 += bcf_gt_allele(gt_arr1[i]);
 						++npres1;
 					}
 				}
-				
-				int nmiss2 = 0, npres2 = 0;
-				double sum2 = 0, sumsq2 = 0;
-				for(int i=0;i<Nsamples2;++i){ 
-					if(
-					(gt_arr2[2*i]==bcf_gt_missing || (bcf_gt_allele(gt_arr2[2*i])<0) || (bcf_gt_allele(gt_arr2[2*i])>2) ) ||
-					(gt_arr2[2*i+1]==bcf_gt_missing || (bcf_gt_allele(gt_arr2[2*i+1])<0) || (bcf_gt_allele(gt_arr2[2*i+1])>2) ) 
-					){
+			}
+			//cout << filename1 << " " << bcf_hdr_id2name(sr->readers[0].header,line1->rid)<<":"<<line1->pos+1 << " "
+			//<< npres1 << " " << sum1 << endl;
+		} else { //not biallelic
+			++ma1;
+			masite = true;
+		}
+	}
+	
+	if( bcf_sr_has_line(sr,1) ){ //in second
+		line2 =  bcf_sr_get_line(sr, 1);
+		++found2;
+		if( line2->n_allele == 2 ){//biallelic
+
+			ngt2 = bcf_get_genotypes(sr->readers[1].header, line2, &gt_arr2, &ngt_arr2);  
+			if(ngt2 < 0){ //didn't read genotypes, look for AC, AN
+
+				int ret = bcf_get_info_int32(sr->readers[1].header, line2, "AC", &ac_ptr, &nval);
+				if(ret < 0){
+					cerr << "No AC at " << bcf_hdr_id2name(sr->readers[1].header,line2->rid)<<":"<<line2->pos+1 << " in " << filename2 << endl; exit(1); 
+				}
+				ret = bcf_get_info_int32(sr->readers[1].header, line2, "AN", &an_ptr, &nval);
+				if(ret < 0){
+					cerr << "No AN at " << bcf_hdr_id2name(sr->readers[1].header,line2->rid)<<":"<<line2->pos+1 << " in " << filename2 << endl; exit(1); 
+				}
+				npres2 = an_ptr[0];
+				sum2 = ac_ptr[0];
+				nmiss2 = 0;
+			} else { //read genotypes, calculate AC, AN
+				for(int i=0;i<2*Nsamples2;++i){ 
+					if(gt_arr2[i]==bcf_gt_missing || (bcf_gt_allele(gt_arr2[i])<0) || (bcf_gt_allele(gt_arr2[i])>2)){
 						++nmiss2;
 					} else {
-						double gt = (bcf_gt_allele(gt_arr2[2*i]) + bcf_gt_allele(gt_arr2[2*i+1]))/2.0;
-						sum2 += gt;
-						sumsq2 += gt*gt;
+						sum2 += bcf_gt_allele(gt_arr2[i]);
 						++npres2;
 					}
 				}
-				
-				double p1 = (double)(sum1)/(double)(npres1);
-				double p2 = (double)(sum2)/(double)(npres2);
-				
-				float QB=-1;
-				float QS=-1;
-				float QE=-1;
-				float pav = (npres1*p1 + npres2*p2)/(double)(npres1 + npres2);
-				float p1f = p1;
-				float p2f = p2;
-					
-
-				//z-test should work in this case			
-				if(npres1 * p1 > 5 && npres2 * p2 > 5 && npres1 * (1 - p1) > 5 && npres2 * (1 - p2) > 5){
-
-					double bvar1 = p1*(1-p1);
-					double bvar2 = p2*(1-p2);
-					double zscore = (p1 - p2)/sqrt( (bvar1/npres1) + (bvar2/npres2) );
-					
-					double svar1 = ((double)(sumsq1)/(double)(npres1)) - p1*p1;
-					double svar2 = ((double)(sumsq2)/(double)(npres2)) - p2*p2;
-					double szscore = (p1 - p2)/sqrt( (svar1/npres1) + (svar2/npres2) );
-					
-					QB = -log10( 2*normalCDF( -fabs(zscore) ) );
-					QS = -log10( 2*normalCDF( -fabs(szscore) ) );
-					++zt;
-				} //else {	//calculate binomial test
-				double p = 0; 
-				
-				if( p1 == 0 ){ p = p2; }
-				else if (p2 == 0){ p = p1; }
-				else if (p1 == 1){ p = p2; }
-				else if (p2 == 1){ p = p1; }
-				else if(npres1 == npres2){ p = (p1 > p2) ? p1 : p2; } 
-				else{ p = (npres1 > npres2) ? p1 : p2; }
-				if(p != 0 && p != 1){ 
-				
-					int expectation, trials, successes;
-					if( (p==p1) ){
-						expectation = 2*round(sum1);
-						trials = 2*npres2;
-						successes = 2*sum2;
-					} else {
-						expectation = 2*round(sum2);
-						trials = 2*npres1;
-						successes = 2*sum1;
-					}
+			}
+		} else { //multiallelic
+			++ma2;
+			masite = true;
+		}
+	}
+	
+	int uh = 0; //which header to use
+	if( bcf_sr_has_line(sr,0) && bcf_sr_has_line(sr,1) && !masite ){ //in both and not multiallelic
+		++both; line_copy =  bcf_sr_get_line(sr, 0); uh = 0; 
+	} 
+	else if( bcf_sr_has_line(sr,0) && !bcf_sr_has_line(sr,1) && !masite ){ //in first and not multiallelic
+		npres2 = np2; sum2 = 0; line_copy =  bcf_sr_get_line(sr, 0); uh = 0;
+	}
+	else if( !bcf_sr_has_line(sr,0) && bcf_sr_has_line(sr,1) && !masite ){ //in second and not multiallelic
+		npres1 = np1; sum1 = 0; line_copy =  bcf_sr_get_line(sr, 1); uh = 1;
+	} 
+	else {
+		masite = true;
+	}
+	if(!masite && npres1>0 && npres2>0){	//can test site
 		
-					//cout << expectation << " " << trials << " " << successes << " " << p << " :: ";
+		//AF
+		double p1 = (double)(sum1)/(double)(npres1);
+		double p2 = (double)(sum2)/(double)(npres2);
+		
+		float QF=-1;
+		float QX=-1;
+		float pav = (npres1*p1 + npres2*p2)/(double)(npres1 + npres2);	//average AF
+		float p1f = p1;
+		float p2f = p2;
+
 					
-					double pval;
-					if(successes > expectation){ //got more
-						pval = binomialCDF_geq( successes,trials,p, log_cum); //one tail
-						pval += binomialCDF_leq( expectation - (successes-expectation),trials,p, log_cum); //2nd tail 
-					} else if(successes < expectation) { //got less 
-						pval = binomialCDF_geq(expectation + (expectation - successes),trials,p, log_cum); 
-						pval += binomialCDF_leq(successes,trials,p, log_cum);
-					} else {	//got exactly what we expected
-						pval = binomialP(successes,trials,p, log_cum);
-					}
-					QE = -log10(pval);
-					cout << bcf_hdr_id2name(sr->readers[0].header,line1->rid)<<":"<<line1->pos+1 << " " << QE << endl;
-				}
-				++bt;
+			//cout << "Writing " << line_copy->pos+1 << " " << npres1 << " " << npres2 << " " << sum1 << " " << sum2 << " " << p1f << " " << p2f << endl;
 			
-				//copy line record 'essentials'
-				rec->rid = line1->rid;
-				rec->pos = line1->pos;
-				rec->qual = line1->qual;
-				rec->rlen = line1->rlen;
+			//Fisher
+			//      	file1 		file2
+			//novar 	n1-sum1 	n2-sum2		| n1+n2 - sum1 - sum2
+			//var		sum1  		sum2		| sum1+sum2
+			//			----------------------------
+			//			n1			n2			| n1+n2	
+			update_cumulative_sum( log_cum , npres1+npres2); 							
+			double pval = fisher_prob( (npres1-sum1),(npres2-sum2), sum1, sum2, log_cum);
+			QF = min(100.0, -log10(pval) );
+						
+			//Chisquared test, with Yates's correction
+			double N = npres1 + npres2;
+			double a = (npres1-sum1);
+			double b = (npres2-sum2);
+			double c = (sum1);
+			double d = (sum2);
+			double c1 = npres1;
+			double c2 = npres2;
+			double r2 = sum1+sum2;
+			double r1 = N - r2;
+			double chi = max(0.0,  fabs( a*d - b*c ) - N*0.5  ) * sqrt( N/(r1*r2*c1*c2) ) ;
 
-				bcf_update_id(new_hdr, rec, line1->d.id);
-				string ref = line1->d.allele[0];
-				string alt = line1->d.allele[1];
-				string alleles = ref + "," + alt;
-				bcf_update_alleles_str(new_hdr, rec, alleles.c_str());
+			//chisq CDF is
+			//\gamma(k/2, x/2) / \Gamma(k/2) for k dof
+			//2x2 table has 1 dof
+			//\Gamma(1/2) = sqrt(pi)
+			//\gamma(1/2,x/2) = sqrt(pi) erf( sqrt(x/2) )
+			double cpval = 1 - erf( chi*M_SQRT1_2 );
+			QX = min(100.0, -log10(cpval) );
+			
 		
-				//add AF annotations
-				bcf_update_info_float(new_hdr, rec, (af_tag + "AF1").c_str(), &p1f, 1);	
-				bcf_update_info_float(new_hdr, rec, (af_tag + "AF2").c_str(), &p2f, 1);	
-				bcf_update_info_float(new_hdr, rec, (af_tag + "AF").c_str(), &pav, 1);	
-				if(QB > 0)bcf_update_info_float(new_hdr, rec, (af_tag + "QB").c_str(), &QB, 1);	
-				if(QS > 0)bcf_update_info_float(new_hdr, rec, (af_tag + "QS").c_str(), &QS, 1);	
-				if(QE > 0)bcf_update_info_float(new_hdr, rec, (af_tag + "QE").c_str(), &QE, 1);	
+			//copy line record 'essentials'
+			rec->rid = bcf_hdr_name2id( new_hdr, bcf_hdr_id2name(sr->readers[uh].header, line_copy->rid) ); 	///two headers may have different representation of chr in hash table
+			rec->pos = line_copy->pos;
+			rec->qual = line_copy->qual;
+			rec->rlen = line_copy->rlen;
 
-				bcf_unpack(rec, BCF_UN_ALL);				
-				bcf_write1(out_fh, new_hdr, rec);
-				bcf_clear1(rec);	
+			bcf_update_id(new_hdr, rec, line_copy->d.id);
+			string ref = line_copy->d.allele[0];
+			string alt = line_copy->d.allele[1];
+			string alleles = ref + "," + alt;
+			bcf_update_alleles_str(new_hdr, rec, alleles.c_str());
+
+			//add AF annotations
+			bcf_update_info_float(new_hdr, rec, (af_tag + "AF1").c_str(), &p1f, 1);	
+			bcf_update_info_float(new_hdr, rec, (af_tag + "AC1").c_str(), &sum1, 1);	
+			bcf_update_info_float(new_hdr, rec, (af_tag + "AN1").c_str(), &npres1, 1);	
+			bcf_update_info_float(new_hdr, rec, (af_tag + "AF2").c_str(), &p2f, 1);	
+			bcf_update_info_float(new_hdr, rec, (af_tag + "AC2").c_str(), &sum2, 1);	
+			bcf_update_info_float(new_hdr, rec, (af_tag + "AN2").c_str(), &npres2, 1);	
+			bcf_update_info_float(new_hdr, rec, (af_tag + "AF").c_str(), &pav, 1);	
+
+			if(QF <= 0){QF = 0;} //-0 annoying
+			bcf_update_info_float(new_hdr, rec, (af_tag + "QF").c_str(), &QF, 1);	
+			if(QX <= 0){QX = 0;} //-0 annoying
+			bcf_update_info_float(new_hdr, rec, (af_tag + "QX").c_str(), &QX, 1);	
 					
-				++kept;
-			}//biallelic
-		} //in both
-		++total;
+			bcf_unpack(rec, BCF_UN_ALL);		
+			bcf_write1(out_fh, new_hdr, rec);
+			bcf_clear1(rec);	
+
+			++kept;
+		
+		
+		np1 = npres1;
+		np2 = npres2;
+		
+		
+	}
   }//reader
   
-  cerr << zt << " " << bt << endl;
+  bcf_destroy1(rec);
   free(gt_arr1);
   free(gt_arr2);
+  free(ac_ptr);
+  free(an_ptr);
   bcf_sr_destroy(sr);	
   hts_close(out_fh);
   bcf_hdr_destroy(new_hdr);
-  bcf_destroy1(rec);
-	
-  cerr << "Kept " << kept << " markers out of " << total << endl;
+  
+  cerr << "Tested " << kept << " sites out of " << total << endl;
+  cerr << "Found " << found1 << " sites in " << filename1 << " and skipped " << ma1 << " multiallelic ones" << endl;
+  cerr << "Found " << found2 << " sites in " << filename2 << " and skipped " << ma2 << " multiallelic ones" << endl;
+  cerr << both << " biallelic sites in both files." << endl;
+
  
   return 0;
 }

@@ -1,14 +1,32 @@
+/**
+ * @file   kin.cpp
+ * @Author Rudy Arthur (rudy.d.arthur@gmail.com)
+ * @brief  Kinship calculator.
+ *
+ * A simple tool to read vcf/bcf files and calculate IBD and kinship.
+ * Calculate allele frequencies from data or from input file.
+ */
+ 
 #include "akt.hpp"
 #include "logs.hpp"
 #include "kin.hpp"
 #include "reader.hpp"
 #include <bitset>
 
+///Size of bitset. Arbitrary but 128 works well in practice
 #define L 128
 
 using namespace std;
 
-//read pairs of samples to compute ibd sharing between
+/**
+ * @name    read_pair
+ * @brief   read input file containing sample pair names
+ *
+ * @param [in] in file 		handle of input list
+ * @param [in] relpairs  	vector of pairs found
+ * @param [in] name_to_id  	samples found in VCF
+ *
+ */
 void read_pairs(ifstream &in, vector< pair<string, string> > &relpairs, map<string,int> &name_to_id )
 {
 	
@@ -37,6 +55,14 @@ void read_pairs(ifstream &in, vector< pair<string, string> > &relpairs, map<stri
 	
 }
 
+/**
+ * @name    make_pair_list
+ * @brief   make a list of all possible sample pairs
+ *
+ * @param [in] relpairs  	vector of pairs
+ * @param [in] names  		samples found in VCF
+ *
+ */
 void make_pair_list(vector< pair<string, string> > &relpairs, vector<string> names){
 	for(size_t j1=0; j1<names.size(); ++j1){
 	for(size_t j2=j1+1; j2<names.size(); ++j2){
@@ -44,6 +70,13 @@ void make_pair_list(vector< pair<string, string> > &relpairs, vector<string> nam
 	}}
 }
 
+/**
+ * @name    usage
+ * @brief   print out options
+ *
+ * List of input options
+ *
+ */
 static void usage(){
   cerr << "Calculate IBD stats from a VCF" << endl;	
   cerr << "Usage:" << endl;
@@ -70,8 +103,6 @@ static void usage(){
 int kin_main(int argc, char* argv[])
 {
 	
-
-		
   int c;
   
   if(argc<3) usage();
@@ -145,37 +176,39 @@ int kin_main(int argc, char* argv[])
   }
 
   optind++;
-  string filename = argv[optind];
+  string filename = argv[optind];	///input VCF
 			
   int Nsamples;
-  vector<string> names;
-  map<string,int> name_to_id;
+  vector<string> names;			///sample names
+  map<string,int> name_to_id;   ///sample ids
 	  
   int sites=0,markers=0,num_sites=0,num_study=0;
   
   bcf_srs_t *sr =  bcf_sr_init() ; ///htslib synced reader.
-  sr->collapse = COLLAPSE_NONE;
-  sr->require_index = 1;
-  
-  if(regions != ""){
+  sr->collapse = COLLAPSE_NONE;		///require matching ALTs
+  sr->require_index = 1;			///require indexed VCF
+
+  ///subset regions
+  if(regions != ""){	
 		if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 ){
 			cerr << "Failed to read the regions: " <<  regions << endl; return 0;
 		}
   }
-	
+  ///open input VCF
   if(!(bcf_sr_add_reader (sr, filename.c_str() ))){ 
     cerr << "Problem opening " << filename << endl; 
     cerr << "Input file not found." << endl;
     bcf_sr_destroy(sr);	
     return 0;
   }
+  ///Open file of allele freqs
   if(!(bcf_sr_add_reader (sr, pfilename.c_str() ))){ 
 	cerr << "Problem opening " << pfilename << endl; 
 	cerr << "Sites file not found." << endl;
 	bcf_sr_destroy(sr);	
 	return 0;
   }
-  
+  ///subsample input vcf
   if(sargs.subsample){ bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); }
   
   int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples in pedigree
@@ -187,7 +220,7 @@ int kin_main(int argc, char* argv[])
 	name_to_id[tmp] = i;
   }
   
-  vector< vector< vector< bitset<L> > > > bits(N); //[sample][site][type][val]
+  vector< vector< vector< bitset<L> > > > bits(N); ///[sample][site][type][val]
 
   int count=0;
 
@@ -197,7 +230,7 @@ int kin_main(int argc, char* argv[])
   float *af_ptr=(float *)malloc(1*sizeof(float)); int nval = 1;
 
   int bc = 0;
-  //IBD DENOMINATOR
+  ///IBD DENOMINATOR
   float n00 = 0;
   float n10 = 0;
   float n11 = 0;
@@ -205,21 +238,22 @@ int kin_main(int argc, char* argv[])
   float n21 = 0;
   float n22 = 0;
   
-  while(bcf_sr_next_line (sr)) { 
+  while(bcf_sr_next_line (sr)) { ///read file
 		
-    if( bcf_sr_has_line(sr,1) ){	//present in sites file.
+    if( bcf_sr_has_line(sr,1) ){	///present in sites file.
 	  line2 =  bcf_sr_get_line(sr, 1);
-      if(line2->n_allele == 2){		//bi-allelic
+      if(line2->n_allele == 2){		///bi-allelic
 
 		int nmiss=0;
 		int npres=0;
-		int sum = 0;
+		int sum = 0;	///AC
 		num_sites++;
-		if(bcf_sr_has_line(sr,0)) { //present in the study file
+		if(bcf_sr_has_line(sr,0)) { ///present in the study file
 			line =  bcf_sr_get_line(sr, 0);
 			ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);  
 			if(ngt < 0){ cerr << "Bad genotypes at " << line->pos+1 << endl; exit(1); }
 			
+			///htslib -> int
 			for(int i=0;i<2*N;i++){ 
 				if(gt_arr[i]==bcf_gt_missing || (bcf_gt_allele(gt_arr[i])<0) || (bcf_gt_allele(gt_arr[i])>2)  ){
 					gt_arr[i] = -1;
@@ -230,7 +264,7 @@ int kin_main(int argc, char* argv[])
 				}
 			}
 
-			//only take one of every 'thin' of these sites
+			///only take one of every 'thin' of these sites
 			if((count++)%thin==0 ){ 
 
 				float p;
@@ -242,18 +276,20 @@ int kin_main(int argc, char* argv[])
 				  if( ret<0 || nval != 1 ){ cerr << (af_tag + "AF") << " read error at " << line2->rid << ":" << line->pos+1 << endl; exit(1); }
 				  p = af_ptr[0];
 				}
-				if( (p < 0.5) ? ( p > min_freq ) : (1-p > min_freq) ){ 	//min af
+				if( (p < 0.5) ? ( p > min_freq ) : (1-p > min_freq) ){ 	///min af
 				
 					float q = 1-p;
 					n00 += 2*p*p*q*q;
 						
-					n11 += 2*p*q; //2ppq + 2qqp = 2pq(p+q) = 2pq == Hij
-					n10 += 4*p*q*(p*p + q*q); //4pppq + 4qqqp = 4pq(pp + qq)
+					n11 += 2*p*q; ///2ppq + 2qqp = 2pq(p+q) = 2pq == Hij
+					n10 += 4*p*q*(p*p + q*q); ///4pppq + 4qqqp = 4pq(pp + qq)
 						
-					n20 += p*p*p*p + q*q*q*q + 4*q*q*p*p; //pppp + qqqq + 4ppqq 
-					n21 += p*p + q*q; //ppp + qqq + ppq + pqq = pp(p+q) + qq(q+p) = pp + qq
+					n20 += p*p*p*p + q*q*q*q + 4*q*q*p*p; ///pppp + qqqq + 4ppqq 
+					n21 += p*p + q*q; ///ppp + qqq + ppq + pqq = pp(p+q) + qq(q+p) = pp + qq
 					n22 += 1; 
     
+					///for each site record truth table
+					///g=0  g=1  g=2  g=missing
 					for(int i=0; i<N; ++i){ 
 						if(bc == 0){ bits[i].push_back( vector< bitset<L> >(4, bitset<L>() ) ); }
 						if(gt_arr[2*i] != -1 && gt_arr[2*i+1] != -1){
@@ -261,8 +297,8 @@ int kin_main(int argc, char* argv[])
 						} else {
 							bits[i].back()[ 3 ][bc] = 1;
 						}
-						
 					}
+					///chunks of size L
 					bc = (bc+1)%(L);
 			  
 					++markers;
@@ -284,7 +320,7 @@ int kin_main(int argc, char* argv[])
   cerr << "Kept " << markers << " markers out of " << sites << " in panel." << endl;
   cerr << num_study << "/"<<num_sites<<" of study markers were in the sites file"<<endl;
   
-  //IBD0 IBD1 IBD2 NSNP
+  ///IBD0 IBD1 IBD2 NSNP
   vector< vector<vector<float> > > IBD( 4, vector< vector<float> >(Nsamples, vector<float>(Nsamples,0) ) );
   vector< pair<string, string> > relpairs;
   if( pairfile != "" ){
@@ -305,19 +341,20 @@ int kin_main(int argc, char* argv[])
 	IBD[2][j1][j2] = 0;
 	IBD[3][j1][j2] = 0;
 	for(size_t i=0; i<bits[j1].size(); ++i){
-		IBD[0][j1][j2] += (bits[j1][i][0] & bits[j2][i][2]).count() + (bits[j1][i][2] & bits[j2][i][0]).count();
-		IBD[2][j1][j2] += (bits[j1][i][0] & bits[j2][i][0]).count() + (bits[j1][i][1] & bits[j2][i][1]).count() + (bits[j1][i][2] & bits[j2][i][2]).count();
-		IBD[3][j1][j2] += (bits[j1][i][3] | bits[j2][i][3]).count();
+		IBD[0][j1][j2] += (bits[j1][i][0] & bits[j2][i][2]).count() + (bits[j1][i][2] & bits[j2][i][0]).count();	///opposite homozygotes
+		IBD[2][j1][j2] += (bits[j1][i][0] & bits[j2][i][0]).count() + (bits[j1][i][1] & bits[j2][i][1]).count() + (bits[j1][i][2] & bits[j2][i][2]).count();	///same genotype
+		IBD[3][j1][j2] += (bits[j1][i][3] | bits[j2][i][3]).count();	///missing in both
 	}
-	IBD[1][j1][j2] = markers-IBD[3][j1][j2]-IBD[0][j1][j2]-IBD[2][j1][j2];
+	IBD[1][j1][j2] = markers-IBD[3][j1][j2]-IBD[0][j1][j2]-IBD[2][j1][j2];	///consistent with IBD1
 
+	///method of moments
 	IBD[0][j1][j2] /= n00;	
 	IBD[1][j1][j2] = (IBD[1][j1][j2] - IBD[0][j1][j2]*n10)/n11;
 	IBD[2][j1][j2] = (IBD[2][j1][j2] - IBD[0][j1][j2]*n20 - IBD[1][j1][j2]*n21)/n22;
 	IBD[3][j1][j2] = n22 - IBD[3][j1][j2];
 
+	///normalize in [0,1]
 	if( norm ){
-		//fit in [0,1]
 		if(IBD[0][j1][j2] > 1){ //very unrelated, project to 100
 		   IBD[0][j1][j2] = 1;  IBD[1][j1][j2] = 0; IBD[2][j1][j2] = 0; 
 		}
@@ -329,9 +366,9 @@ int kin_main(int argc, char* argv[])
 	}
   }
 	
-  for(size_t r=0; r<relpairs.size(); ++r){ //all sample pairs
+  for(size_t r=0; r<relpairs.size(); ++r){ ///all sample pairs
 
-	  int i = name_to_id[ relpairs[r].first  ]; //sample ids
+	  int i = name_to_id[ relpairs[r].first  ]; ///sample ids
 	  int j = name_to_id[ relpairs[r].second ];
 	 
       float ks = 0.5 * IBD[2][i][j] + 0.25 * IBD[1][i][j];

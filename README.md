@@ -31,7 +31,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	1ae5a8b
+Version:	ab0b1e3
 Contact:	rarthur@illumina.com
 
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
@@ -46,6 +46,8 @@ Usage:	akt <command> [options]
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
 	stats                    calculate AF and LD metrics
+
+	metafreq                 examine two files for AF differences
 
 ```
 ##kin
@@ -504,6 +506,37 @@ choosing an arbitrary vector orthogonal to the sides of the tetrahedron made by 
 and roughly equidistant from them. There are two possible choices of sign: the positive one is always chosen.
 
 
+
+##metafreq
+```
+Compare AFs between two cohorts
+Usage:
+akt metafreq a.vcf.gz b.vcf.gz -Oz -o meta.sites.vcf.gz
+Expects input.bcf to contain genotypes.
+	 -r --regions:			chromosome region
+	 -R --regions-file:		list of regions, file
+	 -T --targets-file:		intersecting VCF
+	 -o --output:			output vcf
+	 -O --outputfmt:		output vcf format
+	 -a --aftag:			allele frequency tag
+```
+* -T : Indexed VCF file containing intersecting sites and relevant site info. 
+* -r : Comma-separated list of regions, chr:from-to.
+* -R : File containing 3 columns: CHROM, POS and POS_TO. 
+* -a : Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF. 
+* -o : Output to vcf.
+* -O : Output format of vcf b=compressed bcf, z=compressed vcf.
+
+
+This tool lets us find sites with statistically significant differences in frequency between two samples. 
+```
+./akt ibd f1.bcf -p f2.bcf -O b -o out.bcf 
+```
+The file `out.bcf` contains two fields `QF` and `QX` equal to -log10 of the p-value
+calculated using Fisher's exact test and the chi-squared test, respectively.
+Higher scores indicate a more statistically significant difference. These values are capped at 100
+and typically the chi-squared test is more likely to reject the null-hypothesis that
+the two cohorts have identical distributions.
 
 ##Example Workflow
 ##Test Data
