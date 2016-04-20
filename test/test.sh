@@ -8,15 +8,8 @@ cd test/
 
 ##get data
 data=ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf
-if [ ! -f $data ]
-then
-    wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
-fi
-
-if [ ! -f ${data}.csi ]
-then
-    wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.csi
-fi
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.csi
 
 ##pca of data
 time ../akt pca -R ../data/1000G.snps.nochr.vcf.gz $data  > pca1.txt
