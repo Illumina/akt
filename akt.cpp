@@ -55,7 +55,7 @@ static void usage(){
     cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;
     cerr << "\tcluster                  perform cluster analyses" << endl;
     cerr << "\tLDplot                   output correlation matrix" << endl;
-    cerr << "\tstats                    calculate AF and LD metrics" << endl<<endl;
+    cerr << "\tstats                    calculate AF and LD metrics" << endl;
     cerr << "\tmetafreq                 examine two files for AF differences" << endl<<endl;
     exit(1);
 }
