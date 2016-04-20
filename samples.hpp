@@ -3,6 +3,7 @@
 
 using namespace std;
 
+//struct with infor for htslib sample subsetting
 class sample_args{
 public:
 

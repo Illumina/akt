@@ -31,7 +31,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	1ae5a8b
+Version:	ab0b1e3
 Contact:	rarthur@illumina.com
 
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
@@ -46,6 +46,8 @@ Usage:	akt <command> [options]
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
 	stats                    calculate AF and LD metrics
+
+	metafreq                 examine two files for AF differences
 
 ```
 ##kin
@@ -505,6 +507,36 @@ and roughly equidistant from them. There are two possible choices of sign: the p
 
 
 
+##metafreq
+```
+Compare AFs between two cohorts
+Usage:
+akt metafreq a.vcf.gz b.vcf.gz -Oz -o meta.sites.vcf.gz
+	 -r --regions:			chromosome region
+	 -R --regions-file:		list of regions, file
+	 -T --targets-file:		intersecting VCF
+	 -o --output:			output vcf
+	 -O --outputfmt:		output vcf format
+	 -a --aftag:			allele frequency tag
+```
+* -T : Indexed VCF file containing intersecting sites and relevant site info. 
+* -r : Comma-separated list of regions, chr:from-to.
+* -R : File containing 3 columns: CHROM, POS and POS_TO. 
+* -a : Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF. 
+* -o : Output to vcf.
+* -O : Output format of vcf b=compressed bcf, z=compressed vcf.
+
+
+This tool lets us find sites with statistically significant differences in frequency between two samples. 
+```
+./akt ibd f1.bcf -p f2.bcf -O b -o out.bcf 
+```
+The file `out.bcf` contains two fields `QF` and `QX` equal to -log10 of the p-value
+calculated using Fisher's exact test and the chi-squared test, respectively.
+Higher scores indicate a more statistically significant difference. These values are capped at 100
+and typically the chi-squared test is more likely to reject the null-hypothesis that
+the two cohorts have identical distributions.
+
 ##Example Workflow
 ##Test Data
 
@@ -789,3 +821,35 @@ data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopula
 ![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_alladmix.png)
 
 
+##Checking Site Frequency Distributions
+Given two populations, or even the same population called using two different pipelines, we can
+ask if the observed allele frequencies are consistent with each other. For example: say in cohort 1
+at a particular site we observed 20 variants out of 200 possible alleles while in cohort 2 we observed 15 out of 100.
+Is the difference in allele frequency 0.1 versus 0.15, significant given the cohort sizes? 
+We provide two statistical tests: Fisher's exact test and the chi-squared test.
+
+For example - we can try to find at which sites European and East Asian samples have statistically different allele frequencies.
+First we subset the data
+```
+bcftools view ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -S EAS.samples -r 20 -O b -o EAS.20.bcf --force-samples
+bcftools view ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -S EUR.samples -r 20 -O b -o EUR.20.bcf --force-samples
+bcftools index EAS.20.bcf
+bcftools index EUR.20.bcf
+```
+Then run `akt metafreq`
+```
+./akt metafreq EAS.20.bcf EUR.20.bcf -O b -o mf.bcf
+```
+
+The file `mf.bcf` is a site only VCF containing -log10(p-value) for each site where p-values
+are calculated using Fisher's exact (QF) and chi-squared (QX) tests. Higher values indicate
+more significant differences. A good predictor
+of population differences is simply the difference in allele frequency.
+Observing AF=0.99 in one group and AF=0.05 in another is a sure sign those groups differ at that site.
+![alt text](https://raw.githubusercontent.com/Illumina/akt/metafreq/docs/test_metafreq.png)
+
+The QF score is correlated with allele frequency difference as it should be. Of course, the QF score
+is much more powerful for significance testing. As well as differentiating
+sites in unrelated populations this tool could also be of use for quality control of different bioinformatics
+pipelines. Systematic errors made in one but not the other would be highly statistically significant and so have 
+large QF and QX values.
