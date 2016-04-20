@@ -8,15 +8,8 @@ cd test/
 
 ##get data
 data=ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf
-if [ ! -f $data ]
-then
-    wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
-fi
-
-if [ ! -f ${data}.csi ]
-then
-    wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.csi
-fi
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.csi
 
 ##pca of data
 time ../akt pca -R ../data/1000G.snps.nochr.vcf.gz $data  > pca1.txt
@@ -51,3 +44,11 @@ time ../akt LDplot $data -r 20:0-200000 > LDplot.out
 
 ##calculate admixture fractions
 time ../akt admix pca2.txt -c 2-6 -C ../data/1000G.pca_to_admix > admix.out
+
+##simple metafreq test
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz.tbi
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHORT.chr20.20140722.sites.vcf.gz
+wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHORT.chr20.20140722.sites.vcf.gz.tbi
+
+time ../akt metafreq UK10K_COHORT.chr20.20140722.sites.vcf.gz ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz -Oz -o uk10_1000g.frq.chr20.vcf.gz

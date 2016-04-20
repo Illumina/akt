@@ -1,6 +1,6 @@
 /**
  * @file   vcfpca.cpp
- * @Author Rudy Arthur (rarthur@illumina.com) and Jared O'Connell (joconnell@illumina.com)
+ * @Author Rudy Arthur (rudy.d.arthur@gmail.com) and Jared O'Connell (joconnell@illumina.com)
  * @date   May, 2015
  * @brief  PCA tool.
  *
@@ -71,17 +71,19 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 	sr->require_index = 1;
 	sr->collapse=COLLAPSE_NONE;
 
+	///set the regions
 	if ( bcf_sr_set_regions(sr, vcf2.c_str(), 1)<0 ){
 		cerr << "Failed to read the regions: " <<  vcf2 << endl; exit(1);
 	}
+	///input file
 	if(!(bcf_sr_add_reader (sr, vcf1.c_str() ))){
 		cerr << "Problem opening " + vcf1 << endl; exit(1);
 	}
+	///sites file
 	if(!(bcf_sr_add_reader (sr, vcf2.c_str() ))){
 		cerr << "Problem opening " + vcf2 << endl; exit(1);
 	}
-	
-
+	///subsample
     if(sargs.subsample){ bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); }
 		
 	int ret;
@@ -101,22 +103,22 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 	int nPC=0; ///number of pcs;
 	vector< vector<float> > PC(N);///principal components.
 
-	vector<float> gs(N);///genotypes, defaults to homref - these should be easily called sites.	
-	float *af_ptr=NULL,af;
+	vector<float> gs(N);///genotypes, defaults to 0/0 - these should be easily called sites.	
+	float *af_ptr=NULL,af;///read AF
 	int nval = 0;
 		
-	while(bcf_sr_next_line (sr)) { 
+	while(bcf_sr_next_line (sr)) { //read
 
-	if(bcf_sr_has_line(sr,1)){ ++n1; }		
+	if(bcf_sr_has_line(sr,1)){ ++n1; }	//in sites file	
 	
-	if(bcf_sr_has_line(sr,0) &&  (bcf_sr_has_line(sr,1))){
+	if(bcf_sr_has_line(sr,0) &&  (bcf_sr_has_line(sr,1))){	//in both files
 		++n0;
 		line1 =  bcf_sr_get_line(sr, 1);
 		ret =  bcf_get_info_float(sr->readers[1].header, line1, "AF", &af_ptr, &nval); ///get allele frequency
 		af = af_ptr[0];
 
 		line0 =  bcf_sr_get_line(sr, 0);
-		ngt = bcf_get_genotypes(sr->readers[0].header, line0, &gt_arr, &ngt_arr);
+		ngt = bcf_get_genotypes(sr->readers[0].header, line0, &gt_arr, &ngt_arr);	//get genotypes
 
 		if(ngt==2*N){	///only diploid sites
 			for(int i=0; i<2*N; i+=2){	///all samples in vcf
@@ -130,7 +132,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 		
 		if(ret!=1) {
 			cerr << "WARNING: no AF field at "<<line1->pos+1<<endl;
-		}  else {
+		}  else {	
 			for(int n=0; n<N; ++n){
 				
 				if(!(gs[n]>=0 && gs[n]<=2)) {
@@ -138,6 +140,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 				  <<" g = "<<gs[n]<<" af="<<af<<endl;
 				  exit(1);
 				}
+				//read PCA loadings
 				ret =  bcf_get_info_float(sr->readers[1].header , line1, "WEIGHT", &wts, &nwts);
 				if(ret<=0) {
 				  cerr << bcf_hdr_id2name(sr->readers[1].header,line1->rid)<<":"<<line1->pos+1 << endl;
@@ -147,9 +150,8 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 			
 				  
 				if(!isnan(wts[0])) {///sometimes you get nan weights due to monormoprhic sites in 1000g
-				  gs[n] -= 2*af;
-				  //gs[n] /= sqrt(2*af*(1-af)); //let the user add this elsewhere if they really want it
-				  if(nPC==0) {
+				  gs[n] -= 2*af; //zero mean
+				  if(nPC==0) {	//set correct number of Principle components
 					if( don ){
 						if(maxn > 0){ nPC = min( maxn, nwts ); }
 						else { nPC = nwts;  }
@@ -160,10 +162,10 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 					cerr << "Using " << nPC << " PCs from input file." << endl;
 					Npca = nPC;
 				  }
-				  if(PC[n].size() != (unsigned)nPC){
+				  if(PC[n].size() != (unsigned)nPC){	//initialise vector
 					PC[n].assign(nPC,0.);
 				  }
-				  for(int i=0;i<nPC;i++){
+				  for(int i=0;i<nPC;i++){	//projection
 					PC[n][i] += wts[i]*gs[n];
 				  }
 				  if( isnan( PC[n][0] ) ){
@@ -200,7 +202,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 
 
 /**
- * @name    GtoMatrix
+ * @name    DatatoMatrix
  * @brief   Turn a std vector into an Eigen Matrix
  *
  * Eigen matrices have no push operator, since number of markers is variable
@@ -227,7 +229,20 @@ void DatatoMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, in
 		}
 	} 
 }
-
+/**
+ * @name    DatatoSymmMatrix
+ * @brief   Turn a std vector into an Eigen Matrix subtract bias correction
+ * http://www.ncbi.nlm.nih.gov/pubmed/26482676
+ *
+ * Eigen matrices have no push operator, since number of markers is variable
+ * we have to fill the matrix ourselves.
+ * @param [in] A   Matrix to get written
+ * @param [in] G   vector containing vcf info
+ * @param [in] AF  vector of allele frequencies * 2
+ * @param [in] N   number of samples
+ * @param [in] M   number of markers
+ *
+ */
 void DatatoSymmMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, int M){
 
 float norm = 0;
@@ -281,23 +296,26 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 	bcf_srs_t *sr =  bcf_sr_init() ; ///htslib synced reader.
 	sr->require_index = 1;
 
+	//set the regions
 	if(regions != ""){
 		if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 ){
 			cerr << "Failed to read the regions: " <<  regions << endl; exit(1);
 		}
 		if(regions_is_file){ pfilename = regions; }
 	}
-	
+	//input file
 	if(!(bcf_sr_add_reader (sr, input_name.c_str() ))){
 		string tmp = input_name;
 		cerr << "Problem opening " + tmp << endl; exit(1);
 	}
+	//sites file
 	if(pfilename != ""){
 		if(!(bcf_sr_add_reader (sr, pfilename.c_str() ))){
 			string tmp = pfilename;
 			cerr << "Problem opening " + pfilename << endl; exit(1);
 		}
 	}
+	//subset samples
     if(sargs.subsample){ bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); }
 		
 	int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples
@@ -318,7 +336,7 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 	int count=0;
 	bcf1_t *line;///bcf/vcf line structure.
 	
-	while(bcf_sr_next_line (sr)) { 
+	while(bcf_sr_next_line (sr)) { //read
 		
 		bool read = ( pfilename == "" ) ? true : (bcf_sr_has_line(sr,0) && bcf_sr_has_line(sr,1));
 		if( read ){	//present in sites file and sample file.
@@ -329,7 +347,7 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 				 bcf_hdr_id2name(sr->readers[0].header,line->rid) << ":" << line->pos+1 << endl; exit(1); }
 			
 			int mac = 0,nmiss=0;
-			for(int i=0;i<2*N;i++){
+			for(int i=0;i<2*N;i++){	//calc allele count
 				if(gt_arr[i]!=bcf_gt_missing){
 					mac += bcf_gt_allele(gt_arr[i]);
 				} else {
@@ -338,9 +356,11 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 			}
 			float frq = (float)mac / (float)(2*N-nmiss);	///allele frequency
 
+			//minor allele freq
 			if(mac > (2*N-nmiss)/2) mac = (2*N-nmiss)-mac;
 			if(mac > (2*N-nmiss)*m) ++count;
 
+			//keep every k of these sites
 			if(count%k==0 && mac > (2*N-nmiss)*m ){ //remember, 0%k == 0
 				
 				float mu = 0;	///actual mean =/= frq because default = 2*frq
@@ -380,7 +400,7 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 	int M = nkept;
 	
 	int vsize = M;
-
+	//vector to Eigen
 	MatrixXf A(N, vsize); ///rows = samples, cols = markers
 	if(covn >= 2){
 		vsize = N;
@@ -397,14 +417,14 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
     ofstream out_file;
     if(svfilename != ""){ out_sv = true; out_file.open ( svfilename.c_str() ); }
 		
-    if(a){
+    if(a){ //Jacobi algorithm
 		JacobiSVD<MatrixXf> svd(A, ComputeThinU | ComputeThinV);
 		for(int j=0; j<npca; ++j){ 
 			P.col(j).noalias() = svd.matrixU().col(j) * svd.singularValues()(j) ;
 			if(out_sv){ out_file << svd.singularValues()(j) << "\n";  }
 		}
 		V.noalias() = svd.matrixV().block(0,0,vsize,npca);
-    } else {
+    } else {	//RedSVD algorithm
 		int e = min(  min(N,vsize)-npca  , extra);
 		RedSVD::RedSVD<MatrixXf> svd(A, npca + e);
 		for(int j=0; j<npca; ++j){ 
@@ -416,10 +436,9 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 
 	if(out_sv){ out_file.close(); }
 	
-	if(o){ 
+	if(o){ 	//output sites file
 		
 		cerr <<"Printing coefficients to " << output_name << endl; 
-		  
 		  
 		bcf_srs_t *reader =  bcf_sr_init() ; ///htslib synced reader.
 		reader->require_index = 1;
@@ -441,7 +460,7 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 		}
 		
 		bcf_hdr_t *hdr = bcf_hdr_dup(reader->readers[0].header);
-
+		//new header
 		bcf_hdr_append(hdr, "##INFO=<ID=AF,Number=A,Type=Float,Description=\"Alternate allele frequency\">");
 		bcf_hdr_append(hdr, "##INFO=<ID=WEIGHT,Number=20,Type=Float,Description=\"PCA loading\">");
 
@@ -463,8 +482,9 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 			if( read ){	//present in sites file and sample file.
 			
 				line =  bcf_sr_get_line(reader, 0); 
-				if( (unsigned)idx < sites.size() && sites[idx] == nline ){
+				if( (unsigned)idx < sites.size() && sites[idx] == nline ){	//tracks sites which were included in PCA
 					
+					//copy line essentials
 					rec->rid = line->rid;
 					rec->pos = line->pos;
 					rec->qual = line->qual;

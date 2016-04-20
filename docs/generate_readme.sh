@@ -17,6 +17,7 @@ cat stats.md >> ../README.md; 		../akt stats 2> tmp; 		sed -e '/replace_stats_ru
 cat ibd.md >> ../README.md; 		../akt ibd 2> tmp; 			sed -e '/replace_ibd_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
 cat LDplot.md >> ../README.md; 		../akt LDplot 2> tmp; 		sed -e '/replace_LDplot_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
 cat admix.md >> ../README.md; 		../akt admix 2> tmp; 		sed -e '/replace_admix_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
+cat metafreq.md >> ../README.md; 		../akt metafreq 2> tmp; 		sed -e '/replace_metafreq_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
 
 echo -e "##Example Workflow" >> ../README.md
 cat Data.md >> ../README.md
@@ -27,6 +28,8 @@ cat AF.md >> ../README.md
 cat SegIBD.md >> ../README.md
 cat Corplot.md >> ../README.md
 cat AdFrac.md >> ../README.md
+cat MF.md >> ../README.md
+
 
 declare -A options;
 options=(["-o"]="output_option"); 
