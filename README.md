@@ -31,7 +31,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	ab0b1e3
+Version:	48e66c0
 Contact:	rarthur@illumina.com
 
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
@@ -46,7 +46,6 @@ Usage:	akt <command> [options]
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
 	stats                    calculate AF and LD metrics
-
 	metafreq                 examine two files for AF differences
 
 ```
@@ -420,7 +419,7 @@ Expects input_filename.vcf to contain hard genotypes
 
 This tool lets us find regions which are shared IBD between two samples. 
 ```
-./akt ibd input.bcf -p panel.bcf -r 2 > sharing
+./akt ibd input.bcf -R panel.bcf -r 2 > sharing
 ```
 The file `sharing` is in the format
 ```

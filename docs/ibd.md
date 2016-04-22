@@ -20,7 +20,7 @@ replace_ibd_run
 
 This tool lets us find regions which are shared IBD between two samples. 
 ```
-./akt ibd input.bcf -p panel.bcf -r 2 > sharing
+./akt ibd input.bcf -R panel.bcf -r 2 > sharing
 ```
 The file `sharing` is in the format
 ```
