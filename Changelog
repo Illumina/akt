@@ -1,2 +1,6 @@
+#2016.05.06
+* added a check for 0 samples in akt pca
+
 #2016.04.08
-- initial public release
+* initial public release
+
