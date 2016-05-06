@@ -92,7 +92,10 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 	float *wts=NULL;int nwts=0;
 
 	int N = bcf_hdr_nsamples(sr->readers[0].header); ///number of samples;
-
+	if(N<=0) {
+	  cerr<<"ERROR: no samples found in "+vcf1<<endl;
+	  exit(1);
+	}
 	cerr << N << " samples" << endl;
 	Nsamples = N;
 	for(int i=0; i<N; ++i){ 
@@ -319,7 +322,10 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
     if(sargs.subsample){ bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); }
 		
 	int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples
-		
+	if(N<=0) {
+	  cerr<<"ERROR: no samples found in "+input_name<<endl;
+	  exit(1);
+	}
 	int *gt_arr=(int *)malloc(N*2*sizeof(int)),ngt=N*2,ngt_arr=N*2;
 	
 	  cerr << N << " samples" << endl;
