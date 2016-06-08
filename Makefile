@@ -15,7 +15,8 @@ IFLAGS = -I$(HTSDIR)  -I./
 LFLAGS = -lz -lm
 
 no_omp: CXXFLAGS = -O3 -DNDEBUG 
-no_omp: CFLAGS = -O3 -DNDEBUG 
+no_omp: CFLAGS = -O3 -DNDEBUG
+no_omp: LFLAGS = -lz -lm -lpthread
 no_omp: all
 
 default: CXXFLAGS = -O3 -DNDEBUG $(OMP)
@@ -69,7 +70,9 @@ ldplot.o: ldplot.cpp
 	$(CXX) $(CXXFLAGS)  -c ldplot.cpp $(IFLAGS)
 admix.o: admix.cpp 
 	$(CXX) $(CXXFLAGS) -c admix.cpp $(IFLAGS)
-akt: version.h akt.cpp admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(HTSLIB)
-	$(CXX) $(CXXFLAGS)   -o akt akt.cpp admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+metafreq.o: metafreq.cpp 
+	$(CXX) $(CXXFLAGS) -c metafreq.cpp $(IFLAGS)
+akt: version.h akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(HTSLIB)
+	$(CXX) $(CXXFLAGS)   -o akt akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h

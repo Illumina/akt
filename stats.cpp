@@ -4,6 +4,13 @@
 using namespace std;
 using namespace Eigen;
 
+/**
+ * @name    usage
+ * @brief   print out options
+ *
+ * List of input options
+ *
+ */
 static void usage(){
 	cerr << "Calculate correlation across a population" << endl;	
 	cerr << "Usage:" << endl;
@@ -25,9 +32,7 @@ static void usage(){
 }
 
 	
-	
-	
-	
+//read VCF record and calculate AF and VAR
 static void process_line(bcf_srs_t *sr, bcf1_t *line, 
 					int N, int *gt_arr, int ngt, int ngt_arr,
 					list< vector<int> > &G, list< float > &af, list< float > &sig, list< int > &position)
@@ -40,11 +45,11 @@ static void process_line(bcf_srs_t *sr, bcf1_t *line,
 		}
 	}
 
-	float p = 0;
+	float p = 0;	//mean
 	vector<int> tmp(N); 
 	for(int i=0; i<N; ++i){ tmp[i] = bcf_gt_allele(gt_arr[2*i]) + bcf_gt_allele(gt_arr[2*i+1]); p += (float)tmp[i]; } 
 	p /= N; 
-	float s = 0;
+	float s = 0;	//variance
 	for(int i=0; i<N; ++i){ s += ( (float)tmp[i] - p )*( (float)tmp[i] - p ); } 
 	s /= N;
         
@@ -55,6 +60,7 @@ static void process_line(bcf_srs_t *sr, bcf1_t *line,
 			
 }
 
+//calculate correlation from neighbouring site data and save in bcf record 
 static void process_output(
 bcf_hdr_t *new_hdr,
 bcf1_t *line, bcf1_t *rec, 
@@ -82,20 +88,21 @@ htsFile *out_fh, float ocmin
 	float tvar = *sig_it/4.0; //sig[sites]/4.0; //var( c x ) = c^2 var(x)
 	bcf_update_info_float(new_hdr, rec, (af_tag + "SIG").c_str(), &tvar, 1);	
 	
-	if( !xsig && !position.empty() && *sig_it > 0){
+	if( !xsig && !position.empty() && *sig_it > 0){	//calculate cor = true && we have data && we have some variants
 
-		vector<float> cor;
-		vector<int> corp;
+		vector<float> cor;	//correlation values
+		vector<int> corp;	//correlation positions
 
-		float LDscore = 0;
+		float LDscore = 0;	
 		
-		list<int>::iterator fin = --position.end();
+		list<int>::iterator fin = --position.end();	//stop here
 		
 		list<int>::iterator it=position.begin(); 
 		list< vector<int> >::iterator git=G.begin(); 
 		list<float>::iterator ait = af.begin(); 
 		list<float>::iterator sit = sig.begin();
 
+		//calculate correlation
 		for (; it != fin; ++it, ++git, ++ait, ++sit){
 			if( *sit > 0 ){ 
 				cor.push_back(0);
@@ -114,10 +121,11 @@ htsFile *out_fh, float ocmin
 		}
 		bcf_update_info_float(new_hdr, rec, (af_tag + "LD").c_str(), &LDscore, 1);	
 
+		//save raw correlation
 		if(output_cor){
 			vector<float> cor_red;
 			vector<int> corp_red;
-			for(int i=0; i<cor.size(); ++i){
+			for(size_t i=0; i<cor.size(); ++i){
 				if( fabs(cor[i]) >= ocmin ){
 					cor_red.push_back(cor[i]);
 					corp_red.push_back(corp[i]);
@@ -161,11 +169,9 @@ int stats_main(int argc, char* argv[])
   
   string output = "out.vcf";
   string outputfmt = "w";
-  bool get_regions = false; string regions = "";
+  string regions = "";
   bool regions_is_file = false;
-  bool used_r = false;
-  bool used_R = false;
-  bool enable_pi = false;
+
   sample_args sargs;
   string af_tag = "";
   float ocmin = 0;
@@ -181,8 +187,8 @@ int stats_main(int argc, char* argv[])
         case 'o': output = (string)(optarg); break;
         case 'O': outputfmt += (string)(optarg); break;
         case 'a': af_tag = string(optarg)+"_"; break;
-		case 'r': get_regions = true; regions = (optarg); used_r = true; break;
-		case 'R': get_regions = true; regions = (optarg); used_R = true; regions_is_file = true; break;
+		case 'r': regions = (optarg); break;
+		case 'R': regions = (optarg); regions_is_file = true; break;
         case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
         case 'S': sargs.sample_names = (optarg); sargs.subsample = true; sargs.sample_is_file = 1; break;
         case '?': usage();
@@ -197,6 +203,7 @@ int stats_main(int argc, char* argv[])
 	optind++;
     string filename = argv[optind];
 	
+	//reads same file twice, F sites out of sync
 	//Setup htslib reader OUTER
 	bcf_srs_t *sr =  bcf_sr_init() ; ///htslib synced reader.
 	sr->collapse = COLLAPSE_ANY;
@@ -234,11 +241,8 @@ int stats_main(int argc, char* argv[])
 	htsFile *out_fh  = hts_open( output.c_str(), outputfmt.c_str() );
 	bcf_hdr_write(out_fh, new_hdr);
 	
-
-	//sub_sample_header(&sr->readers[0].header, sargs);
     if(sargs.subsample){ 
 		bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); 
-		//bcf_hdr_set_samples(reader->readers[0].header, sargs.sample_names, sargs.sample_is_file); 
 	}
 		
 	int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples	
@@ -259,7 +263,7 @@ int stats_main(int argc, char* argv[])
 	list<float>::iterator af_it;
 	list<float>::iterator sig_it;
 	list<int>::iterator calc_it;
-	int last;
+
 	int chr_id = -1;
 	
 	while(bcf_sr_next_line (sr) ) { 
@@ -268,7 +272,7 @@ int stats_main(int argc, char* argv[])
 		
 		if( line->n_allele == 2 && bcf_is_snp(line) ){ //biallelic
 
-		if( xsig ){
+		if( xsig ){	//AF only case
 			
 			float p = 0;
 			ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr); 
@@ -291,7 +295,7 @@ int stats_main(int argc, char* argv[])
 			bcf_unpack(rec, BCF_UN_ALL);				
 			bcf_write1(out_fh, new_hdr, rec);
 			bcf_clear1(rec);	
-		} else {
+		} else {	
 
 			if( chr_id != line->rid ){ //new chromosome
 				
@@ -299,15 +303,13 @@ int stats_main(int argc, char* argv[])
 					
 					int last_pos = position.back();
 
-					//Finish off the right edge
+					//Finish off the right edge of previous chromosome
 					while( bcf_sr_next_line (reader) ){
 
 						line =  bcf_sr_get_line(reader, 0);
 						
 						if( line->n_allele == 2 && bcf_is_snp(line) ){ //biallelic
-						//Debugging
-						//cout << position.front() << " " << position.back() << " " << *calc_it << " " << position.size() << endl;
-						
+			
 						process_output( new_hdr, line, rec, N, G_it, af_it, sig_it, calc_it, 
 						G, af, sig, position, af_tag, xsig, output_cor, out_fh, ocmin); 
 						
@@ -315,8 +317,7 @@ int stats_main(int argc, char* argv[])
 						while( calc_it != position.end() && 
 						((do_block && distance( position.begin(), calc_it ) > flank ) ||
 						(!do_block && *calc_it - position.front() > flank ))
-						){ 
-							last = position.front(); 
+						){ //within flank
 							G.pop_front();
 							af.pop_front();
 							sig.pop_front();
@@ -333,14 +334,12 @@ int stats_main(int argc, char* argv[])
 				chr_id = line->rid; 
 				process_line( sr, line, N, gt_arr, ngt, ngt_arr, G, af, sig, position );
 				
-				
 				calc_it = position.begin(); af_it = af.begin(); sig_it = sig.begin(); G_it = G.begin();
-				last = position.front(); 
 	
 			} else {
 				process_line( sr, line, N, gt_arr, ngt, ngt_arr, G, af, sig, position );
 			}
-			
+			//read enough to calculate next site
 				while( 
 					(
 					(do_block && distance( calc_it, position.end() ) > flank ) ||
@@ -352,7 +351,6 @@ int stats_main(int argc, char* argv[])
 					line =  bcf_sr_get_line(reader, 0);
 					if( line->n_allele == 2 && bcf_is_snp(line) ){ //biallelic
 					
-					//cout << position.front() << " " << position.back() << " " << *calc_it << " " << position.size() << endl;
 
 					process_output( new_hdr, line, rec, N, G_it, af_it, sig_it, calc_it, 
 					G, af, sig, position, af_tag, xsig, output_cor, out_fh, ocmin); 
@@ -362,7 +360,6 @@ int stats_main(int argc, char* argv[])
 					((do_block && distance( position.begin(), calc_it ) > flank ) ||
 					(!do_block && *calc_it - position.front() > flank ))
 					){ 
-						last = position.front(); 
 						G.pop_front();
 						af.pop_front();
 						sig.pop_front();
@@ -376,15 +373,13 @@ int stats_main(int argc, char* argv[])
 	}
 
 
-	//Done most of the reading now finish off the right edge
+	//Done most of the reading now finish off the right edge of last chromosome
 	while( !xsig && bcf_sr_next_line (reader) && !position.empty() ){
-
 
 		line =  bcf_sr_get_line(reader, 0);
 				
 		if( line->n_allele == 2 && bcf_is_snp(line) ){ //biallelic
 					
-		//cout << position.front() << " " << position.back() << " " << *calc_it << " " << position.size() << endl;
 
 		process_output( new_hdr, line, rec, N, G_it, af_it, sig_it, calc_it, 
 		G, af, sig, position, af_tag, xsig, output_cor, out_fh, ocmin); 
@@ -394,7 +389,6 @@ int stats_main(int argc, char* argv[])
 		((do_block && distance( position.begin(), calc_it ) > flank ) ||
 		(!do_block && *calc_it - position.front() > flank ))
 		){ 
-			last = position.front(); 
 			G.pop_front();
 			af.pop_front();
 			sig.pop_front();
@@ -411,6 +405,8 @@ int stats_main(int argc, char* argv[])
 	bcf_hdr_destroy(hdr);
 	bcf_hdr_destroy(new_hdr);
 	bcf_destroy1(rec);
-	return(0);
+	
+	return (0);
+
 }
 

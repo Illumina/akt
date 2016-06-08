@@ -9,6 +9,7 @@ using namespace Eigen;
 bool cf_idx(vector<int> i, vector<int> j){ return i[0]>j[0]; } //descending order
 bool cf_pair(pair<int, float> i, pair<int, float> j){ return i.first>j.first; } //descending order
 
+//number of points less than dc away
 void Cluster::localDensity(float dc_){
 	dc = dc_; 
 	rho = VectorXi::Zero(N);
@@ -24,6 +25,7 @@ void Cluster::localDensity(float dc_){
 
 }
 
+//number of points less than dc away
 void Cluster::minDistance(){
 	//can probably be improved by sorting
 	delta = VectorXf::Ones(N) * numeric_limits<float>::infinity();	//distance of closest data point of higher density
@@ -35,8 +37,8 @@ void Cluster::minDistance(){
 
 			//density of i > density of j
 			if(rho[i] > rho[j]){
-				if( dist < delta[j] ){ delta[j] = dist; }	//check if dist of i from j is smaller
-			} else if (dist > maxd[j] ){	//density j >= density i: check if distance from i to j is larger
+				if( dist < delta[j] ){ delta[j] = dist; }	//check if dist of i from j is smaller then best so far
+			} else if (dist > maxd[j] ){	//density j >= density i: check if distance from i to j is larger than max so far
 				maxd[j] = dist;
 			}
          
@@ -57,24 +59,26 @@ void Cluster::minDistance(){
 
 }
 
+//print out delta versus density graph - useful to determine parameter settings
 void Cluster::densityPlot(){
 	for(int i=0; i<N; ++i){ cout << rho(i) << " " << delta(i) << "\n"; }
 	
 }
 
+//assign clusters based on density
 void Cluster::densityCluster(int min_rho, float min_delta){
 	 
-	//find density values at peaks
 	vector< int > peak_rho; 
 	vector< float > peak_delta; 
 	vector< int > peak; 
 	vector< vector<int> > sorted_rho; 
-
+	
+	//find density values at peaks
 	for(int i=0; i<N; ++i){
-		if( rho(i) > min_rho ){
+		if( rho(i) > min_rho ){	//only data points at least this dense
 			vector<int> tmp(2); tmp[0]=rho(i); tmp[1]=i;
 			sorted_rho.push_back(tmp);
-			if( delta(i) > min_delta ){
+			if( delta(i) > min_delta ){ //only peaks in local density at least this high
 				vector<int>::iterator it = find( peak_rho.begin(), peak_rho.end(), rho(i) );
 				if( peak_rho.size() == 0 || it == peak_rho.end() ){
 					peak_rho.push_back(rho(i));
@@ -82,11 +86,11 @@ void Cluster::densityCluster(int min_rho, float min_delta){
 					peak.push_back(i);
 				} else {	//repeated rho value
 					int idx = distance( peak_rho.begin() , it);
-					if( (P.row(i) - P.row(peak[idx])).squaredNorm() > dc*dc ){ //further than dc away
+					if( (P.row(i) - P.row(peak[idx])).squaredNorm() > dc*dc ){ //further than dc away - different peak
 						peak_rho.push_back(rho(i));
 						peak_delta.push_back(delta(i));
 						peak.push_back(i);
-					} else if( peak_delta[idx] < delta(i) ){
+					} else if( peak_delta[idx] < delta(i) ){	//closer than dc - overlapping peak
 						peak_delta[idx] = delta(i);
 						peak[idx] = i;
 					}
@@ -94,26 +98,27 @@ void Cluster::densityCluster(int min_rho, float min_delta){
 			}
 		}
 	}	
+	//assign peaks arbitrary cluster numbers
 	K = peak.size() + 1;	
 	centres.resize(K, d);
 	sizes = VectorXi::Zero(K); 
-	for(int i=0; i<peak.size(); ++i){
+	for(size_t i=0; i<peak.size(); ++i){
 			assignment[ peak[i] ] = i+1;
 			centres.row(i+1) = P.row(peak[i]);
 	}
 	
     sort(sorted_rho.data(), sorted_rho.data()+sorted_rho.size(), cf_idx); //sort to avoid backtracking
 
-	for(int i=0; i<sorted_rho.size(); ++i){	
+	//assign peaks
+	for(size_t i=0; i<sorted_rho.size(); ++i){	
 			
 		vector<int>::iterator it = find (peak.begin(), peak.end(), sorted_rho[i][1]);
-		if( it != peak.end() ){ //found a peak
-			//assignment[ sorted_rho[i][1] ] = distance(peak.begin(), it)+1; //0 cluster is unassigned
+		if( it != peak.end() ){ //found a peak skip it
+			//0 cluster is unassigned
 		} else { //not a peak
 			//find nn of higher density
-			
 			float min_dist = numeric_limits<float>::infinity();
-			for(int j=0; j<sorted_rho.size(); ++j){
+			for(size_t j=0; j<sorted_rho.size(); ++j){
 				float dist = (P.row( sorted_rho[i][1] ) - P.row( sorted_rho[j][1] )).squaredNorm();
 				if( assignment[ sorted_rho[j][1] ] != 0 && i !=j && sorted_rho[j][0] >= sorted_rho[i][0] && dist < min_dist ){
 					min_dist = dist;
@@ -124,39 +129,9 @@ void Cluster::densityCluster(int min_rho, float min_delta){
 		++sizes[ assignment[ sorted_rho[i][1] ] ];
 	}
 
-	//silhouette();
-
-
 }
 
-void Cluster::raw_data_dump(){
-	
-	for(int i=0; i<N; ++i){
-		for(int j=0; j<d-1; ++j){
-			cout << P(i,j) << "\t";
-		} cout << P(i,d-1) << "\n";
-	}
-	
-}
-
-void Cluster::clustered_data_dump(){
-	
-	
-	for(int k=0; k<K; k++){
-		for(int i=0; i<N; i++){
-			if( assignment[i] == k ){ 
-				for(int j=0; j<d-1; ++j){
-					cout << P(i,j) << "\t";
-				} cout << P(i,d-1);
-				if(silset){ cout << "\t" << sil(i); }
-				cout << "\tCluster" << k << "\n";
-			}
-		}
-		if(k < K-1) cout << endl;
-	} 	
-	
-}
-
+//clusters to stdout, with labels appended
 void Cluster::clustered_data_dump(vector<vector<string> > &labels){
 	
 	for(int k=0; k<K; k++){
@@ -168,7 +143,7 @@ void Cluster::clustered_data_dump(vector<vector<string> > &labels){
 				if(silset){ cout << "\t" << sil(i); } 
 				cout << "\tCluster" << k << "\t"; 
 				if(labels[i].size() > 0){
-					for(int j=0; j<labels[i].size()-1; ++j){
+					for(size_t j=0; j<labels[i].size()-1; ++j){
 						cout << labels[i][j] << "\t";
 					}
 					cout << labels[i].back() << "\n";
@@ -182,18 +157,7 @@ void Cluster::clustered_data_dump(vector<vector<string> > &labels){
 	
 }
 
-void Cluster::cluster_to_file(ofstream& of, vector<vector<string> > &labels, int k){
-	
-	for(int i=0; i<N; i++){
-		if( assignment[i] == k){ 
-			for(int j=0; j<labels[i].size()-1; ++j){
-				of << labels[i][j] << "\t";
-			} of << labels[i].back() << "\n";
-		}
-	}
-		
-}
-
+//assign points to clusters based on centres
 void Cluster::clusterAssign(){
 	
 	sizes = VectorXi::Zero(K);
@@ -212,6 +176,7 @@ void Cluster::clusterAssign(){
 	
 }
 
+//k++ means initialisation
 void Cluster::initialiseCentres(){	//k++ means init step
 
 	centres.row(0) = P.row(  int(N*drand48())  );
@@ -231,7 +196,7 @@ void Cluster::initialiseCentres(){	//k++ means init step
 			dnorm += min_dist;
 		}
 		//choose a new centre
-		float rand = drand48();
+		float rand = drand48();	//good enough random number generator
 		float sum = 0;
 		for(int i=0; i<N; ++i){
 	        	sum += D[i]/dnorm;
@@ -244,6 +209,7 @@ void Cluster::initialiseCentres(){	//k++ means init step
 	}
 }
 
+//k means clustering
 void Cluster::kMeans(int max_it){
 
 	VectorXi old_sizes(K);
@@ -267,13 +233,13 @@ void Cluster::kMeans(int max_it){
 			diff += abs(sizes(i) - old_sizes(i));
         } 
         if (diff == 0){ 
-			//break; 
+			break; 
 		}
 	}
 	cerr << "Clustering completed after " << it << " iterations" << endl;
-	//silhouette();
 }
 
+//k++ means algorithm
 void Cluster::kppMeans(int max_it){
 
 	initialiseCentres();
@@ -281,6 +247,7 @@ void Cluster::kppMeans(int max_it){
 
 }
 
+// calculate weights for gaussian mixture clusters
 float Cluster::EMweights(){
 		
 	//calc weights
@@ -302,6 +269,7 @@ float Cluster::EMweights(){
 	return newP;
 }
 
+//assign data to clusters based on gaussian probability weights
 void Cluster::EMassign(){
 	
 	for(int k=0; k<K; ++k){ sizes(k) = 0; }
@@ -313,6 +281,7 @@ void Cluster::EMassign(){
 	}
 }
 
+//EM Gaussian clustering algorithm
 void Cluster::EMcluster(int max_its){
 	
 		clusterAssign();	
@@ -353,9 +322,9 @@ void Cluster::EMcluster(int max_its){
 		} 
 
 		EMassign();	
-		//silhouette();
 }
 
+//calculate silhouette scores
 void Cluster::silhouette(){
 
 	float a; //dissimilarity to assigned cluster
@@ -497,9 +466,11 @@ int cluster_main(int argc,char **argv) {
 	int N = data.size();
 	int d = data[0].size();
 	
+	//vector to Eigen
 	MatrixXf P(N,d);
 	for (int i=0; i<N; i++){ P.row(i) = VectorXf::Map(&data[i][0],d); }
 	
+	//initial centres
 	MatrixXf mu;
 	if(use_file){		 
 		ifstream in_cfile(cfile.c_str());
@@ -507,20 +478,21 @@ int cluster_main(int argc,char **argv) {
 		vector< vector<string> > mu_lab;
 		readMatrix(in_cfile, mu_data, mu_lab, "1-" + to_string(d) );
 		in_cfile.close();
-		if(mu_data[0].size() != d){
+		if( mu_data[0].size() != (size_t)d){
 			cerr << "Center init must be same dim as data" << endl; exit(1);
 		}
 		K = mu_data.size();
 		mu.resize(K,d);
 		for (int i=0; i<K; i++){ mu.row(i) = VectorXf::Map(&mu_data[i][0],d); }
 	}
-	
 	Cluster C(P,K);
 	if(use_file){
 		C.assignCentres(mu);
 	} else {
 		C.initialiseCentres();	
 	}
+	
+	//which algorithm?
 	switch(alg){
 		case 0: C.kMeans(max_its); break;
 		case 1: C.EMcluster(max_its); break;
@@ -534,9 +506,12 @@ int cluster_main(int argc,char **argv) {
 				cerr << "found " << C.K << " clusters" << endl;
 			}
 	}
+	//calculate silhouette?
 	if( dosil ){ C.silhouette(); }
+	//output
 	C.clustered_data_dump(labels);	
 		
+	//output centres
 	if(output_c != ""){
 		ofstream fk( output_c.c_str() );
 		int st= (alg==2) ? 1 : 0;
@@ -545,8 +520,6 @@ int cluster_main(int argc,char **argv) {
 		}
 		fk.close();
 	}
-	
-	
 	
     return(0);
 }

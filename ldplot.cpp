@@ -31,18 +31,18 @@ int ldplot_main(int argc, char* argv[])
         {0,0,0,0}
     };
 
-  bool get_regions = false; string regions = "";
+  string regions = "";
   bool regions_is_file = false;
   bool used_r = false;
   bool used_R = false;
-  bool enable_pi = false;
+
   sample_args sargs;
 
     while ((c = getopt_long(argc, argv, "r:R:s:S:",loptions,NULL)) >= 0) {  
         switch (c)
         {
-		case 'r': get_regions = true; regions = (optarg); used_r = true; break;
-		case 'R': get_regions = true; regions = (optarg); used_R = true; regions_is_file = true; break;
+		case 'r': regions = (optarg); used_r = true; break;
+		case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
         case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
         case 'S': sargs.sample_names = (optarg); sargs.subsample = true; sargs.sample_is_file = 1; break;
         case '?': usage();
@@ -69,7 +69,7 @@ int ldplot_main(int argc, char* argv[])
 	int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples	
 	cerr << N << " samples in " << filename << endl;
 	
-	int ngt=N*2,ngt_arr=N*2;
+	int ngt_arr=N*2;
 	bcf1_t *line;///bcf/vcf line structure.
 	vector< int* > gt;
 	int M=0;
@@ -82,9 +82,11 @@ int ldplot_main(int argc, char* argv[])
 		//exclude haploid sites & multi allelics
 		if( line->n_allele == 2){	
 			int *gt_arr=(int *)malloc(N*2*sizeof(int));
-			ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);   
-			gt.push_back( gt_arr );
-			++M;
+			int ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);   
+			if(ngt > 0){
+				gt.push_back( gt_arr );
+				++M;
+			}
 		}
 			
 	}
@@ -127,6 +129,8 @@ int ldplot_main(int argc, char* argv[])
 	while(!gt.empty()) free(gt.back()), gt.pop_back(); 
 
 	cout << Sigma << endl;
-	return(0);
+
+	return (0);
+
 }
 

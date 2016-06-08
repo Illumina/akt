@@ -4,7 +4,7 @@ then
 wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf
 wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf.csi
 fi
-
+<<\COMMENT
 ##Discovering Cryptic Relations
 ../akt kin ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R ../data/1000G.snps.nochr.vcf.gz -n 4 > test_kin
 ../akt relatives test_kin -p test -g > test_relatives
@@ -50,6 +50,14 @@ echo -19 -27 EAS 0 0 >> centre.txt
 ../akt admix test_pcaproj -c 2-3 -C centre.txt > test_admix
 ../akt admix test_pcaproj -c 2-6 -C ../data/1000G.pca_to_admix > test_alladmix
 
+bcftools view ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -S EAS.samples -r 20 -O b -o EAS.20.bcf --force-samples
+bcftools view ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -S EUR.samples -r 20 -O b -o EUR.20.bcf --force-samples
+bcftools index EAS.20.bcf
+bcftools index EUR.20.bcf
+../akt metafreq EAS.20.bcf EUR.20.bcf -O b -o mf.bcf
+bcftools query -f "%AF1\t%AF2\t%QF\t%QX\n" mf.bcf > test_metafreq
+COMMENT
+
 ##Make plots
 ##NB: docs/AMR.samples does not equal data/AMR.samples!
 for pop in AMR AFR EAS EUR SAS; 
@@ -64,6 +72,7 @@ do
 	while read line; do grep "$line" test_alladmix; done < "$pop".samples > test_alladmix_"$pop"; 
 
 done
+COMMENT
 gnuplot -e "load 'plot.gnu'"
 
 ##Makes the complicated ibd segment plot

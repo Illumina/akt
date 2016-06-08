@@ -9,6 +9,13 @@
 using namespace std;
 using namespace Eigen;
 
+/**
+ * @name    usage
+ * @brief   print out options
+ *
+ * List of input options
+ *
+ */
 static void usage(){
 	cerr << "Discover relatives from IBD" << endl;	
 	cerr << "Usage:" << endl;
@@ -26,6 +33,7 @@ static void usage(){
 	
 }
 
+///compare graphs based on number of members
 struct less_than_graph
 {
     inline bool operator() (const graph& struct1, const graph& struct2)
@@ -68,10 +76,10 @@ int relatives_main(int argc, char* argv[])
     string cfilename = argv[optind];
     cerr <<"Input: " << cfilename << endl; 
 
-	vector< vector<string> > pnames;
-	set<string> unames;
-	vector< vector<float> > ibd;
-
+	//read ibd data
+	vector< vector<string> > pnames;	//sample pairs
+	set<string> unames;					//sample names
+	vector< vector<float> > ibd;		//ibd data
 	ifstream in(cfilename.c_str());
 	read_ibd1(in, ibd, pnames, unames, relmin);
 	in.close();
@@ -81,7 +89,7 @@ int relatives_main(int argc, char* argv[])
 	int N = ibd.size();
 	cerr << N << " ibd pairs above threshold" << endl;
 	
-	MatrixXf mu(K,d);	//cluster centres
+	MatrixXf mu(K,d);	//cluster centres, known from theory
 	mu(0,0) = 0; 	mu(0,1) = 1; 	//PO
 	mu(1,0) = 0.25; mu(1,1) = 0.5;  //FS
 	mu(2,0) = 0.5; 	mu(2,1) = 0.5;	//rel1
@@ -97,9 +105,11 @@ int relatives_main(int argc, char* argv[])
 		++N;
 	}
 	
+	//vector to Eigen
 	MatrixXf P(N,d);	
 	for (int i=0; i<N; i++){ P.row(i) = VectorXf::Map(&ibd[i][0],d); }
 
+	//assign data points to category
 	Cluster C(P,K);
 	C.assignCentres(mu);
 	C.clusterAssign(); //don't bother to cluster, just use given centres
@@ -108,17 +118,17 @@ int relatives_main(int argc, char* argv[])
 	graph Fdup; //contains duplicates only
 
 	int ct = 0; int rels = 0; int dups = 0;
-	for(int i=0; i<pnames.size(); i++){
+	for(size_t i=0; i<pnames.size(); i++){	//for all pairs
 
 		int type = C.assignment[ct];
 		
-		if( type == 0 || type == 1 || type == 2 || type == 5 ){ //parents, sibs or duplicates
+		if( type == 0 || type == 1 || type == 2 || type == 5 ){ //parents, sibs, 2nd order or duplicates
 			++rels;
 			if( !F.hasvertex(pnames[i][0]) ){ F.add(pnames[i][0]); }
 			if( !F.hasvertex(pnames[i][1]) ){ F.add(pnames[i][1]); }
 			F.link( pnames[i][0], pnames[i][1], type );
 		} 
-		if( type == 5 ){
+		if( type == 5 ){	//duplicates
 			++dups;
 			if( !Fdup.hasvertex(pnames[i][0]) ){ Fdup.add(pnames[i][0]); }
 			if( !Fdup.hasvertex(pnames[i][1]) ){ Fdup.add(pnames[i][1]); }
@@ -130,31 +140,33 @@ int relatives_main(int argc, char* argv[])
 	cerr << rels << " filtered ibd pairs >= 2nd order" << endl; 
 	cerr << dups << " duplicate pairs" << endl;
 	
-	if( gout ){
+	if( gout ){	//print out the big graph
 		cerr <<  prefix + "allgraph includes all relative pairs 2nd order or lower" << endl; 
 		ofstream f( (prefix + "allgraph").c_str() );
 		F.gviz_neato(f);
 		f.close();
 	}
 
+	//deal with duplicate samples
 	vector<graph> DFdup;
 	Fdup.assign_disconnected(DFdup);
 	sort(DFdup.begin(), DFdup.end(), less_than_graph());
-
-	for(int i=0; i<DFdup.size(); ++i){
+	//print duplicates
+	for(size_t i=0; i<DFdup.size(); ++i){
 		for(viter iter=DFdup[i].vlist.begin(); iter != DFdup[i].vlist.end(); ++iter){
 			cout << "Dup" << i << "\t" << (*iter).second->name << endl; 
 		}
 	}
 
+	//deal with families
 	vector<graph> DF;
 	F.assign_disconnected(DF);
 	sort(DF.begin(), DF.end(), less_than_graph());
 	
 	map<string, string> fam_names;
 	vector< string > fam_labs;
-	
-	for(int i=0; i<DF.size(); ++i){
+	//print families
+	for(size_t i=0; i<DF.size(); ++i){
 		fam_labs.push_back("Fam" + to_string(i));
 		for(viter iter=DF[i].vlist.begin(); iter != DF[i].vlist.end(); ++iter){
 			fam_names[ (*iter).second->name ] = fam_labs.back();
@@ -170,38 +182,39 @@ int relatives_main(int argc, char* argv[])
 		}
 	}
 
-	for(int g=0; g<DF.size(); ++g){
+	for(size_t g=0; g<DF.size(); ++g){
 		
 		vector<string> nm = DF[g].names();
 		vector<string> unrelated;
 
-		int ms = 0;
+		size_t ms = 0;
+		//Find a random unrelated set a few times and save the biggest one 
+		//Do this for long enough, you'll find the best set...
 		for(int i=0; i<uits; ++i){
 			vector<string> ur; 
-			DF[g].unrelated(ur);	//Do this for long enough, you'll find the best set...
+			DF[g].unrelated(ur);	
 			if( ur.size() > ms ){
 				ms = ur.size();
 				unrelated = ur;
 			}
 		}
 		
-		for(int j=0; j<unrelated.size(); ++j){
+		for(size_t j=0; j<unrelated.size(); ++j){
 			cout << "Unrel" << uc << "\t" << unrelated[j] << endl; ++uc;
 		}			
 	}
 	cerr << uc << " nominally unrelated samples." << endl;	
 	
-
 	cerr << "Attempting to resolve pedigrees." << endl;
-	
+	//try to read every ibd pair
 	vector< vector<float> > tibd; 
 	vector< vector<string> > pnamesr;
 	ifstream in2(cfilename.c_str());
 	int Nsamples = read_ibd2(in2, tibd, pnamesr); 
 	in2.close();
-
+	//have to have all to all data
 	cerr << Nsamples << " unique samples names" << endl;
-	if( Nsamples*(Nsamples-1)/2 != tibd.size() ){
+	if( Nsamples*(Nsamples-1)/2 != (int)tibd.size() ){
 		cerr << "Found " << tibd.size() << " total pairs when " << Nsamples*(Nsamples-1)/2 << " expected." << endl;
 		cerr << "\"akt relatives\" expects unfiltered output from \"akt kin\"." << endl;
 		exit(1);
@@ -212,12 +225,12 @@ int relatives_main(int argc, char* argv[])
 
 	//strip out singletons and non family ibd pairs.
 	int sz = 0;
-	for(int n=0; n<pnamesr.size(); ++n){
-		//fam_names[ pnames[n][0] ] = which family this
+	for(size_t n=0; n<pnamesr.size(); ++n){
+		//fam_names[ pnames[n][0] ] = which family this is
 		//then find the index of this family
 		int pos1 = find( fam_labs.begin(), fam_labs.end(), fam_names[ pnamesr[n][0] ] ) - fam_labs.begin();
 		int pos2 = find( fam_labs.begin(), fam_labs.end(), fam_names[ pnamesr[n][1] ] ) - fam_labs.begin();
-		if( pos1 < fam_labs.size() && pos2 < fam_labs.size() ){
+		if( (size_t)pos1 < fam_labs.size() && (size_t)pos2 < fam_labs.size() ){
 			if( pos1 == pos2 ){	
 				all_names[ pos1 ].push_back( pnamesr[n] );
 				ibdr[ pos1 ].push_back( tibd[n] );	
@@ -229,10 +242,11 @@ int relatives_main(int argc, char* argv[])
 	N = sz;
 	cerr << N << " ibd pairs to cluster" << endl;
 	
+	//vector to Eigen
 	MatrixXf Pr(N+K,d);
 	ct = 0;	
-	for(int i=0; i<ibdr.size(); ++i){
-		for(int j=0; j<ibdr[i].size(); ++j){
+	for(size_t i=0; i<ibdr.size(); ++i){
+		for(size_t j=0; j<ibdr[i].size(); ++j){
 			Pr.row(ct) = VectorXf::Map(&ibdr[i][j][0],d);
 			++ct;
 		}
@@ -247,17 +261,19 @@ int relatives_main(int argc, char* argv[])
 	ct = 0;
 	ofstream out_file2 ( (prefix + "fam").c_str() );
 	
-	for(int n=0; n<all_names.size(); ++n){
+	//big loop over all families
+	for(size_t n=0; n<all_names.size(); ++n){
 			
+		//temporary copy of family
 		graph H;
-		for(int m=0; m<all_names[n].size(); ++m){ 
+		for(size_t m=0; m<all_names[n].size(); ++m){ 
 			if( ! H.hasvertex(all_names[n][m][0]) ){ H.add(all_names[n][m][0]);}
 			if( ! H.hasvertex(all_names[n][m][1]) ){ H.add(all_names[n][m][1]); }
 		}
 		N = all_names[n].size();
 		map<string, int> relationship;
 
-		//hash table of relationships and remove duplicates
+		//hash table of relationships and remove duplicates from graph
 		for(int i=0; i<N; i++){
 			relationship[all_names[n][i][0] + all_names[n][i][1]] = Cr.assignment[ct];
 			relationship[all_names[n][i][1] + all_names[n][i][0]] = Cr.assignment[ct];
@@ -268,7 +284,7 @@ int relatives_main(int argc, char* argv[])
 			++ct;
 		}
 		
-		//Add PO links
+		//Add PO links to H
 		for(int i=0; i<N; i++){
 			if( relationship[all_names[n][i][0] + all_names[n][i][1]] == 0 &&
 				H.hasvertex(all_names[n][i][0]) && H.hasvertex(all_names[n][i][1]) &&
@@ -296,8 +312,8 @@ int relatives_main(int argc, char* argv[])
 					}
 				}
 				
-				for(int i=0; i<tmp.size(); ++i){
-					for(int j=i+1; j<tmp.size(); ++j){	
+				for(size_t i=0; i<tmp.size(); ++i){
+					for(size_t j=i+1; j<tmp.size(); ++j){	
 						
 						if( relationship[ tmp[i] + tmp[j] ] == 1 ){ //sibs -> this is the parent of 2 sibs
 
@@ -343,17 +359,16 @@ int relatives_main(int argc, char* argv[])
 					}
 				}
 
-				vector<int> parent;
+				vector<size_t> parent;
 				set<string> sib;
 				int sc = 0;
-				for(int i=0; i<tmp.size(); ++i){
-					for(int j=i+1; j<tmp.size(); ++j){
+				for(size_t i=0; i<tmp.size(); ++i){
+					for(size_t j=i+1; j<tmp.size(); ++j){
 						++sc;
 						if( relationship[ tmp[i] + tmp[j] ] == 4 ){ //unrelated => parents, 
 																//not 3 because 2 misclassified as 3 can happen
 							parent.push_back(i);
 							parent.push_back(j);
-							//break;
 						}
 						if( relationship[ tmp[i] + tmp[j] ] == 0 ){
 							sib.insert( tmp[i] );
@@ -363,7 +378,7 @@ int relatives_main(int argc, char* argv[])
 					}
 				}
 				if(parent.size() == 2){
-					for(int i=0; i<tmp.size(); ++i){
+					for(size_t i=0; i<tmp.size(); ++i){
 						if( i != parent[0] && i != parent[1] ){
 														
 							if(H.linked(tname, tmp[i])){ H.unlink(tname, tmp[i]); }
@@ -378,7 +393,7 @@ int relatives_main(int argc, char* argv[])
 							H.link( tmp[i], (*iter).second->name, 0 );
 						}
 					}
-				} else if (parent.size() == 0 && sib.size() == 2*sc){ //all links are siblings => vertex is parent
+				} else if (parent.size() == 0 && (int)sib.size() == 2*sc){ //all links are siblings => vertex is parent
 					for (set<string>::iterator it=sib.begin(); it!=sib.end(); ++it){
 			
 						if(H.linked(tname, *it)){ H.unlink(tname, *it); }
@@ -398,7 +413,7 @@ int relatives_main(int argc, char* argv[])
 			}
 		}
 
-
+		//add in other relationships for graph output
 		for(int i=0; i<N; i++){
 			if( relationship[all_names[n][i][0] + all_names[n][i][1]] < 4 && 
 			    relationship[all_names[n][i][0] + all_names[n][i][1]] > 0 &&
@@ -409,16 +424,16 @@ int relatives_main(int argc, char* argv[])
 			}
 		}
 		
+		//graph file
 		if( gout ){
 			ofstream out_file ( (prefix + fam_labs[n] + ".graph").c_str() );
 			H.gviz_dot(out_file);
 			out_file.close();
 		}
-	
+		//family info
 		for(viter iter=H.vlist.begin(); iter != H.vlist.end(); ++iter){
 			cout << fam_labs[n] << "\t" << (*iter).second->name << endl;
 		}
-		
 		int ntypes = 0;
 		for(viter iter=H.vlist.begin(); iter != H.vlist.end(); ++iter){
 			for(int i=0; i<(*iter).second->num_out; ++i){
@@ -434,6 +449,7 @@ int relatives_main(int argc, char* argv[])
 				}
 			}	
 		}
+		//output fam file
 		H.ped_print(out_file2, fam_labs[n]);
 	}
 	out_file2.close();
