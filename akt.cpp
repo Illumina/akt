@@ -1,7 +1,21 @@
+/**
+ * @file   akt.cpp
+ * @brief  controller for ancestry and kinship toolkit.
+ *
+ * parse command options and call correct functions
+ */
+ 
 #include "akt.hpp"
 
 using namespace std;
 
+/**
+ * @name    umessage
+ * @brief   common command options
+ *
+ * Enforcing consistency on input option description
+ *
+ */
 void umessage(const char type){
 	switch(type){
 		case 'r': cerr << "\t -r --regions:			chromosome region" << endl; break;
@@ -21,11 +35,15 @@ void umessage(const char type){
 	}
 }
 
-int main(int argc, char **argv) {
-
-
-  if(argc < 2) {
-    cerr << "\nProgram:\takt (Ancestry and Kinship Tools)" << endl;
+/**
+ * @name    usage
+ * @brief   print out options
+ *
+ * List of input options
+ *
+ */
+static void usage(){
+	cerr << "\nProgram:\takt (Ancestry and Kinship Tools)" << endl;
     cerr << "Version:\t" << VERSION <<endl;
     cerr << "Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.\n"<<endl;
     cerr << "Usage:\takt <command> [options]\n" << endl;
@@ -36,7 +54,16 @@ int main(int argc, char **argv) {
     cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;
     cerr << "\tcluster                  perform cluster analyses" << endl;
     cerr << "\tLDplot                   output correlation matrix" << endl;
-    cerr << "\tstats                    calculate AF and LD metrics" << endl<<endl;
+    cerr << "\tstats                    calculate AF and LD metrics" << endl;
+    cerr << "\tmetafreq                 examine two files for AF differences" << endl<<endl;
+    exit(1);
+}
+
+int main(int argc, char **argv) {
+
+
+  if(argc < 2) {
+	usage();
     return(1);
   }
   else if(((string)argv[1]) == "pca") {
@@ -57,8 +84,11 @@ int main(int argc, char **argv) {
     ldplot_main(argc, argv); 
   } else if(((string)argv[1]) == "admix") {
     admix_main(argc, argv); 
+  } else if(((string)argv[1]) == "metafreq") {
+    metafreq_main(argc, argv); 
   } 
   else {
     cerr << "Invalid command: " << argv[1] << endl;
+    usage();
   }
 }

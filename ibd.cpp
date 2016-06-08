@@ -6,13 +6,10 @@
 
 using namespace std;
 
+//log odds ratio of IBD versus no IBD for observed genotypes and AF
 float calc_snp_logodds(vector< vector<int> > &G, vector< float > &af, vector< float > &ld, int ip, int j1, int j2, vector< vector<float> > &GQ){
-	
-		//log allele freq
-		float l1af = log(1 - af[ip]);
-		float laf = log(af[ip]);
 		
-		//IBD
+		//GLs
 		float gl1[3]; for(int g=0; g<3; ++g){ gl1[g] = ( g == G[ip][j1] ) ? 1.0-GQ[ip][j1] : GQ[ip][j1]/2.0; } 
 		float gl2[3]; for(int g=0; g<3; ++g){ gl2[g] = ( g == G[ip][j2] ) ? 1.0-GQ[ip][j2] : GQ[ip][j2]/2.0; } 
 
@@ -22,7 +19,7 @@ float calc_snp_logodds(vector< vector<int> > &G, vector< float > &af, vector< fl
 			+	gl1[1] * (1 - af[ip]) * af[ip] * 2
 			+	gl1[2] * af[ip] * af[ip]
 			);
-
+		//IBD
 		float num = log(
 			gl2[0] * ( gl1[0]*(1 - af[ip]) + gl1[1]*af[ip] )
 		+	gl2[1] * ( gl1[0]*(0.5*(1 - af[ip])) + gl1[1]*0.5 + gl1[2]*0.5*af[ip] )
@@ -32,6 +29,13 @@ float calc_snp_logodds(vector< vector<int> > &G, vector< float > &af, vector< fl
 		return (num - den)/ld[ip];
 }
 
+/**
+ * @name    usage
+ * @brief   print out options
+ *
+ * List of input options
+ *
+ */
 static void usage(){
   cerr << "Find IBD regions from a VCF" << endl;	
   cerr << "Usage:" << endl;
@@ -56,6 +60,7 @@ static void usage(){
   exit(1);
 }
 
+//contiguous region
 class region{
 public:
 	int begin;
@@ -95,6 +100,7 @@ public:
     friend bool operator>=(const region& l, const region& r){ return !(l < r); }
 };
 
+//compare regions by start position
 bool chrom_compare(const region& l, const region& r){ return l.begin < r.begin; }
 
 int ibd_main(int argc, char* argv[])
@@ -106,7 +112,6 @@ int ibd_main(int argc, char* argv[])
 	static struct option loptions[] =    {
 	{"regions",1,0,'r'},	
 	{"nthreads",1,0,'n'},	
-	{"regions-file",1,0,'R'},
 	{"targets-file",1,0,'T'},
 	{"thin",1,0,'h'},
 	{"wsize",1,0,'w'},
@@ -124,7 +129,7 @@ int ibd_main(int argc, char* argv[])
 	};
 
 	string pfilename = "";
-	bool norm = false;
+
 	int thin = 1;
 	int nthreads = -1;
 	int wsize = 20;
@@ -138,17 +143,14 @@ int ibd_main(int argc, char* argv[])
 	float min_freq = 0;
     sample_args sargs;
 
-    bool get_regions = false; string regions = "";
-    bool regions_is_file = false;
+    string regions = "";
     bool used_r = false;
-    bool used_R = false;
 
 	int maxerr = 2;
 	
-	while ((c = getopt_long(argc, argv, "r:R:h:n:w:l:a:T:L:f:e:M:m:x:s:S:",loptions,NULL)) >= 0) {  
+	while ((c = getopt_long(argc, argv, "r:h:n:w:l:a:T:L:f:e:M:m:x:s:S:",loptions,NULL)) >= 0) {  
 		switch (c) {
-			case 'r': get_regions = true; regions = (optarg); used_r = true; break;
-			case 'R': get_regions = true; regions = (optarg); used_R = true; regions_is_file = true; break;
+			case 'r': regions = (optarg); used_r = true; break;
 			case 'T': pfilename = (optarg); break;
 			case 'h': thin = atoi(optarg); break;
 			case 'n': nthreads = atoi(optarg); break;
@@ -167,7 +169,7 @@ int ibd_main(int argc, char* argv[])
 			default: cerr << "Unknown argument:"+(string)optarg+"\n" << endl; exit(1);
 		}
 	}
-	if(!get_regions){ cerr << "-r argument is mandatory" << endl; exit(1); }
+	if(!used_r){ cerr << "-r argument is mandatory" << endl; exit(1); }
 	if(optind>=argc-1) { cerr<< "No input .bcf/.vcf provided!"<<endl;exit(1);}
     if(pfilename.empty()){ cerr << "No sites file provided" << endl;exit(1); }
     
@@ -185,24 +187,27 @@ int ibd_main(int argc, char* argv[])
 	string filename = argv[optind];
 					
 	bcf_srs_t *sr =  bcf_sr_init() ; ///htslib synced reader.
-	sr->collapse = COLLAPSE_NONE;
-	sr->require_index = 1;
-	if(get_regions){
+	sr->collapse = COLLAPSE_NONE;	//matching ALTS
+	sr->require_index = 1;	//indexed files
+
+	//set regions
 	if ( bcf_sr_set_regions(sr, regions.c_str(), false)<0 ){ 
-	cerr << "Failed to read the regions: " <<  regions << endl; 
-	return 0;
-	}}
+		cerr << "Failed to read the regions: " <<  regions << endl; 
+		return 0;
+	}
+	//input file
 	if(!(bcf_sr_add_reader (sr, filename.c_str() ))){ 
 	cerr << "Problem opening " << filename << endl; 
 	bcf_sr_destroy(sr);	
 	return 0;
 	}
+	//sites file
 	if(!(bcf_sr_add_reader (sr, pfilename.c_str() ))){ 
 	cerr << "Problem opening " << pfilename << endl; 
 	bcf_sr_destroy(sr);	
 	return 0;
 	}
-	//sub_sample_header(&sr->readers[0].header, sargs);
+	//sub sample
     if(sargs.subsample){ bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); }
 		
 	int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples 
@@ -217,6 +222,7 @@ int ibd_main(int argc, char* argv[])
 	name_to_id[tmp] = i;
 	}
 
+	//sample pairs to process
 	vector< pair<string, string> > relpairs;
 	if( pairfile != "" ){
 		ifstream in(pairfile.c_str());
@@ -226,8 +232,8 @@ int ibd_main(int argc, char* argv[])
 		make_pair_list(relpairs, names);
 	}
 
-	//Dont't waste time reading all samples
-	for(int r=0; r<relpairs.size(); ++r){ //all sample pairs
+	//Dont't waste time reading all samples, just required ones
+	for(size_t r=0; r<relpairs.size(); ++r){ //all sample pairs
 		unique_names.insert( relpairs[r].first  );
 		unique_names.insert( relpairs[r].second  );
     }	  
@@ -239,6 +245,8 @@ int ibd_main(int argc, char* argv[])
 	} sample_names += (*uit);
 
     int sret = bcf_hdr_set_samples(sr->readers[0].header, sample_names.c_str(), 0);
+    if(sret < 0){ cerr << "Failed to set samples from " << pairfile << endl; exit(1); }
+    
 	N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples 
 	
 	name_to_id.clear();
@@ -276,7 +284,9 @@ int ibd_main(int argc, char* argv[])
 	num_sites++;
 	if(bcf_sr_has_line(sr,0)) { //present in the study file
 	line =  bcf_sr_get_line(sr, 0);
-	ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);    
+	ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);   
+	if(ngt < 0){ cerr << "Bad genotypes at " << line->pos+1 << endl; exit(1); }
+	 
 	for(int i=0;i<2*N;i++){ 
 		if(gt_arr[i]==bcf_gt_missing || (bcf_gt_allele(gt_arr[i])<0) || (bcf_gt_allele(gt_arr[i])>2)  ){
 			gt_arr[i]=bcf_gt_phased(0);//inserting homref instead of missing.
@@ -291,10 +301,10 @@ int ibd_main(int argc, char* argv[])
 
 		float p;
 		int ret = bcf_get_info_float(sr->readers[1].header, line2, (af_tag + "AF").c_str(), &af_ptr, &nval);
-		if( nval != 1 ){ cerr << (af_tag + "AF") << " read error at " << line2->rid << ":" << line->pos+1 << endl; exit(1); }
+		if( ret < 0 || nval != 1 ){ cerr << (af_tag + "AF") << " read error at " << line2->rid << ":" << line->pos+1 << endl; exit(1); }
 		p = af_ptr[0];
 		
-		if( (p < 0.5) ? ( p > min_freq ) : (1-p > min_freq) ){ 	
+		if( (p < 0.5) ? ( p > min_freq ) : (1-p > min_freq) ){ 	//freq cutoff
 						
 			vector<int> tmp(N); 
 			for(int i=0; i<N; ++i){ tmp[i] = bcf_gt_allele(gt_arr[2*i]) + bcf_gt_allele(gt_arr[2*i+1]); } 
@@ -302,6 +312,7 @@ int ibd_main(int argc, char* argv[])
 			af.push_back( p );
 			position.push_back( line->pos+1 );
 			
+			//read GQ for errors otherwise use constant
 			ngq = bcf_get_format_float(sr->readers[0].header, line, "GQ", &gq_arr, &ngq_arr);
 			vector<float> tmpq(N);
 			if( ngq < 0 ){
@@ -311,6 +322,7 @@ int ibd_main(int argc, char* argv[])
 			}
 			GQ.push_back( tmpq );
 			
+			//read LD scores otherwise assume equilibrium
 			float tl;
 			int ret = bcf_get_info_float(sr->readers[1].header, line2, (af_tag + "LD").c_str(), &ld_ptr, &nval);
 			if( ret<=-1 ){ 
@@ -342,18 +354,17 @@ int ibd_main(int argc, char* argv[])
 	bcf_sr_destroy(sr);	
   
   vector< list< region > > all_extended_match_region(relpairs.size());
-  //vector< vector<float> > all_mscore(relpairs.size());
   cerr << "computing IBD sharing for " << relpairs.size() << " sample pairs." << endl;
   
   #pragma omp parallel for	
-  for(int r=0; r<relpairs.size(); ++r){ //all sample pairs
+  for(size_t r=0; r<relpairs.size(); ++r){ //all sample pairs
   
 	  int j1 = name_to_id[ relpairs[r].first  ]; //sample ids
 	  int j2 = name_to_id[ relpairs[r].second ];	  
 	 
 	  list<region> matches;
 	  ///count number of IBS>0 matches between j1 and j2 in each window
-	  for(int i=0; i<G.size(); i+=wsize){	
+	  for(int i=0; i<(int)G.size(); i+=wsize){	
 		  region rg;
 		  rg.begin = i;
 		  rg.end = i+wsize;
@@ -413,7 +424,7 @@ int ibd_main(int argc, char* argv[])
 		  list<region>::iterator mit = max_element(matches.begin(), matches.end());
 		  initm = mit->score;
 		  
-		  float best_score = mit->score;
+
 		  region best_region = (*mit);
 		  region init_region = best_region;
 		  
@@ -527,7 +538,7 @@ int ibd_main(int argc, char* argv[])
 	
   } //end pair list
   
-  for(int r=0; r<all_extended_match_region.size(); ++r){
+  for(size_t r=0; r<all_extended_match_region.size(); ++r){
 		for(list<region>::iterator it=all_extended_match_region[r].begin(); 
 		it != all_extended_match_region[r].end(); ++it){
 			if(it->score >= thresh && position[ it->end ] - position[ it->begin ] >= min_len){

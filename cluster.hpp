@@ -11,7 +11,9 @@
 using namespace std;
 using namespace Eigen;
 
+//compare vector by first component
 extern bool cf_idx(vector<int> i, vector<int> j);
+//compare pair by first value
 extern bool cf_pair(pair<int, float> i, pair<int, float> j);
 
 //let's try to use Eigen here so I don't have to write many loops
@@ -109,10 +111,7 @@ class Cluster
 		//move constructors are stupid
 				
 		//output functions
-		void raw_data_dump();
-		void clustered_data_dump();
 		void clustered_data_dump(vector<vector<string> > &labels);
-		void cluster_to_file(ofstream& of, vector<vector<string> > &labels, int k);
 
 		//basic init functions
 		void initialiseCentres();
