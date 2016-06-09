@@ -2,7 +2,7 @@
 
 ##build akt
 cd ../
-make clean
+#make clean
 make -j 4
 cd test/
 
