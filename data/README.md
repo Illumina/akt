@@ -1,6 +1,8 @@
-The site-only vcfs in this directory contain a sparse set (one per ~200kb) of 17535 "reliable" SNPs.  These are reasonably common and consistently called by different bioinformatics pipelines. They should be useful for PCA and relatedness analyses which require LD-pruned variants.
+The site-only vcfs in this directory contain a sparse set (one per ~200kb) of 17535 "reliable" SNPs.  These are reasonably common and consistently called by different bioinformatics pipelines. They should be useful for PCA and relatedness analyses which require LD-pruned variants. We have one site list appropriate for whole-genome sequence (WGS) data and one approprate for whole-exome sequence data (WES).
 
-They are:
+There is one vcf where chromosomes have the chr prefix (hg19/hg38) and one vcf where the prefix is removed (grch37/grch38). 
+
+**WGS data:**
 * bi-allelic SNPs in 1000G Phase 3 with global MAF>=5%
 * present on the Human Core Exome Microarray
 * present on the Infinium Core Exome Microarray
@@ -9,11 +11,17 @@ They are:
 * present on v4 of 23andMe microarray
 * present in high-coverage samples sequenced at Illumina with similar allele frequency to 1000G
 
-There is one vcf where chromosomes have the chr prefix (eg. chr1) and one vcf where the prefix is removed. 
+**WES data:**
+* bi-allelic SNPs in 1000G Phase 3 with global MAF>=5%
+* present in ExAC
+* present in high-coverage samples sequenced at Illumina with similar allele frequency to 1000G
+* LD pruned 
 
-The INFO also contains the PCA coefficients for 1000G Phase3 which allows new samples to be easily projected onto the 1000G principal components.
 
-The file `1000G.phase3.pca` contains the first twenty principal components calculated on the 2504 samples in the 1000G Phase 3 release using these SNPs. 
+
+The INFO also contains the PCA coefficients for 1000G Phase3 which allows new samples to be easily projected onto the 1000G principal components. This is only applicable for the grch37/hg19 site lists, since 1000G is not available in b38.
+
+The file `1000G.phase3.pca` contains the first twenty principal components calculated on the 2504 samples in the 1000G Phase 3 release using these SNPs (hg19/grch37).
 
 You can generate a simple plot in R of the 1000G PCs via:
 
