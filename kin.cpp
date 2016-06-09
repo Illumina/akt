@@ -385,23 +385,19 @@ int kin_main(int argc, char* argv[])
     }
   }
 	
-  for(size_t r=0; r<relpairs.size(); ++r){ ///all sample pairs
+  for(size_t r=0; r<relpairs.size(); ++r) ///all sample pairs
+  {
 
     int i = name_to_id[ relpairs[r].first  ]; ///sample ids
     int j = name_to_id[ relpairs[r].second ];
 	 
     float ks = 0.5 * IBD[2][i][j] + 0.25 * IBD[1][i][j];
 
-    if( tk ){
-      if( ks > min_kin ){
+    if( !tk || ks > min_kin )
+    {
 	cout  << names[i] << "\t" << names[j] << "\t"
 	      << left << " " << setprecision(5) << fixed << IBD[0][i][j]  << left << " " << setprecision(5) << fixed << IBD[1][i][j]  << left << " " << setprecision(5) << fixed << IBD[2][i][j] 
 	      << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<IBD[3][i][j] << "\n";
-      }
-    } else {
-      cout  << names[i] << "\t" << names[j] << "\t"
-	    << left << " " << setprecision(5) << fixed << IBD[0][i][j]  << left << " " << setprecision(5) << fixed << IBD[1][i][j]  << left << " " << setprecision(5) << fixed << IBD[2][i][j] 
-	    << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) << IBD[3][i][j] << "\n";	
     }
   }
   return 0;
