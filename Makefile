@@ -76,3 +76,6 @@ akt: version.h akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o
 	$(CXX) $(CXXFLAGS)   -o akt akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h
+
+test: 
+	cd test/;bash test.sh
