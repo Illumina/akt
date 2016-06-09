@@ -79,24 +79,28 @@ void make_pair_list(vector< pair<string, string> > &relpairs, vector<string> nam
  *
  */
 static void usage(){
-  cerr << "Calculate IBD stats from a VCF" << endl;	
-  cerr << "Usage:" << endl;
-  cerr << "./akt kin in.bcf -T sites.vcf.gz" << endl;
+  cerr << "\nAbout: Calculate IBD stats from a VCF" << endl;	
+  cerr << "Usage: akt kin [options] <in.bcf>" << endl;
   cerr << "Expects input.bcf to contain genotypes." << endl;
-  cerr << "User must specify a file containing allele frequencies with -R!" << endl;
+
+  cerr << "\nKinship calculation options:"<<endl;
   cerr << "\t -k --minkin:			threshold for relatedness output (none)" << endl;
   cerr << "\t -u --unnorm:			If present don't normalize" << endl;
-  cerr << "\t -c --calc:			calculate AF from data" << endl;
-  umessage('h');
-  umessage('T');
-  umessage('n');
+//  cerr << "\t -c --calc:			calculate AF from data" << endl;
+  cerr << "\t -F --freq-file:                a file containing population allele frequencies to use in kinship calculation"<<endl;
   umessage('a');
-  umessage('r');
+  umessage('n');
+  cerr << "\nSite filtering options:"<<endl;  
   umessage('R');
+//  umessage('T');
+  umessage('r');
+  umessage('m');
+  umessage('h');
+  cerr << "\nSample filtering options:"<<endl;
   umessage('s');
   umessage('S');
-  umessage('f');
-  umessage('m');
+//  umessage('f');
+
   exit(1);
 }
 
@@ -113,14 +117,12 @@ int kin_main(int argc, char* argv[])
     {"freq-file",1,0,'F'},	
     {"regions-file",1,0,'R'},
     //    {"targets-file",1,0,'T'},
-    {"frq-file",1,0,'F'},
     {"aftag",1,0,'a'},
     {"minkin",1,0,'k'},
     {"thin",1,0,'h'},
     {"unnorm",1,0,'u'},
-    {"calc",1,0,'c'},
     {"maf",1,0,'m'},
-    {"pairfile",1,0,'f'},
+//    {"pairfile",1,0,'f'},
     {"samples",1,0,'s'},
     {"samples-file",1,0,'S'},
     {0,0,0,0}
@@ -152,7 +154,7 @@ int kin_main(int argc, char* argv[])
       case 'u': norm = false; break;
       case 'm': min_freq = atof(optarg); break;
       case 'n': nthreads = atoi(optarg); break;
-      case 'f': pairfile = (optarg); break;
+//      case 'f': pairfile = (optarg); break;
       case 'a': af_tag = string(optarg); break;
       case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
       case 'S': sargs.sample_names = (optarg); sargs.subsample = true; sargs.sample_is_file = 1; break;
@@ -341,64 +343,54 @@ int kin_main(int argc, char* argv[])
   }
   ///IBD0 IBD1 IBD2 NSNP
   vector< vector<vector<float> > > IBD( 4, vector< vector<float> >(Nsamples, vector<float>(Nsamples,0) ) );
-  vector< pair<string, string> > relpairs;
-  if( pairfile != "" ){
-    ifstream in(pairfile.c_str());
-    read_pairs(in, relpairs, name_to_id);
-    in.close();
-  } else {
-    make_pair_list(relpairs, names);
-  }
 
 #pragma omp parallel for	
-  for(size_t r=0; r<relpairs.size(); ++r){ //all sample pairs
-
-    int j1 = name_to_id[ relpairs[r].first  ]; //sample ids
-    int j2 = name_to_id[ relpairs[r].second ];
-
-    IBD[0][j1][j2] = 0;
-    IBD[2][j1][j2] = 0;
-    IBD[3][j1][j2] = 0;
-    for(size_t i=0; i<bits[j1].size(); ++i){
-      IBD[0][j1][j2] += (bits[j1][i][0] & bits[j2][i][2]).count() + (bits[j1][i][2] & bits[j2][i][0]).count();	///opposite homozygotes
-      IBD[2][j1][j2] += (bits[j1][i][0] & bits[j2][i][0]).count() + (bits[j1][i][1] & bits[j2][i][1]).count() + (bits[j1][i][2] & bits[j2][i][2]).count();	///same genotype
-      IBD[3][j1][j2] += (bits[j1][i][3] | bits[j2][i][3]).count();	///missing in both
-    }
-    IBD[1][j1][j2] = markers-IBD[3][j1][j2]-IBD[0][j1][j2]-IBD[2][j1][j2];	///consistent with IBD1
-
-    ///method of moments
-    IBD[0][j1][j2] /= n00;	
-    IBD[1][j1][j2] = (IBD[1][j1][j2] - IBD[0][j1][j2]*n10)/n11;
-    IBD[2][j1][j2] = (IBD[2][j1][j2] - IBD[0][j1][j2]*n20 - IBD[1][j1][j2]*n21)/n22;
-    IBD[3][j1][j2] = n22 - IBD[3][j1][j2];
-
-    ///normalize in [0,1]
-    if( norm ){
-      if(IBD[0][j1][j2] > 1){ //very unrelated, project to 100
-	IBD[0][j1][j2] = 1;  IBD[1][j1][j2] = 0; IBD[2][j1][j2] = 0; 
-      }
-      if(IBD[1][j1][j2] < 0){ IBD[1][j1][j2] = 0; }
-      if(IBD[2][j1][j2] < 0){ IBD[2][j1][j2] = 0; }
-		
-      float sum = IBD[0][j1][j2] + IBD[1][j1][j2] + IBD[2][j1][j2];
-      for(int k=0; k<3; ++k){ IBD[k][j1][j2] /= sum; }
-    }
-  }
-	
-  for(size_t r=0; r<relpairs.size(); ++r) ///all sample pairs
+  for(int j1=0;j1<Nsamples;j1++) 
   {
+      for(int j2=j1;j2<Nsamples;j2++) 
+      {
+	  IBD[0][j1][j2] = 0;
+	  IBD[2][j1][j2] = 0;
+	  IBD[3][j1][j2] = 0;
+	  for(size_t i=0; i<bits[j1].size(); ++i){
+	      IBD[0][j1][j2] += (bits[j1][i][0] & bits[j2][i][2]).count() + (bits[j1][i][2] & bits[j2][i][0]).count();	///opposite homozygotes
+	      IBD[2][j1][j2] += (bits[j1][i][0] & bits[j2][i][0]).count() + (bits[j1][i][1] & bits[j2][i][1]).count() + (bits[j1][i][2] & bits[j2][i][2]).count();	///same genotype
+	      IBD[3][j1][j2] += (bits[j1][i][3] | bits[j2][i][3]).count();	///missing in both
+	  }
+	  IBD[1][j1][j2] = markers-IBD[3][j1][j2]-IBD[0][j1][j2]-IBD[2][j1][j2];	///consistent with IBD1
 
-    int i = name_to_id[ relpairs[r].first  ]; ///sample ids
-    int j = name_to_id[ relpairs[r].second ];
-	 
-    float ks = 0.5 * IBD[2][i][j] + 0.25 * IBD[1][i][j];
+	  ///method of moments
+	  IBD[0][j1][j2] /= n00;	
+	  IBD[1][j1][j2] = (IBD[1][j1][j2] - IBD[0][j1][j2]*n10)/n11;
+	  IBD[2][j1][j2] = (IBD[2][j1][j2] - IBD[0][j1][j2]*n20 - IBD[1][j1][j2]*n21)/n22;
+	  IBD[3][j1][j2] = n22 - IBD[3][j1][j2];
 
-    if( !tk || ks > min_kin )
-    {
-	cout  << names[i] << "\t" << names[j] << "\t"
-	      << left << " " << setprecision(5) << fixed << IBD[0][i][j]  << left << " " << setprecision(5) << fixed << IBD[1][i][j]  << left << " " << setprecision(5) << fixed << IBD[2][i][j] 
-	      << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<IBD[3][i][j] << "\n";
-    }
+	  ///normalize in [0,1]
+	  if( norm ){
+	      if(IBD[0][j1][j2] > 1){ //very unrelated, project to 100
+		  IBD[0][j1][j2] = 1;  IBD[1][j1][j2] = 0; IBD[2][j1][j2] = 0; 
+	      }
+	      if(IBD[1][j1][j2] < 0){ IBD[1][j1][j2] = 0; }
+	      if(IBD[2][j1][j2] < 0){ IBD[2][j1][j2] = 0; }
+		
+	      float sum = IBD[0][j1][j2] + IBD[1][j1][j2] + IBD[2][j1][j2];
+	      for(int k=0; k<3; ++k){ IBD[k][j1][j2] /= sum; }
+	  }
+      }
+  }	
+
+  for(int j1=0;j1<Nsamples;j1++) 
+  {
+      for(int j2=j1;j2<Nsamples;j2++) 
+      {	 
+	  float ks = 0.5 * IBD[2][j1][j2] + 0.25 * IBD[1][j1][j2];
+	  if( !tk || ks > min_kin )
+	  {
+	      cout  << names[j1] << "\t" << names[j2] << "\t"
+		    << left << " " << setprecision(5) << fixed << IBD[0][j1][j2]  << left << " " << setprecision(5) << fixed << IBD[1][j1][j2]  << left << " " << setprecision(5) << fixed << IBD[2][j1][j2] 
+		    << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<IBD[3][j1][j2] << "\n";
+	  }
+      }
   }
   return 0;
 }
