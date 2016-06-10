@@ -19,4 +19,17 @@ extern void read_pairs(ifstream &in, vector< pair<string, string> > &relpairs, m
 
 extern void make_pair_list(vector< pair<string, string> > &relpairs, vector<string> names);
 
+//trying to keep some of the kinship stuff in this class
+//i will expand this to hold genotype bitset as well - jared.
+class Kinship 
+{
+public:
+    Kinship(int nsample);
+    void estimate_ibd(float & ibd0, float & ibd1, float & ibd2,float & ibd3,bool normalise=true) ;
+    void update_n(float p);
+    float _n00,_n10,_n11,_n20,_n21,_n22;
+    int _nsample;  
+    vector _af;//allele freqs
+};
+
 #endif

@@ -72,5 +72,6 @@ int admix_main(int argc,char **argv);
 
 int metafreq_main(int argc,char **argv);
 
+void die(string s);
 
 #endif
