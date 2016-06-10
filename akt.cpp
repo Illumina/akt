@@ -92,3 +92,8 @@ int main(int argc, char **argv) {
     usage();
   }
 }
+
+void die(string s) {
+    cerr<<"ERROR: "<<s<<endl;
+    exit(1);
+}
