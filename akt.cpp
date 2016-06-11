@@ -86,14 +86,24 @@ int main(int argc, char **argv) {
     admix_main(argc, argv); 
   } else if(((string)argv[1]) == "metafreq") {
     metafreq_main(argc, argv); 
-  } 
+  } else if(((string)argv[1]) == "grm") {
+    grm_main(argc, argv); 
+  }   
   else {
     cerr << "Invalid command: " << argv[1] << endl;
     usage();
   }
 }
 
-void die(string s) {
-    cerr<<"ERROR: "<<s<<endl;
+/**
+ * @name    die
+ * @brief   exit with error message
+ *
+ * Exit "gracefully"
+ *
+ * @param [in] s Error string.
+ */
+void die(const string& s) {
+    cerr << "ERROR: " << s << "\nExiting..." << endl;
     exit(1);
 }

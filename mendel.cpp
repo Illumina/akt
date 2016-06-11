@@ -8,10 +8,6 @@ typedef struct _args {
   char *pedigree,*inputfile,*include,*regions,*targets,*outfile;  
 } args;
 
-void die(string s) {
-  cerr<<"ERROR: "<<s<<endl;
-  exit(1);
-}
 /**
  * @name    usage
  * @brief   print out options

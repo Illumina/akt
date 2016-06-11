@@ -29,7 +29,7 @@ public:
     void update_n(float p);
     float _n00,_n10,_n11,_n20,_n21,_n22;
     int _nsample;  
-    vector _af;//allele freqs
+    vector<float> _af;//allele freqs
 };
 
 #endif
