@@ -115,13 +115,13 @@ static void usage()
 
 Kinship::Kinship(int nsample)
 {
-    _nsample=_nsample;
+    _nsample=nsample;
     _n00=0;
     _n10=0;
     _n11=0;
     _n20=0;
     _n21=0;
-    _n22;
+    _n22=0;
     _af.resize(50000);//shouldnt need more markers than this.
 }
 
@@ -496,14 +496,15 @@ int kin_main(int argc, char* argv[])
 		    ks = (Nhet_12 - 2*ibd0)/(2*minhet) + 0.5 - 0.25*(Nhet_1+Nhet_2)/minhet;
 		    K.estimate_ibd(ibd0,ibd1,ibd2,ibd3);
 		}
-	    }
-	    if( !tk || ks > min_kin )
-	    {
+	    
+		if( !tk || ks > min_kin )
+		{
 #pragma omp critical
-		{		    
-		    cout  << names[j1] << "\t" << names[j2] << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
+		    {		    
+			cout  << names[j1] << "\t" << names[j2] << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
+		    }
 		}
-	    }  
+	    }
 	}
     }
     cerr << "done."<<endl;

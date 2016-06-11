@@ -349,18 +349,6 @@ void Cluster::silhouette(){
 	silset = true;
 }
 
-/**
- * @name    die
- * @brief   exit with error message
- *
- * Exit "gracefully"
- *
- * @param [in] s Error string.
- */
-static void die(const string& s) {
-    cerr << "ERROR: " << s << "\nExiting..." << endl;
-    exit(1);
-}
 
 /**
  * @name    usage
