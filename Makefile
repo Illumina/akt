@@ -23,8 +23,8 @@ default: CXXFLAGS = -O3 -DNDEBUG $(OMP)
 default: CFLAGS = -O3 -DNDEBUG $(OMP)
 default: all
 
-debug: CXXFLAGS = -g -O1
-debug: CFLAGS =  -g -O1 
+debug: CXXFLAGS = -g -O1 $(OMP)
+debug: CFLAGS =  -g -O1  $(OMP)
 debug: all
 
 profile: CXXFLAGS = -pg -O3 $(OMP)
