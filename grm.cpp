@@ -107,7 +107,7 @@ int grm_main(int argc, char** argv)
 			int offset=j1*nsample - j1*(j1+1)/2;
 			for(int j2=j1;j2<nsample;j2++) 
 			{
-			    int idx = j1*nsample+j2;//(offset+j2);
+			    int idx = offset+j2;
 #ifdef DEBUG
 			    assert( idx < grm.size());
 			    assert( gt_arr[j1]>=0 && gt_arr[j1]<4);
@@ -125,7 +125,7 @@ int grm_main(int argc, char** argv)
 	int offset=j1*nsample - j1*(j1+1)/2;
 	for(int j2=j1;j2<nsample;j2++) 
 	{
-	    int idx = j1*nsample+j2;// offset+j2;
+	    int idx = offset+j2;
 	    assert( idx < grm.size());
 	    grm[idx]/=nsnp;
 	    cout<<idx<<" "<<sr->readers[0].header->samples[j1]<<"\t"<<sr->readers[0].header->samples[j2]<<"\t"<<grm[idx]<<endl;
