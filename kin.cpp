@@ -452,11 +452,8 @@ int kin_main(int argc, char* argv[])
 	cerr << num_study << "/"<<num_sites<<" of study markers were in the sites file"<<endl;
     }
     cerr << "Calculating kinship values...";
-#pragma omp parallel for	
-    //0: plink unnormalised. 1: plink normalised. 2: king-robust. 3:GRM
-    if(method<2) //plink normalised/unnormalised/king-robust. all use similar variables.
-    {
 
+#pragma omp parallel for	
 	for(int j1=0;j1<Nsamples;j1++) 
 	{
 	    for(int j2=j1;j2<Nsamples;j2++) 
@@ -506,7 +503,6 @@ int kin_main(int argc, char* argv[])
 		}
 	    }
 	}
-    }
     cerr << "done."<<endl;
     return 0;
 }
