@@ -51,8 +51,8 @@ int grm_main(int argc, char** argv)
     int nsample = bcf_hdr_nsamples(sr->readers[0].header);
     cerr <<nsample<<" samples in "<<argv[optind]<<endl;
     float lookup[3][3];
-    vector<float> grm(nsample*nsample,0.0);
-//    grm.assign(nsample*(nsample - 1)/2 + nsample,0.0);
+    vector<float> grm(nsample*(nsample - 1)/2 + nsample,0.0);
+    vector<int> nmiss(nsample*(nsample - 1)/2 + nsample,0);
 
     bcf1_t *line;
     int *gt_arr=NULL;
@@ -102,33 +102,41 @@ int grm_main(int argc, char** argv)
 		    }
 		}
 //#pragma omp parallel for	
-		    for(int j1=0;j1<nsample;j1++) 
+		for(int j1=0;j1<nsample;j1++) 
+		{
+		    int offset=j1*nsample - j1*(j1+1)/2;
+		    for(int j2=j1;j2<nsample;j2++) 
 		    {
-			int offset=j1*nsample - j1*(j1+1)/2;
-			for(int j2=j1;j2<nsample;j2++) 
-			{
-			    int idx = offset+j2;
+			int idx = offset+j2;
 #ifdef DEBUG
-			    assert( idx < grm.size());
-			    assert( gt_arr[j1]>=0 && gt_arr[j1]<4);
-			    assert( gt_arr[j2]>=0 && gt_arr[j2]<4);
+			assert( idx < grm.size());
+			assert( gt_arr[j1]>=0 && gt_arr[j1]<4);
+			assert( gt_arr[j2]>=0 && gt_arr[j2]<4);
 #endif
-			    grm[idx]+=lookup[gt_arr[j1]][gt_arr[j2]];
+			int g0=gt_arr[j1];
+			int g1=gt_arr[j2];
+			if(g0<3&&g1<3)
+			{
+			    grm[idx]+=lookup[g0][g1];
+			}
+			else
+			{
+			    nmiss[idx]++;
 			}
 		    }
-		    nsnp++;
+		}
+		nsnp++;
 	    }
 	}
     }
     for(int j1=0;j1<nsample;j1++) 
     {
-	int offset=j1*nsample - j1*(j1+1)/2;
-	for(int j2=j1;j2<nsample;j2++) 
+	for(int j2=0;j2<=j1;j2++) 
 	{
-	    int idx = offset+j2;
+	    int idx = j2*nsample - j2*(j2+1)/2 + j1;
 	    assert( idx < grm.size());
-	    grm[idx]/=nsnp;
-	    cout<<idx<<" "<<sr->readers[0].header->samples[j1]<<"\t"<<sr->readers[0].header->samples[j2]<<"\t"<<grm[idx]<<endl;
+	    grm[idx]/=(nsnp-nmiss[idx]);
+	    cout<<sr->readers[0].header->samples[j1]<<"\t"<<sr->readers[0].header->samples[j2]<<"\t"<<grm[idx]<<endl;
 	}
     }
     cerr << nsnp << " markers used"<<endl;
