@@ -29,7 +29,7 @@ void umessage(const char type){
 		case 'o': cerr << "\t -o --output:			output vcf" << endl; break;	
 		case 'O': cerr << "\t -O --outputfmt:		output vcf format" << endl; break;	
 		case 'f': cerr << "\t -f --pairfile:			file containing sample pairs to perform calculations on" << endl; break;
-		case 'h': cerr << "\t -h --thin:			keep every t variants" << endl; break;
+		case 'h': cerr << "\t -h --thin:			keep every h variants" << endl; break;
 		case 'm': cerr << "\t -m --maf:			minimum MAF" << endl; break;
 		default: cerr << "No default message exists for " << type << endl; break; 
 	}
@@ -43,13 +43,13 @@ void umessage(const char type){
  *
  */
 static void usage(){
-	cerr << "\nProgram:\takt (Ancestry and Kinship Tools)" << endl;
+    cerr << "\nProgram:\takt (Ancestry and Kinship Tools)" << endl;
     cerr << "Version:\t" << VERSION <<endl;
     cerr << "Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.\n"<<endl;
     cerr << "Usage:\takt <command> [options]\n" << endl;
     cerr << "\tpca                      principal component analysis" << endl;
     cerr << "\tkin                      detect average IBD sharing" << endl;
-    cerr << "\tgrm                      calculates the genetic-relationship matrix" << endl;
+//    cerr << "\tgrm                      calculates the genetic-relationship matrix" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
     cerr << "\tibd                      detect segments shared IBD" << endl;
     cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;
@@ -87,9 +87,10 @@ int main(int argc, char **argv) {
     admix_main(argc, argv); 
   } else if(((string)argv[1]) == "metafreq") {
     metafreq_main(argc, argv); 
-  } else if(((string)argv[1]) == "grm") {
-    grm_main(argc, argv); 
-  }   
+  } 
+  // else if(((string)argv[1]) == "grm") {
+  //   grm_main(argc, argv); 
+  // }   
   else {
     cerr << "Invalid command: " << argv[1] << endl;
     usage();
