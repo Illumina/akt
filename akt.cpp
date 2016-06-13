@@ -49,6 +49,7 @@ static void usage(){
     cerr << "Usage:\takt <command> [options]\n" << endl;
     cerr << "\tpca                      principal component analysis" << endl;
     cerr << "\tkin                      detect average IBD sharing" << endl;
+    cerr << "\tgrm                      calculates the genetic-relationship matrix" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
     cerr << "\tibd                      detect segments shared IBD" << endl;
     cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;

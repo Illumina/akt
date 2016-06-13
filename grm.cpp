@@ -4,9 +4,14 @@
 
 static void usage()
 {
-    cerr << "\nAbout: Calculate genetic relation matrix from a BCF/VCF" << endl;	
+    cerr << "\nAbout: Calculate genetic relationship matrix from a BCF/VCF" << endl;	
     cerr << "Usage: akt grm [options] <in.bcf>" << endl;
-    cerr << "Expects input.bcf to contain genotypes." << endl;
+    cerr<< "    -r, --regions <region>        restrict to comma-separated list of regions"<<endl;
+    cerr<< "    -R, --regions-file <file>     restrict to regions listed in a file"<<endl;
+    cerr<< "    -s, --samples [^]<list>       comma separated list of samples to include (or exclude with \"^\" prefix)"<<endl;
+    cerr<< "    -S, --samples-file [^]<file>  file of samples to include (or exclude with \"^\" prefix)"<<endl;
+    cerr<< "    -n                            number of threads to use for calculations."<<endl;
+    exit(1);
 }
 
 int grm_main(int argc, char** argv)
@@ -18,12 +23,14 @@ int grm_main(int argc, char** argv)
 	{"regions-file",1,0,'R'},
 	{"samples",1,0,'s'},
 	{"samples-file",1,0,'S'},
+	{"nthreads",1,0,'n'},
 	{0,0,0,0}
     };
     string regions="",input="",samples="";
     int regions_is_file=1;
     int samples_is_file=1;
-    while ((c = getopt_long(argc, argv, "r:R:s:S",loptions,NULL)) >= 0 )
+    int nthreads=1;
+    while ((c = getopt_long(argc, argv, "r:R:s:S:n:",loptions,NULL)) >= 0 )
     {
 	switch (c)
 	{	    
@@ -31,10 +38,34 @@ int grm_main(int argc, char** argv)
 	case 'R': regions = (optarg); break;
 	case 's': samples = (optarg); samples_is_file=0; break;
 	case 'S': samples = (optarg); break;	    
+	case 'n': nthreads = atoi(optarg); break;
 	}
     }
     optind++;
-    if(optind>=argc) die("no input provided");
+    if(optind>=argc) 
+    {
+	die("no input provided");
+    }
+
+    if(nthreads < 1)
+    { 
+	nthreads = 1; 
+    }
+    omp_set_num_threads(nthreads);
+#pragma omp parallel
+    {
+	if(omp_get_thread_num() == 0)
+	{
+	    if( omp_get_num_threads() != 1)
+	    {
+		cerr << "Using " << omp_get_num_threads() << " threads" << endl;
+		nthreads = omp_get_num_threads();
+	    }
+	}
+    }
+
+
+
     bcf_srs_t *sr =  bcf_sr_init() ; ///htslib synced reader.
     if(!regions.empty())
     {
@@ -48,16 +79,20 @@ int grm_main(int argc, char** argv)
     {
 	die("problem opening"+(string)argv[optind]);
     }
-    int nsample = bcf_hdr_nsamples(sr->readers[0].header);
+    bcf_hdr_t *hdr=sr->readers[0].header;
+    if( !samples.empty() )
+    {
+	bcf_hdr_set_samples(hdr, samples.c_str(), samples_is_file);
+    }
+    int nsample = bcf_hdr_nsamples(hdr);
     cerr <<nsample<<" samples in "<<argv[optind]<<endl;
-    float lookup[3][3];
     vector<float> grm(nsample*(nsample - 1)/2 + nsample,0.0);
     vector<int> nmiss(nsample*(nsample - 1)/2 + nsample,0);
-
     bcf1_t *line;
-    int *gt_arr=NULL;
-    int ngt=0;
+    int ngt=2*nsample;
+    int *gt_arr=new int[ngt];
     int nsnp=0;
+
     while(bcf_sr_next_line (sr))  ///read file
     {
 	line =  bcf_sr_get_line(sr, 0);
@@ -79,10 +114,11 @@ int grm_main(int argc, char** argv)
 		}
 	    }
 	    float af = (float)ac/(float)an;//allele frequency.
-//	    if(af>0.5) af = 1-af;
+
 #ifdef DEBUG
 	    cerr << line->rid<<":"<<line->pos+1<<" ac="<<ac<<" an="<<an<<" af="<<af<<endl;
 #endif
+	    float lookup[4][4];		
 	    if(ac>0 && ac<an)
 	    {
 		for(int g0=0;g0<4;g0++) 
@@ -101,7 +137,7 @@ int grm_main(int argc, char** argv)
 			}
 		    }
 		}
-//#pragma omp parallel for	
+#pragma omp parallel for	
 		for(int j1=0;j1<nsample;j1++) 
 		{
 		    int offset=j1*nsample - j1*(j1+1)/2;
@@ -109,7 +145,8 @@ int grm_main(int argc, char** argv)
 		    {
 			int idx = offset+j2;
 #ifdef DEBUG
-			assert( idx < grm.size());
+			assert( idx>=0 && idx<nmiss.size());
+			assert( idx>=0 && idx<grm.size());
 			assert( gt_arr[j1]>=0 && gt_arr[j1]<4);
 			assert( gt_arr[j2]>=0 && gt_arr[j2]<4);
 #endif
@@ -129,12 +166,23 @@ int grm_main(int argc, char** argv)
 	    }
 	}
     }
+
+    /////code for lower triangular matrix
+    // for(int j1=0;j1<nsample;j1++) 
+    // {
+    // 	for(int j2=0;j2<=j1;j2++) 
+    // 	{
+    // 	    int idx = j2*nsample - j2*(j2+1)/2 + j1;
     for(int j1=0;j1<nsample;j1++) 
     {
-	for(int j2=0;j2<=j1;j2++) 
+	int offset=j1*nsample - j1*(j1+1)/2;
+	for(int j2=j1;j2<nsample;j2++) 
 	{
-	    int idx = j2*nsample - j2*(j2+1)/2 + j1;
-	    assert( idx < grm.size());
+	    int idx = offset+j2;
+#ifdef DEBUG
+	    assert(idx>=0 && idx < nmiss.size());
+	    assert(idx>=0 && idx < grm.size());
+#endif
 	    grm[idx]/=(nsnp-nmiss[idx]);
 	    cout<<sr->readers[0].header->samples[j1]<<"\t"<<sr->readers[0].header->samples[j2]<<"\t"<<grm[idx]<<endl;
 	}

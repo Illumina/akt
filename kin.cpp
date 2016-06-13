@@ -231,12 +231,8 @@ int kin_main(int argc, char* argv[])
 	}
     }
 
-    if(!frq_file.empty()&&method==2) {
-	cerr <<"ERROR: cannot use -F and --method 2"<<endl;
-	exit(1);
-    }
-    if(method<0 || method>2) {
-	cerr << "ERROR: method must be one of 0/1/2"<<endl;
+    if(method<0 || method>1) {
+	cerr << "ERROR: method must be one of 0/1"<<endl;
 	exit(1);
     }
     if( used_r && used_R )
