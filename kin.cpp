@@ -93,10 +93,8 @@ static void usage()
 
     cerr << "\nKinship calculation options:"<<endl;
     cerr << "\t -k --minkin:			threshold for relatedness output (none)" << endl;
-//    cerr << "\t -u --unnorm:			If present don't normalize" << endl;
-//  cerr << "\t -c --calc:			calculate AF from data" << endl;
     cerr << "\t -F --freq-file:                a file containing population allele frequencies to use in kinship calculation"<<endl;
-    cerr << "\t -M --method:			type of estimator. 0:plink (default) 1:king-robust 2:genetic relationship matrix" << endl;
+    cerr << "\t -M --method:			type of estimator. 0:plink (default) 1:king-robust 2:genetic-relationship-matrix" << endl;
     umessage('a');
     umessage('n');
     cerr << "\nSite filtering options:"<<endl;  
@@ -216,13 +214,10 @@ int kin_main(int argc, char* argv[])
 	case 'F': frq_file=optarg;break;
 	case 'M': method=atoi(optarg);break;
 	case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
-	    //      case 'T': target = true; pfilename = (optarg); break;
 	case 'k': tk = true; min_kin = atof(optarg); break;
 	case 'h': thin = atoi(optarg); break;
-//	case 'u': norm = false; break;
 	case 'm': min_freq = atof(optarg); break;
 	case 'n': nthreads = atoi(optarg); break;
-//      case 'f': pairfile = (optarg); break;
 	case 'a': af_tag = string(optarg); break;
 	case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
 	case 'S': sargs.sample_names = (optarg); sargs.subsample = true; sargs.sample_is_file = 1; break;
@@ -231,8 +226,8 @@ int kin_main(int argc, char* argv[])
 	}
     }
 
-    if(method<0 || method>1) {
-	cerr << "ERROR: method must be one of 0/1"<<endl;
+    if(method<0 || method>2) {
+	cerr << "ERROR: method must be one of 0/1/2"<<endl;
 	exit(1);
     }
     if( used_r && used_R )
@@ -330,9 +325,17 @@ int kin_main(int argc, char* argv[])
     { 
 	bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); 
     }
+    if(method==2) //jump out to GRM routine.
+    {
+	return(grm(sr));
+    }
   
     int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples
-  
+
+    if(N<10 && frq_file.empty())
+    {
+	cerr<<"WARNING: your sample size is <10 and you have NOT provided population frequencies (-F)."<<endl;
+    }
     cerr << N << " samples" << endl;
     Nsamples = N;
     for(int i=0; i<N; ++i)
@@ -452,7 +455,7 @@ int kin_main(int argc, char* argv[])
 #pragma omp parallel for	
 	for(int j1=0;j1<Nsamples;j1++) 
 	{
-	    for(int j2=j1;j2<Nsamples;j2++) 
+	    for(int j2=j1+1;j2<Nsamples;j2++) 
 	    {
 		float ibd0 = 0;
 		float ibd1 = 0;
