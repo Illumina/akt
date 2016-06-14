@@ -23,8 +23,8 @@ default: CXXFLAGS = -O3 -DNDEBUG $(OMP)
 default: CFLAGS = -O3 -DNDEBUG $(OMP)
 default: all
 
-debug: CXXFLAGS = -g -O1 $(OMP)
-debug: CFLAGS =  -g -O1  $(OMP)
+debug: CXXFLAGS = -g -O1  $(OMP)
+debug: CFLAGS =  -g -O1   $(OMP)
 debug: all
 
 profile: CXXFLAGS = -pg -O3 $(OMP)
@@ -79,5 +79,5 @@ akt: version.h akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o
 clean:
 	rm *.o akt version.h
 
-test: 
-	cd test/;bash test.sh
+test: akt
+	cd test/;bash -e test.sh
