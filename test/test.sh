@@ -1,9 +1,5 @@
 #this is a basic set of tests for akt.
 
-##build akt
-cd ../
-make -j 4
-cd test/
 
 reg=../data/wgs.grch37.vcf.gz
 ##get data
