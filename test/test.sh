@@ -1,10 +1,6 @@
 #this is a basic set of tests for akt.
 
-##build akt
-cd ../
-#make clean
-make -j 4
-cd test/
+reg=../data/wgs.grch37.vcf.gz
 
 ##get data
 data=ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf
@@ -12,19 +8,21 @@ wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
 wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.csi
 
 ##pca of data
-time ../akt pca -R ../data/1000G.snps.nochr.vcf.gz $data  > pca1.txt
+time ../akt pca -R $reg $data  > pca1.txt
 
 ##project data onto 1000G PCs
-time ../akt pca -w ../data/1000G.snps.nochr.vcf.gz $data  > pca2.txt
+time ../akt pca -w $reg $data  > pca2.txt
 Rscript ../scripts/1000G_pca.R pca2.txt 
 
 ##calculate kinship coefficients
-time ../akt kin -n 4 -F ../data/1000G.snps.nochr.vcf.gz $data > kinship.txt
-time ../akt kin -n 4  ../data/1000G.snps.nochr.vcf.gz $data > kinship.txt
-python ped_compare.py  n433.fam  20130606_g1k.fam
+time ../akt kin -M 0 -n 4 -R $reg $data > kinship0.txt
+time ../akt kin -M 1 -n 4 -R $reg $data > kinship1.txt
+time ../akt kin -M 2 -n 4 -R $reg $data > kinship2.txt
+time ../akt kin -n 4 -F $reg $data > kinship.txt
 
 ##find relatives
 time ../akt relatives -p n433 kinship.txt > relatives.out
+python ped_compare.py  n433.fam  20130606_g1k.fam
 
 ##check mendel error rates of relatives
 time ../akt mendel -p n433.fam $data > mendel.out
