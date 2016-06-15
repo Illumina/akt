@@ -6,16 +6,8 @@
  * A simple tool to read vcf/bcf files and calculate IBD and kinship.
  * Calculate allele frequencies from data or from input file.
  */
- 
-#include "akt.hpp"
-#include "logs.hpp"
-#include "kin.hpp"
-#include "reader.hpp"
-#include <bitset>
-#include <iomanip>
 
-///Size of bitset. Arbitrary but 128 works well in practice
-#define L 128
+#include "kin.hpp" 
 
 using namespace std;
 
@@ -99,31 +91,20 @@ static void usage()
     umessage('n');
     cerr << "\nSite filtering options:"<<endl;  
     umessage('R');
-//  umessage('T');
     umessage('r');
+    umessage('T');
+    umessage('t');
     umessage('m');
     umessage('h');
     cerr << "\nSample filtering options:"<<endl;
     umessage('s');
     umessage('S');
 //  umessage('f');
-
+    cerr<<endl;
     exit(1);
 }
 
-Kinship::Kinship(int nsample)
-{
-    _nsample=nsample;
-    _n00=0;
-    _n10=0;
-    _n11=0;
-    _n20=0;
-    _n21=0;
-    _n22=0;
-    _af.resize(50000);//shouldnt need more markers than this.
-}
-
-void Kinship::update_n(float p) 
+void Kinship::addGenotypes(int *gt_arr,float p)
 {
     float q = 1-p;
     _n00 += 2*p*p*q*q;
@@ -135,17 +116,91 @@ void Kinship::update_n(float p)
     _n21 += p*p + q*q; ///ppp + qqq + ppq + pqq = pp(p+q) + qq(q+p) = pp + qq
     _n22 += 1;
     _af.push_back(p);    
+
+///for each site record truth table
+///g=0  g=1  g=2  g=missing
+    for(int i=0; i<_nsample; ++i)
+    { 
+	if(_bc == 0)
+	{ 
+	    _bits[i].push_back( vector< bitset<L> >(4, bitset<L>() ) ); 
+	}
+	if(gt_arr[2*i] != -1 && gt_arr[2*i+1] != -1)
+	{
+	    int g = bcf_gt_allele(gt_arr[2*i]) + bcf_gt_allele(gt_arr[2*i+1]);
+	    _bits[i].back()[ g ][_bc] = 1;
+	} 
+	else 
+	{
+	    _bits[i].back()[ 3 ][_bc] = 1;
+	}
+    }
+///chunks of size L
+    _bc = (_bc+1)%(L);			  
+    ++_markers;
 }
 
-void Kinship::estimate_ibd(float & ibd0, float & ibd1, float & ibd2,float & ibd3,bool normalise) 
+Kinship::Kinship(int nsample)
 {
-    ///method of moments
+    _nsample=nsample;
+    _markers=0;
+    _bits.assign(_nsample, vector< vector< bitset<L> > >() );
+    _n00=0;
+    _n10=0;
+    _n11=0;
+    _n20=0;
+    _n21=0;
+    _n22=0;
+    _af.resize(50000);//shouldnt need more markers than this.
+    _bc = 0;
+}
+
+
+void Kinship::estimateKinship(int j1,int j2,float & ibd0, float & ibd1, float & ibd2,float & ibd3,float & ks,int method) 
+{
+    ibd0 = 0;
+    ibd1 = 0;
+    ibd2 = 0;
+    ibd3 = 0;
+    ks=-1;
+    for(size_t i=0; i<_bits[j1].size(); ++i)
+    {
+	ibd0 += (_bits[j1][i][0] & _bits[j2][i][2]).count() + (_bits[j1][i][2] & _bits[j2][i][0]).count();//opposite homozygotes. NAA,aa
+	ibd2 += (_bits[j1][i][0] & _bits[j2][i][0]).count() + (_bits[j1][i][1] & _bits[j2][i][1]).count() + (_bits[j1][i][2] & _bits[j2][i][2]).count();//same genotype.  
+	ibd3 += (float)(_bits[j1][i][3] | _bits[j2][i][3]).count();//missing in both.
+    }
+//consistent with IBD1 N - (NAA,AA + Naa,aa)
+    ibd1 = _markers-ibd3-ibd0-ibd2;
+
+    if(method==0) 
+    {
+	estimateIBD(ibd0,ibd1,ibd2,ibd3);
+	ks = 0.5 * ibd2 + 0.25 * ibd1;
+    }
+    if(method==1)//king
+    {
+	int Nhet_1=0,Nhet_2=0,Nhet_12=0;
+	for(size_t i=0; i<_bits[j1].size(); ++i)
+	{
+	    Nhet_1 += _bits[j1][i][1].count(); //NAa^i
+	    Nhet_2 += _bits[j2][i][1].count(); //NAa^j
+	    Nhet_12 += (_bits[j1][i][1] & _bits[j2][i][1]).count(); //NAa,Aa
+	}
+	int minhet=min(Nhet_1,Nhet_2);
+	ks = (Nhet_12 - 2*ibd0)/(2*minhet) + 0.5 - 0.25*(Nhet_1+Nhet_2)/minhet;
+	estimateIBD(ibd0,ibd1,ibd2,ibd3);
+    }
+}
+
+void Kinship::estimateIBD(float & ibd0, float & ibd1, float & ibd2,float & ibd3,bool normalise) 
+{
+///method of moments
     ibd0 /= _n00;	
     ibd1 = (ibd1 - ibd0*_n10)/_n11;
     ibd2 = (ibd2 - ibd0*_n20 - ibd1*_n21)/_n22;
     ibd3 = _n22 - ibd3;
 
-    ///_normalize i_n [0,1]
+///_normalize i_n [0,1]
     if(normalise)
     {
 	if(ibd0 > 1)//very unrelated, project to 100
@@ -179,41 +234,47 @@ int kin_main(int argc, char* argv[])
 	{"nthreads",1,0,'n'},
 	{"freq-file",1,0,'F'},	
 	{"regions-file",1,0,'R'},
-	//    {"targets-file",1,0,'T'},
+	{"targets-file",1,0,'T'},
 	{"aftag",1,0,'a'},
 	{"minkin",1,0,'k'},
 	{"thin",1,0,'h'},
-//	{"unnorm",1,0,'u'},
 	{"maf",1,0,'m'},
 	{"method",1,0,'M'},
-//    {"pairfile",1,0,'f'},
 	{"samples",1,0,'s'},
 	{"samples-file",1,0,'S'},
 	{0,0,0,0}
     };
     int method=0;
     string regions = "";
+    bool regions_is_file = false;
+    string targets = "";
+    bool targets_is_file = false;
     bool norm = true;
-    float min_kin = 0; bool tk = false;
+    float min_kin = 0; 
+    bool tk = false;
     int thin = 1;
     int nthreads = -1;
     float min_freq = 0;
     string pairfile="";
     string af_tag = "AF";
     sample_args sargs;
-    bool regions_is_file = false;
+
     bool used_r = false;
     bool used_R = false;
-    bool target = false;
+    bool used_t = false;
+    bool used_T = false;
+
     string frq_file="";  
-    while ((c = getopt_long(argc, argv, "r:R:M:F:k:h:n:m:f:a:s:S:c",loptions,NULL)) >= 0) 
+    while ((c = getopt_long(argc, argv, "T:t:r:R:M:F:k:h:n:m:f:a:s:S:c",loptions,NULL)) >= 0) 
     {  
 	switch (c)
 	{
+	case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
 	case 'r': regions = (optarg); used_r = true; break;
+	case 'T': targets = (optarg); targets_is_file = true; used_T=true; break;
+	case 't': targets = (optarg); used_t=true;break;
 	case 'F': frq_file=optarg;break;
 	case 'M': method=atoi(optarg);break;
-	case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
 	case 'k': tk = true; min_kin = atof(optarg); break;
 	case 'h': thin = atoi(optarg); break;
 	case 'm': min_freq = atof(optarg); break;
@@ -234,12 +295,14 @@ int kin_main(int argc, char* argv[])
     { 
 	cerr << "-r and -R cannot be used simultaneously" << endl; exit(1); 
     }
-    //  if( !used_R && !target ){ cerr << "Must use one of -R or -T" << endl; exit(1); }
-
+    if( used_t && used_T )
+    { 
+	cerr << "-t and -T cannot be used simultaneously" << endl; exit(1); 
+    }
     assert(min_freq>=0 && min_freq<=1);
-    if((used_R&&target) )  
+    if((!targets.empty() && !regions.empty()) )  
     {
-	cerr<<"ERROR: -h/-m and -R/-T are incompatible"<<endl;
+	cerr<<"ERROR: -r/-R and -r/-R are incompatible"<<endl;
 	exit(1);
     }
     if(!frq_file.empty() && !regions.empty()) 
@@ -247,13 +310,12 @@ int kin_main(int argc, char* argv[])
 	cerr<<"ERROR: -F and -R/-r are incompatible!"<<endl;
 	exit(1);
     } 
-    else if(regions.empty())
+    if(!frq_file.empty() && regions.empty())
     {
 	regions=frq_file;
 	regions_is_file=true;
     }
-
-    if(frq_file=="")  
+    if(frq_file.empty())  
     {
 	cerr<<"No frequency VCF provided (-F). Allele frequencies will be estimated from the data."<<endl;
     }
@@ -265,6 +327,11 @@ int kin_main(int argc, char* argv[])
     { 
 	nthreads = 1; 
     }
+    if(!frq_file.empty() && method==2)
+    {
+	die("method=2 and -F are incompatible. The GRM must estimate allele frequencies from the data.");
+    }
+
     omp_set_num_threads(nthreads);
 #pragma omp parallel
     {
@@ -285,7 +352,7 @@ int kin_main(int argc, char* argv[])
     vector<string> names;			///sample names
     map<string,int> name_to_id;   ///sample ids
 	  
-    int sites=0,markers=0,num_sites=0,num_study=0;
+    int sites=0,num_sites=0,num_study=0;
   
     bcf_srs_t *sr =  bcf_sr_init() ; ///htslib synced reader.
     sr->collapse = COLLAPSE_NONE;		///require matching ALTs
@@ -294,8 +361,16 @@ int kin_main(int argc, char* argv[])
     ///subset regions
     if(!regions.empty())
     {
-	if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 ){
-	    cerr << "Failed to read the regions: " <<  regions << endl; return 0;
+	if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 )
+	{
+	    die("Failed to read the regions: "+ regions);
+	}
+    }
+    if(!targets.empty())
+    {
+	if ( bcf_sr_set_targets(sr, targets.c_str(), targets_is_file,0)<0 )
+	{
+	    die("Failed to read the targets: " +  targets);
 	}
     }
 
@@ -332,9 +407,9 @@ int kin_main(int argc, char* argv[])
   
     int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples
 
-    if(N<10 && frq_file.empty())
+    if(N<50 && frq_file.empty())
     {
-	cerr<<"WARNING: your sample size is <10 and you have NOT provided population frequencies (-F)."<<endl;
+	cerr<<"WARNING: your sample size is <50 and you have NOT provided population frequencies (-F)."<<endl;
     }
     cerr << N << " samples" << endl;
     Nsamples = N;
@@ -345,7 +420,7 @@ int kin_main(int argc, char* argv[])
 	name_to_id[tmp] = i;
     }
     Kinship K(Nsamples);
-    vector< vector< vector< bitset<L> > > > bits(N); ///[sample][site][type][val]
+//    vector< vector< vector< bitset<L> > > > bits(N); ///[sample][site][type][val]
 
     int count=0;
 
@@ -354,7 +429,7 @@ int kin_main(int argc, char* argv[])
     int *gt_arr=(int *)malloc(N*2*sizeof(int)),ngt=N*2,ngt_arr=N*2;
     float *af_ptr=(float *)malloc(1*sizeof(float)); int nval = 1;
 
-    int bc = 0;
+
     bool use_frq = !frq_file.empty();
     cerr << "Reading genotypes...";
     while(bcf_sr_next_line (sr))  ///read file
@@ -378,7 +453,7 @@ int kin_main(int argc, char* argv[])
 		///htslib -> int
 		for(int i=0;i<2*N;i++)
 		{ 
-		    if(gt_arr[i]==bcf_gt_missing || (bcf_gt_allele(gt_arr[i])<0) || (bcf_gt_allele(gt_arr[i])>2)  )
+		    if( bcf_gt_is_missing(gt_arr[i]) || bcf_gt_allele(gt_arr[i])<0 || bcf_gt_allele(gt_arr[i])>2 )
 		    {
 			gt_arr[i] = -1;
 			++nmiss;
@@ -409,29 +484,8 @@ int kin_main(int argc, char* argv[])
 		}
 		if( (p < 0.5) ? ( p > min_freq ) : (1-p > min_freq) )///min af	  
 		{
-		    K.update_n(p);
-		    ///for each site record truth table
-		    ///g=0  g=1  g=2  g=missing
-		    for(int i=0; i<N; ++i)
-		    { 
-			if(bc == 0)
-			{ 
-			    bits[i].push_back( vector< bitset<L> >(4, bitset<L>() ) ); 
-			}
-			if(gt_arr[2*i] != -1 && gt_arr[2*i+1] != -1)
-			{
-			    bits[i].back()[ bcf_gt_allele(gt_arr[2*i]) + bcf_gt_allele(gt_arr[2*i+1]) ][bc] = 1;
-			} 
-			else 
-			{
-			    bits[i].back()[ 3 ][bc] = 1;
-			}
-		    }
-		    ///chunks of size L
-		    bc = (bc+1)%(L);
-			  
-		    ++markers;
-		}	
+		    K.addGenotypes(gt_arr,p);
+		}
 	    } //thin			
 	    ++num_study;
 	} //in study
@@ -443,65 +497,31 @@ int kin_main(int argc, char* argv[])
 
     if(frq_file.empty()) 
     {
-	cerr << "Using "<<markers<<" markers for calculations"<<endl;
+	cerr << "Using "<<K._markers<<" markers for calculations"<<endl;
     }
     else
     {
-	cerr << "Kept " << markers << " markers out of " << sites << " in panel." << endl;
+	cerr << "Kept " << K._markers << " markers out of " << sites << " in panel." << endl;
 	cerr << num_study << "/"<<num_sites<<" of study markers were in the sites file"<<endl;
     }
     cerr << "Calculating kinship values...";
 
 #pragma omp parallel for	
-	for(int j1=0;j1<Nsamples;j1++) 
+    for(int j1=0;j1<Nsamples;j1++) 
+    {
+	for(int j2=j1+1;j2<Nsamples;j2++) 
 	{
-	    for(int j2=j1+1;j2<Nsamples;j2++) 
+	    float ibd0,ibd1,ibd2,ibd3,ks;
+	    K.estimateKinship(j1,j2,ibd0,ibd1,ibd2,ibd3,ks,method);
+	    if( !tk || ks > min_kin )
 	    {
-		float ibd0 = 0;
-		float ibd1 = 0;
-		float ibd2 = 0;
-		float ibd3 = 0;
-		float ks=-1;
-		for(size_t i=0; i<bits[j1].size(); ++i)
-		{
-		    //opposite homozygotes. NAA,aa
-		    ibd0 += (bits[j1][i][0] & bits[j2][i][2]).count() + (bits[j1][i][2] & bits[j2][i][0]).count();	
-		    //same genotype.  NAA,AA + Naa,aa
-		    ibd2 += (bits[j1][i][0] & bits[j2][i][0]).count() + (bits[j1][i][1] & bits[j2][i][1]).count() + (bits[j1][i][2] & bits[j2][i][2]).count();	
-		    //missing in both.
-		    ibd3 += (bits[j1][i][3] | bits[j2][i][3]).count();	
-		}
-		///consistent with IBD1 N - (NAA,AA + Naa,aa)
-		ibd1 = markers-ibd3-ibd0-ibd2;
-
-		if(method==0) 
-		{
-		    K.estimate_ibd(ibd0,ibd1,ibd2,ibd3);
-		    ks = 0.5 * ibd2 + 0.25 * ibd1;
-		}
-		if(method==1)//king
-		{
-		    int Nhet_1=0,Nhet_2=0,Nhet_12=0;
-		    for(size_t i=0; i<bits[j1].size(); ++i)
-		    {
-			Nhet_1 += bits[j1][i][1].count(); //NAa^i
-			Nhet_2 += bits[j2][i][1].count(); //NAa^j
-			Nhet_12 += (bits[j1][i][1] & bits[j2][i][1]).count(); //NAa,Aa
-		    }
-		    int minhet=min(Nhet_1,Nhet_2);
-		    ks = (Nhet_12 - 2*ibd0)/(2*minhet) + 0.5 - 0.25*(Nhet_1+Nhet_2)/minhet;
-		    K.estimate_ibd(ibd0,ibd1,ibd2,ibd3);
-		}
-	    
-		if( !tk || ks > min_kin )
-		{
 #pragma omp critical
-		    {		    
-			cout  << names[j1] << "\t" << names[j2] << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
-		    }
+		{		    
+		    cout  << names[j1] << "\t" << names[j2] << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
 		}
 	    }
 	}
+    }
     cerr << "done."<<endl;
     return 0;
 }

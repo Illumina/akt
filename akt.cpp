@@ -21,6 +21,7 @@ void umessage(const char type){
 		case 'r': cerr << "\t -r --regions:			chromosome region" << endl; break;
 		case 'R': cerr << "\t -R --regions-file:		restrict to regions listed in a file" << endl; break;
 		case 'T': cerr << "\t -T --targets-file:		similar to -R but streams rather than index-jumps" << endl; break;
+		case 't': cerr << "\t -t --targets:		        similar to -r but streams rather than index-jumps" << endl; break;
 		case 's': cerr << "\t -s --samples:			list of samples" << endl; break; 
 		case 'S': cerr << "\t -S --samples-file:		list of samples, file" << endl; break;
 		case 'n': cerr << "\t -n --nthreads: 		num threads" << endl; break;
