@@ -54,7 +54,7 @@ vcfpca.o: vcfpca.cpp
 	$(CXX) $(CXXFLAGS) -c vcfpca.cpp $(IFLAGS)
 cluster.o: cluster.cpp 
 	$(CXX) $(CXXFLAGS)  -c cluster.cpp $(IFLAGS)
-kin.o: kin.cpp 
+kin.o: kin.cpp  kin.hpp
 	$(CXX) $(CXXFLAGS)  -c kin.cpp $(IFLAGS)
 ibd.o: ibd.cpp 
 	$(CXX) $(CXXFLAGS)  -c ibd.cpp $(IFLAGS)
