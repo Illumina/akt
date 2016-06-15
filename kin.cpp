@@ -79,7 +79,7 @@ void make_pair_list(vector< pair<string, string> > &relpairs, vector<string> nam
  */
 static void usage()
 {
-    cerr << "\nAbout: Calculate IBD stats from a VCF" << endl;	
+    cerr << "\nAbout: Calculate kinship/IBD statistics from a multisample BCF/VCF" << endl;	
     cerr << "Usage: akt kin [options] <in.bcf>" << endl;
     cerr << "Expects input.bcf to contain genotypes." << endl;
 
@@ -441,17 +441,15 @@ int kin_main(int argc, char* argv[])
 	    int sum = 0;	///AC
 
 	    line =  bcf_sr_get_line(sr, 0);
-//	    cerr<<line->pos+1<<endl;
+
 	    if(line->n_allele == 2 && (count++)%thin==0 )		///bi-allelic
 	    {
 		ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);  
 		if(ngt < 0)
 		{ 
 		    cerr << "Bad genotypes at " << line->pos+1 << endl; exit(1); 
-		}
-			
-		///htslib -> int
-		for(int i=0;i<2*N;i++)
+		}			
+		for(int i=0;i<2*N;i++)		///htslib -> int
 		{ 
 		    if( bcf_gt_is_missing(gt_arr[i]) || bcf_gt_allele(gt_arr[i])<0 || bcf_gt_allele(gt_arr[i])>2 )
 		    {
@@ -465,7 +463,7 @@ int kin_main(int argc, char* argv[])
 		    }
 		}
 		float p;
-		if(frq_file=="")	///calculate AF from data
+		if(frq_file.empty())///calculate AF from data
 		{
 		    p = (float)sum / (float)(npres);	///allele frequency
 		} 
@@ -506,7 +504,9 @@ int kin_main(int argc, char* argv[])
     }
     cerr << "Calculating kinship values...";
 
-#pragma omp parallel for	
+//ordered lets us enforce ordereing but slows down code
+//#pragma omp parallel for ordered
+#pragma omp parallel for
     for(int j1=0;j1<Nsamples;j1++) 
     {
 	for(int j2=j1+1;j2<Nsamples;j2++) 
@@ -515,6 +515,7 @@ int kin_main(int argc, char* argv[])
 	    K.estimateKinship(j1,j2,ibd0,ibd1,ibd2,ibd3,ks,method);
 	    if( !tk || ks > min_kin )
 	    {
+//#pragma omp ordered 
 #pragma omp critical
 		{		    
 		    cout  << names[j1] << "\t" << names[j2] << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
