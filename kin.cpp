@@ -96,10 +96,10 @@ static void usage()
     umessage('t');
     umessage('m');
     umessage('h');
+    cerr << "\t    --force:			run kin without -R/-T/-F" << endl;
     cerr << "\nSample filtering options:"<<endl;
     umessage('s');
     umessage('S');
-//  umessage('f');
     cerr<<endl;
     exit(1);
 }
@@ -223,6 +223,7 @@ void Kinship::estimateIBD(float & ibd0, float & ibd1, float & ibd2,float & ibd3,
     }
 }
 
+#define FORCE 100
 int kin_main(int argc, char* argv[])
 {
 	
@@ -230,18 +231,20 @@ int kin_main(int argc, char* argv[])
   
     if(argc<3) usage();
     static struct option loptions[] =    {
-	{"regions",1,0,'r'},	
-	{"nthreads",1,0,'n'},
-	{"freq-file",1,0,'F'},	
-	{"regions-file",1,0,'R'},
 	{"targets-file",1,0,'T'},
-	{"aftag",1,0,'a'},
+	{"targets",1,0,'t'},
+	{"regions-file",1,0,'R'},
+	{"regions",1,0,'r'},	
+	{"method",1,0,'M'},
+	{"freq-file",1,0,'F'},	
 	{"minkin",1,0,'k'},
 	{"thin",1,0,'h'},
+	{"nthreads",1,0,'n'},
 	{"maf",1,0,'m'},
-	{"method",1,0,'M'},
+	{"aftag",1,0,'a'},
 	{"samples",1,0,'s'},
 	{"samples-file",1,0,'S'},
+	{"force",0,0,FORCE},	
 	{0,0,0,0}
     };
     int method=0;
@@ -259,13 +262,14 @@ int kin_main(int argc, char* argv[])
     string af_tag = "AF";
     sample_args sargs;
 
+    bool force = false;
     bool used_r = false;
     bool used_R = false;
     bool used_t = false;
     bool used_T = false;
 
     string frq_file="";  
-    while ((c = getopt_long(argc, argv, "T:t:r:R:M:F:k:h:n:m:f:a:s:S:c",loptions,NULL)) >= 0) 
+    while ((c = getopt_long(argc, argv, "T:t:R:r:M:F:k:h:n:m:a:s:S:f",loptions,NULL)) >= 0) 
     {  
 	switch (c)
 	{
@@ -279,12 +283,17 @@ int kin_main(int argc, char* argv[])
 	case 'h': thin = atoi(optarg); break;
 	case 'm': min_freq = atof(optarg); break;
 	case 'n': nthreads = atoi(optarg); break;
+	case FORCE: force = true; break;
 	case 'a': af_tag = string(optarg); break;
 	case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
 	case 'S': sargs.sample_names = (optarg); sargs.subsample = true; sargs.sample_is_file = 1; break;
 	case '?': usage();
 	default: cerr << "Unknown argument:"+(string)optarg+"\n" << endl; exit(1);
 	}
+    }
+    if(!force && targets.empty() && regions.empty() && frq_file.empty())
+    {
+	die("None of -R/-F/-T were provided.\n       kin does not require a dense set of markers and this can substantially increase compute time.\n       You can disable this error with --force");
     }
 
     if(method<0 || method>2) {
