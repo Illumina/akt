@@ -6,6 +6,8 @@
  * frequencies now read from `-F` argument and `-R/-T` now behave as bcftools
  * moved kinship calculations into their own class
  * reduced memory footprint (at the cost of non-deterministic output ordering)
+ * removed pairfile option
+ * users must provide one of -F/-R/-T or use --force
 
 ##2016.06.03
 * kin command defaults to calculating allele frequency from data
