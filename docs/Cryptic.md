@@ -1,7 +1,7 @@
 ##Discovering Cryptic Relations
 First we attempt to identify cryptic relations. Run
 ```
-./akt kin ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/1000G.snps.nochr.vcf.gz -n 4 > test_kin
+./akt kin ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz -n 4 > test_kin
 ```
 To calculate average ibd for all pairs in the dataset. Use more than 4 processors if you have them! `test_kin` contains 
 IBD and kinship coefficients for all 93528 possible pairs, most of which are not closely related.
