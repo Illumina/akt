@@ -4,15 +4,15 @@ are expected to be admixed with a lot of European ancestry. We therefore expect 
 3 clusters, corresponding to European, East Asian and African with the American samples either in or very close to the European 
 cluster. The command to run is
 ```
-./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/1000G.snps.nochr.vcf.gz > test_pca
+./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz > test_pca
 ```
 or if you want to use unrelated samples use the subsetting option
 ```
-./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/1000G.snps.nochr.vcf.gz -S phase1.unrel > test_pca.unrel
+./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz -S phase1.unrel > test_pca.unrel
 ```
 Alternatively we can project samples onto 1000Genomes phase3 princple components using
 ```
-./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -w data/1000G.snps.nochr.vcf.gz > test_pcaproj
+./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -w data/wgs.grch37.vcf.gz > test_pcaproj
 ```
 
 Plotting the projections of all samples onto the first three principle components gives
