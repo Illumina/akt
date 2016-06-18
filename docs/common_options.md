@@ -5,6 +5,7 @@
 -r : Comma-separated list of regions, chr:from-to.
 -R : File containing 3 columns: CHROM, POS and POS_TO. 
 -T : Indexed VCF file containing intersecting sites and relevant site info. 
+-t : similar to -r but streams rather than index-jumps.
 -n : Number of threads to use. 
 -a : Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF. 
 -f : File containing pairs of samples to compute, 2 column: Sample1 Sample2. 

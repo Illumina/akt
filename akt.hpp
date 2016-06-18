@@ -50,6 +50,8 @@ template <typename T> string to_string( T x ){
         
 using namespace std;
 
+int grm_main(int argc, char** argv);
+
 void umessage(const char type);
 
 int pca_main(int argc,char **argv);
@@ -71,6 +73,10 @@ int ldplot_main(int argc,char **argv);
 int admix_main(int argc,char **argv);
 
 int metafreq_main(int argc,char **argv);
+
+void die(const string& s);
+
+int grm(bcf_srs_t *sr);
 
 
 #endif

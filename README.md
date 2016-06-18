@@ -31,9 +31,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	48e66c0
-Contact:	rarthur@illumina.com
-
+Version:	ff35fad
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
 
 Usage:	akt <command> [options]
@@ -51,50 +49,64 @@ Usage:	akt <command> [options]
 ```
 ##kin
 ```
-Calculate IBD stats from a VCF
-Usage:
-./akt kin in.bcf -T sites.vcf.gz
+
+About: Calculate kinship/IBD statistics from a multisample BCF/VCF
+Usage: akt kin [options] <in.bcf>
 Expects input.bcf to contain genotypes.
-User must specify a file containing allele frequencies with -R!
+
+Kinship calculation options:
 	 -k --minkin:			threshold for relatedness output (none)
-	 -u --unnorm:			If present don't normalize
-	 -c --calc:			calculate AF from data
-	 -h --thin:			keep every t variants
-	 -T --targets-file:		intersecting VCF
+	 -F --freq-file:                a file containing population allele frequencies to use in kinship calculation
+	 -M --method:			type of estimator. 0:plink (default) 1:king-robust 2:genetic-relationship-matrix
+	 -a --aftag:			allele frequency tag (default AF)
 	 -n --nthreads: 		num threads
-	 -a --aftag:			allele frequency tag
+
+Site filtering options:
+	 -R --regions-file:		restrict to regions listed in a file
 	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
+	 -T --targets-file:		similar to -R but streams rather than index-jumps
+	 -t --targets:		        similar to -r but streams rather than index-jumps
+	 -m --maf:			minimum MAF
+	 -h --thin:			keep every h variants
+	    --force:			run kin without -R/-T/-F
+
+Sample filtering options:
 	 -s --samples:			list of samples
 	 -S --samples-file:		list of samples, file
-	 -f --pairfile:			file containing sample pairs
-	 -m --maf:			minimum MAF
+
 
 ```
-* -k : Output only pairs with kinship coefficient more than this.
-* -u : Don't normalize IBD scores
-* -c : Calculate allele frequency from data
-* -h : Hop this many markers forward from last accepted marker. 
-* -T : Indexed VCF file containing intersecting sites and relevant site info. 
-* -n : Number of threads to use. 
+* -k : Only output pairs with kinship coefficient greater than this.
+* -F : a file containing population allele frequencies to use in kinship calculation
+* -M : type of estimator. 0:[plink (default)](https://www.cog-genomics.org/plink2/ibd) 1:[king-robust](http://bioinformatics.oxfordjournals.org/content/26/22/2867.full) 2:[genetic-relationship-matrix](http://cnsgenomics.com/software/gcta/estimate_grm.html)
 * -a : Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF. 
-* -r : Comma-separated list of regions, chr:from-to.
+* -n : Number of threads to use. 
 * -R : File containing 3 columns: CHROM, POS and POS_TO. 
+* -r : Comma-separated list of regions, chr:from-to.
+* -T : Indexed VCF file containing intersecting sites and relevant site info. 
+* -t : similar to -r but streams rather than index-jumps.
+* -m : Minimum MAF a site to be counted. When reading: if AF > 0.5 checks 1-AF > m. 
+* -h : Hop this many markers forward from last accepted marker. 
 * -s : Comma-separated list of samples to include or exclude if prefixed with "^".
 * -S : File of sample names to include or exclude if prefixed with "^". One sample per line.
-* -f : File containing pairs of samples to compute, 2 column: Sample1 Sample2. 
-* -m : Minimum MAF a site to be counted. When reading: if AF > 0.5 checks 1-AF > m. 
 
 
 Run the kinship calculation by giving akt a multi-sample vcf/bcf file:
+
 ```
-~/ancestry_tools$./akt kin multisample.bcf -R data/1000G.snps.nochr.vcf.gz -n 32 > allibd
+$ akt kin multisample.bcf -R data/wgs.grch37.vcf.gz -n 32 > kin.txt
 ```
-the output `allibd` is 7 columns in the format
+###Choice of estimator
+
+
+The default algorithm (`-M 0`) used to calculate IBD is taken from [PLINK](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) with some minor changes. It outputs the following seven column format:
+
 ```
 ID1 ID2 IBD0 IBD1 IBD2 KINSHIP NSNP
 ```
-The algorithm used to calculate IBD is taken from [PLINK](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) with some minor changes:
+
+As with PLINK, we set KINSHIP = 0.5 * IBD2 + 0.25 * IBD1. Our IBD values may slighly differ to PLINK's (by desing) due to the following differences:
+
 * No 'bias correction' since allele frequencies are assumed to be accurate
 * Normalization as follows:
 	* if IBD0 > 1: IBD0 = 1, IBD1 = 0, IBD2 = 0
@@ -102,8 +114,11 @@ The algorithm used to calculate IBD is taken from [PLINK](http://www.ncbi.nlm.ni
 	* if IBD2 < 0: IBD2 = 0
 	* norm = IBD0 + IBD1 + IBD2
 	* IBD0 /= norm, IBD1 /= norm; IBD2 /= norm;
-* We do NOT follow PLINK which forces IBD to obey consistency conditions - this affects the clustering that is required for the `relatives` code.
-* KINSHIP = 0.5 * IBD2 + 0.25 * IBD1;
+* We do **not** follow PLINK which forces IBD to obey consistency conditions - this affects the clustering that is required for the `relatives` code.
+
+The second method (`-M 1`) uses the robust kinship coefficent estimate describing in the [KING paper](http://bioinformatics.oxfordjournals.org/content/26/22/2867.full). This may be preferable when your cohort has large amounts of population structure. The IBD estimates and output format are the same as for `-M 0`.
+
+The third method (`-M 2`) outputs the genetic relationship matrix used by [GCTA](http://cnsgenomics.com/software/gcta/) (among other software).  The output format is `ID1 ID2 GR` where `GR` is the genetic correlation between samples `ID1` and `ID2`. This matrix is important for fitting linear mixed-effect models but we have found methods 0 and 1 more appropriate for sample QC purposes.
 
 ##relatives
 ```
@@ -206,14 +221,14 @@ PG NA12893 NA12877 NA12878      1 -9
 Performs principal component analysis on a vcf/bcf
 Usage:
 ./akt pca input.bcf
-	 -T --targets-file:		intersecting VCF
+	 -T --targets-file:		similar to -R but streams rather than index-jumps
 	 -o --output:			output vcf
 	 -O --outputfmt:		output vcf format
 	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
+	 -R --regions-file:		restrict to regions listed in a file
 	 -s --samples:			list of samples
 	 -S --samples-file:		list of samples, file
-	 -h --thin:			keep every t variants
+	 -h --thin:			keep every h variants
 	 -m --maf:			minimum MAF
 	 -w --weight:			VCF with weights for PCA
 	 -N --npca:			first N principle components
@@ -343,11 +358,11 @@ Expects input_filename.vcf to contain hard genotypes
 	 -x --afonly:			calculate allele freq only
 	 -c --output_cor:		output sitewise correlation (false)
 	 -C --output_cormin:		output sitewise correlation greater than (0)
-	 -a --aftag:			allele frequency tag
+	 -a --aftag:			allele frequency tag (default AF)
 	 -o --output:			output vcf
 	 -O --outputfmt:		output vcf format
 	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
+	 -R --regions-file:		restrict to regions listed in a file
 	 -s --samples:			list of samples
 	 -S --samples-file:		list of samples, file
 ```
@@ -384,14 +399,14 @@ Find IBD regions from a VCF
 Usage:
 ./akt ibd in.bcf -p sites.bcf
 Expects input_filename.vcf to contain hard genotypes
-	 -T --targets-file:		intersecting VCF
+	 -T --targets-file:		similar to -R but streams rather than index-jumps
 	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
+	 -R --regions-file:		restrict to regions listed in a file
 	 -s --samples:			list of samples
 	 -S --samples-file:		list of samples, file
-	 -h --thin:			keep every t variants
-	 -a --aftag:			allele frequency tag
-	 -f --pairfile:			file containing sample pairs
+	 -h --thin:			keep every h variants
+	 -a --aftag:			allele frequency tag (default AF)
+	 -f --pairfile:			file containing sample pairs to perform calculations on
 	 -n --nthreads: 		num threads
 	 -m --maf:			minimum MAF
 	 -e --error: 			If no GQ then this is error probability(1e-3)
@@ -444,7 +459,7 @@ Usage:
 ./akt ldplot input_filename.vcf
 Expects input_filename.vcf to contain hard genotypes
 	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
+	 -R --regions-file:		restrict to regions listed in a file
 	 -s --samples:			list of samples
 	 -S --samples-file:		list of samples, file
 ```
@@ -512,11 +527,11 @@ Compare AFs between two cohorts
 Usage:
 akt metafreq a.vcf.gz b.vcf.gz -Oz -o meta.sites.vcf.gz
 	 -r --regions:			chromosome region
-	 -R --regions-file:		list of regions, file
-	 -T --targets-file:		intersecting VCF
+	 -R --regions-file:		restrict to regions listed in a file
+	 -T --targets-file:		similar to -R but streams rather than index-jumps
 	 -o --output:			output vcf
 	 -O --outputfmt:		output vcf format
-	 -a --aftag:			allele frequency tag
+	 -a --aftag:			allele frequency tag (default AF)
 ```
 * -T : Indexed VCF file containing intersecting sites and relevant site info. 
 * -r : Comma-separated list of regions, chr:from-to.
@@ -551,7 +566,7 @@ AKT only works with autosomal DNA i.e. not X and Y, so you should not use these 
 ##Discovering Cryptic Relations
 First we attempt to identify cryptic relations. Run
 ```
-./akt kin ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/1000G.snps.nochr.vcf.gz -n 4 > test_kin
+./akt kin ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz -n 4 > test_kin
 ```
 To calculate average ibd for all pairs in the dataset. Use more than 4 processors if you have them! `test_kin` contains 
 IBD and kinship coefficients for all 93528 possible pairs, most of which are not closely related.
@@ -674,15 +689,15 @@ are expected to be admixed with a lot of European ancestry. We therefore expect 
 3 clusters, corresponding to European, East Asian and African with the American samples either in or very close to the European 
 cluster. The command to run is
 ```
-./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/1000G.snps.nochr.vcf.gz > test_pca
+./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz > test_pca
 ```
 or if you want to use unrelated samples use the subsetting option
 ```
-./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/1000G.snps.nochr.vcf.gz -S phase1.unrel > test_pca.unrel
+./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz -S phase1.unrel > test_pca.unrel
 ```
 Alternatively we can project samples onto 1000Genomes phase3 princple components using
 ```
-./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -w data/1000G.snps.nochr.vcf.gz > test_pcaproj
+./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -w data/wgs.grch37.vcf.gz > test_pcaproj
 ```
 
 Plotting the projections of all samples onto the first three principle components gives
@@ -812,7 +827,7 @@ then run
 The transformation specified in
 data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopulations
 (AFR, AMR, EAS, EUR, SAS) if (and ONLY if) the PCA is done by projection using the
-`-w` option and the file `1000G.snps.nochr.vcf.gz` or `1000G.snps.withchr.vcf.gz`
+`-w` option and the file `wgs.grch37.vcf.gz` or `wgs.hg19.vcf.gz`
 ```
 ./akt admix test_pcaproj -c 2-6 -C data/1000G.pca_to_admix > test_alladmix
 ```
