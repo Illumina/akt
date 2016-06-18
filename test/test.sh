@@ -1,7 +1,7 @@
 #this is a basic set of tests for akt.
 
-reg=../data/wgs.grch37.vcf.gz
 
+reg=../data/wgs.grch37.vcf.gz
 ##get data
 data=ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf
 wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
@@ -19,6 +19,7 @@ time ../akt kin -M 0 -n 4 -R $reg $data > kinship0.txt
 time ../akt kin -M 1 -n 4 -R $reg $data > kinship1.txt
 time ../akt kin -M 2 -n 4 -R $reg $data > kinship2.txt
 time ../akt kin -n 4 -F $reg $data > kinship.txt
+
 
 ##find relatives
 time ../akt relatives -p n433 kinship.txt > relatives.out
