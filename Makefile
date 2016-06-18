@@ -23,8 +23,8 @@ default: CXXFLAGS = -O3 -DNDEBUG $(OMP)
 default: CFLAGS = -O3 -DNDEBUG $(OMP)
 default: all
 
-debug: CXXFLAGS = -g -O1 $(OMP)
-debug: CFLAGS =  -g -O1 $(OMP)
+debug: CXXFLAGS = -g -O1  $(OMP)
+debug: CFLAGS =  -g -O1   $(OMP)
 debug: all
 
 profile: CXXFLAGS = -pg -O3 $(OMP)
@@ -54,10 +54,12 @@ vcfpca.o: vcfpca.cpp
 	$(CXX) $(CXXFLAGS) -c vcfpca.cpp $(IFLAGS)
 cluster.o: cluster.cpp 
 	$(CXX) $(CXXFLAGS)  -c cluster.cpp $(IFLAGS)
-kin.o: kin.cpp 
+kin.o: kin.cpp  kin.hpp
 	$(CXX) $(CXXFLAGS)  -c kin.cpp $(IFLAGS)
 ibd.o: ibd.cpp 
 	$(CXX) $(CXXFLAGS)  -c ibd.cpp $(IFLAGS)
+grm.o: grm.cpp 
+	$(CXX) $(CXXFLAGS)  -c $< $(IFLAGS)
 pedigree.o: pedigree.cpp pedigree.h
 	$(CXX) $(CXXFLAGS)  -c $< $(IFLAGS)
 mendel.o: pedigree.h mendel.cpp 
@@ -72,10 +74,10 @@ admix.o: admix.cpp
 	$(CXX) $(CXXFLAGS) -c admix.cpp $(IFLAGS)
 metafreq.o: metafreq.cpp 
 	$(CXX) $(CXXFLAGS) -c metafreq.cpp $(IFLAGS)
-akt: version.h akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(HTSLIB)
-	$(CXX) $(CXXFLAGS)   -o akt akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+akt: version.h akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o $(HTSLIB)
+	$(CXX) $(CXXFLAGS)   -o akt akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h
 
-test: 
-	cd test/;bash test.sh
+test: akt
+	cd test/;bash -e test.sh

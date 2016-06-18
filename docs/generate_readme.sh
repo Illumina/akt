@@ -39,6 +39,7 @@ options+=(["-R"]="regionsfile_option");
 options+=(["-s"]="samples_option");
 options+=(["-S"]="samplesfile_option");
 options+=(["-T"]="targetfile_option");
+options+=(["-t"]="target_option");
 options+=(["-n"]="nthread_option");
 options+=(["-a"]="aftag_option");
 options+=(["-f"]="pairfile_option");
