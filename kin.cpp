@@ -358,8 +358,6 @@ int kin_main(int argc, char* argv[])
     string filename = argv[optind];	///input VCF
 			
     int Nsamples;
-    vector<string> names;			///sample names
-    map<string,int> name_to_id;   ///sample ids
 	  
     int sites=0,num_sites=0,num_study=0;
   
@@ -422,12 +420,6 @@ int kin_main(int argc, char* argv[])
     }
     cerr << N << " samples" << endl;
     Nsamples = N;
-    for(int i=0; i<N; ++i)
-    { 
-	string tmp = sr->readers[0].header->samples[i]; 
-	names.push_back(tmp);
-	name_to_id[tmp] = i;
-    }
     Kinship K(Nsamples);
 //    vector< vector< vector< bitset<L> > > > bits(N); ///[sample][site][type][val]
 
@@ -523,11 +515,13 @@ int kin_main(int argc, char* argv[])
 	    float ibd0,ibd1,ibd2,ibd3,ks;
 	    K.estimateKinship(j1,j2,ibd0,ibd1,ibd2,ibd3,ks,method);
 	    if( !tk || ks > min_kin )
-	    {
+	      {
 //#pragma omp ordered 
 #pragma omp critical
-		{		    
-		    cout  << names[j1] << "\t" << names[j2] << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
+	      {		    
+		  string id1=sr->samples[j1]; 
+		  string id2=sr->samples[j2]; 
+		  cout  <<  id1<<"\t" <<id2 << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
 		}
 	    }
 	}
