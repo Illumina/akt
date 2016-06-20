@@ -21,3 +21,4 @@ legend("topleft",names(cols),pch=16,col=cols)
 plot(ogp.pc$PC3~ogp.pc$PC2,pch=16,col=cols[ogp$super_pop],xlab='PC2',ylab='PC3')
 points(pc$PC3~pc$PC2)
 dev.off()
+
