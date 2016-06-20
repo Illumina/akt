@@ -389,11 +389,8 @@ int kin_main(int argc, char* argv[])
 	bcf_sr_destroy(sr);	
 	return 0;
     }
-    if(bcf_hdr_nsamples(sr->readers[0].header)==0) 
-    {
-	cerr <<"ERROR: no samples in "<<filename<<endl;
-	exit(1);
-    }
+    bcf_hdr_t *hdr=sr->readers[0].header;
+
     ///Open file of allele freqs
     if(frq_file!="" && !(bcf_sr_add_reader (sr, frq_file.c_str() )))
     { 
@@ -405,23 +402,36 @@ int kin_main(int argc, char* argv[])
     ///subsample input vcf
     if(sargs.subsample)
     { 
-	bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); 
+	if(bcf_hdr_set_samples(hdr,sargs.sample_names, sargs.sample_is_file)!=0)
+	{
+	    die("problem setting samples");
+	}
     }
+    if(bcf_hdr_nsamples(hdr)<=0)
+    {
+	die("no samples!");
+    }
+
     if(method==2) //jump out to GRM routine.
     {
 	return(grm(sr));
     }
-  
-    int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples
+ 
+    int N = bcf_hdr_nsamples(hdr);	///number of samples
+    cerr << N << " samples" << endl;
+
+//     for(int i=0;i<N;i++)
+//     {
+// 	cout << i << " "<<hdr->samples[i]<<endl;
+//     }
 
     if(N<50 && frq_file.empty())
     {
 	cerr<<"WARNING: your sample size is <50 and you have NOT provided population frequencies (-F)."<<endl;
     }
-    cerr << N << " samples" << endl;
+
     Nsamples = N;
     Kinship K(Nsamples);
-//    vector< vector< vector< bitset<L> > > > bits(N); ///[sample][site][type][val]
 
     int count=0;
 
@@ -445,7 +455,8 @@ int kin_main(int argc, char* argv[])
 
 	    if(line->n_allele == 2 && (count++)%thin==0 )		///bi-allelic
 	    {
-		ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);  
+		ngt = bcf_get_genotypes(hdr, line, &gt_arr, &ngt_arr);  
+		assert(ngt==2*N);
 		if(ngt < 0)
 		{ 
 		    cerr << "Bad genotypes at " << line->pos+1 << endl; exit(1); 
@@ -492,7 +503,7 @@ int kin_main(int argc, char* argv[])
     cerr << "done."<<endl;
     free(gt_arr);
     free(af_ptr);
-    bcf_sr_destroy(sr);	
+
 
     if(frq_file.empty()) 
     {
@@ -519,13 +530,15 @@ int kin_main(int argc, char* argv[])
 //#pragma omp ordered 
 #pragma omp critical
 	      {		    
-		  string id1=sr->samples[j1]; 
-		  string id2=sr->samples[j2]; 
+		  string id1=hdr->samples[j1];
+		  string id2=hdr->samples[j2];
 		  cout  <<  id1<<"\t" <<id2 << "\t" << left << " " << setprecision(5) << fixed << ibd0  << left << " " << setprecision(5) << fixed << ibd1  << left << " " << setprecision(5) << fixed << ibd2  << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) <<ibd3 << "\n";
 		}
 	    }
 	}
     }
+
+    bcf_sr_destroy(sr);	
     cerr << "done."<<endl;
     return 0;
 }
