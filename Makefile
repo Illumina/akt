@@ -74,8 +74,10 @@ admix.o: admix.cpp
 	$(CXX) $(CXXFLAGS) -c admix.cpp $(IFLAGS)
 metafreq.o: metafreq.cpp 
 	$(CXX) $(CXXFLAGS) -c metafreq.cpp $(IFLAGS)
-akt: version.h akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o $(HTSLIB)
-	$(CXX) $(CXXFLAGS)   -o akt akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+prune.o: prune.cpp 
+	$(CXX) $(CXXFLAGS) -c prune.cpp $(IFLAGS)
+akt: version.h akt.cpp  admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o metafreq.o prune.o $(HTSLIB)
+	$(CXX) $(CXXFLAGS)   -o akt akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o prune.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h
 

@@ -1,7 +1,9 @@
-#include prune.hpp
+#include "prune.hpp"
 
-circularBuffer::circularBuffer(const string & fname,const string & filter,int window,int buffer)
+circularBuffer::circularBuffer(const string & fname,const string & filter,int window,int overlap)
 {
+    _sr =  bcf_sr_init() ; 
+    cerr<<"Input: "<<fname<<endl;
     if(bcf_sr_add_reader(_sr,fname.c_str())!=1)
     {
 	die("problem opening "+fname);
@@ -9,69 +11,87 @@ circularBuffer::circularBuffer(const string & fname,const string & filter,int wi
     filter_t *_filter=NULL;
     if(!filter.empty())   
     {
-	_filter = filter_init(_hdr_in, filter);
+	_filter = filter_init(_hdr_in, filter.c_str());
     }
-    _hdr_in=sr->readers[0].header;
+    _hdr_in=_sr->readers[0].header;
     _nsample =  bcf_hdr_nsamples(_hdr_in);
-    assert(window>(2*buffer));
     _window=window;
-    _bufsize=window+2*buffer;
+    _overlap=overlap;
+    _bufsize=window+2*_overlap;
     _offset=0;
     _nsnp=0;
-    _line = (bcf1_t *)malloc(_bufsize*sizeof(bcf1_t));
+    _line = new bcf1_t*[_bufsize];
     _gt = (int **)malloc(_bufsize*sizeof(int *));
     _ngt=2*_nsample;  
-    bcf1_t *line_ptr=_line;
     for(int i=0;i<_bufsize;i++)
     {
-	line_ptr = bcf_init1();
+	_line[i] = bcf_init1();
 	_gt[i] = (int *)malloc(_ngt*sizeof(int));
-	_line_ptr++;
     }
-
-    _hdr_out = bcf_hdr_subset(_hdr_in,0,NULL,NULL);
-    bcf_hdr_add_sample(_hdr_out, NULL);     
-    _fout = hts_open("-", "wv");
+    _hdr_out=_hdr_in;
+//    _hdr_out = bcf_hdr_subset(_hdr_in,0,NULL,NULL);
+//    bcf_hdr_add_sample(_hdr_out, NULL);     
+    _keep.assign(_bufsize,true);
+    _fout = hts_open("-", "wb");
+    bcf_hdr_write(_fout,_hdr_out);
 }
 
-circularBuffer::~circularBuffer
+circularBuffer::~circularBuffer()
 {
     flush(_nsnp);
     hts_close(_fout);
-    bcf_sr_destroy(sr);
-    bcf1_t *line_ptr=_line;
+    bcf_sr_destroy(_sr);
     for(int i=0;i<_bufsize;i++)
     {
 	free(_gt[i]);
-	bcf_destroy(line_ptr);
-	line_ptr++;
+	bcf_destroy(_line[i]);
     }    
     free(_gt);
-    free(_line);
+    delete[] _line;
+}
+
+int circularBuffer::flush(int nflush)
+{
+    int count=0;
+    while(_nsnp>0 && count<nflush)
+    {
+	int idx = (count+_offset)%_bufsize;
+	assert(idx<_bufsize);
+//	cerr << _line[idx]->pos+1<<endl;
+	if(_keep[idx])
+	{
+	    bcf_write1(_fout, _hdr_out, _line[idx]);
+	}
+	_offset++;
+	_offset%=_bufsize;
+	_nsnp--;
+    }
+    return(count);
 }
 
 int circularBuffer::next()
 {
     flush(_nsnp - _overlap);
-
-    bcf1_t *ptr = line+_offset+_nsnp;
+    assert(_nsnp<_bufsize);
     while(_nsnp<_bufsize && bcf_sr_next_line(_sr))
     {
-	int idx = _offset+_nsnp;
-	ptr = bcf_sr_get_line(_sr,0);
-	assert(bcf_get_genotypes(_hdr_in, ptr, &_gt[idx], &_ngt)==2*_nsample);
+	int idx = (_offset+_nsnp)%_bufsize;
+	_line[idx] = bcf_sr_get_line(_sr,0);
+//	cerr<<"idx="<<idx<<" nsnp="<<_nsnp<<" bufsize="<<_bufsize<<endl;
+//	cerr<<_line[idx]->pos+1<<endl;
+	_keep[idx]=true;
+	assert(bcf_get_genotypes(_hdr_in, _line[idx], &_gt[idx], &_ngt)==2*_nsample);
 	for(int i=0;i<2*_nsample;i++) 
 	{
-	    if(bcf_gt_is_missing(_gt[2*i]) || bcf_gt_is_missing(_gt[2*i+1]))
+	    if(bcf_gt_is_missing(_gt[idx][2*i]) || bcf_gt_is_missing(_gt[idx][2*i+1]))
 	    {
 		_gt[idx][i] = 3;
 	    }
 	    else
 	    {
-		_gt[idx][i] = bcf_gt_allele(_gt[2*i]) + bcf_gt_allele(_gt[2*i+1]);
+		_gt[idx][i] = bcf_gt_allele(_gt[idx][2*i]) + bcf_gt_allele(_gt[idx][2*i+1]);
 	    }
 	}
-	ptr++;
 	_nsnp++;
     }
     return(_nsnp);
@@ -80,7 +100,7 @@ int circularBuffer::next()
 
 int prune_main(int argc,char **argv) {
     assert(argc==3);
-    circularBuffer cb(argv[2],"",1000,100);
+    circularBuffer cb(argv[2],"",500,500);
     while(cb.next()) 
     {
 	
