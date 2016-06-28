@@ -12,6 +12,7 @@
 #include <getopt.h>
 #include <math.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <limits>
