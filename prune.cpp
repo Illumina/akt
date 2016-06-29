@@ -120,17 +120,13 @@ int circularBuffer::next()
     return(count);
 }
 
-
-int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
+int meanvar(circularBuffer & cb, vector<float> & mean, vector<float> & sd)
 {
     int L = cb.getNumberOfSNPs();
-    assert(R2.rows() == R2.cols());    
-    assert(L<=R2.rows());
     int N = cb.getNumberOfSamples();
-    assert(L>0);
-    assert(N>0);
-    vector<float> frq(L,0.);
-    vector<float> s(L,0.);
+    mean.assign(L,0.0);
+    sd.assign(L,0.0);
+
     for(int i=0;i<L;i++)
     {
 	float n = 0;
@@ -140,63 +136,80 @@ int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
 	    assert(x[k]>=0 && x[k]<=3);
 	    if(x[k]<3)
 	    {
-		frq[i]+=x[k];
+		mean[i]+=x[k];
 		n++;
 	    }
 	}	
-	frq[i] /=n;	    
+	mean[i] /=n;	    
 	for(int k=0;k<N;k++)
 	{
 	    if(x[k]<3)
 	    {
-		s[i] += pow(x[k] - frq[i],2.0);
+		sd[i] += pow(x[k] - mean[i],2.0);
 	    }
 	}	
-//	s[i] /= (n-1); //we want the sum-of-squares not the variance.
-	s[i] = sqrt(s[i]);
-//	cerr <<i << " "<< frq[i] << " "<< s[i]<<endl;
-	assert(s[i]>0);
-	assert(frq[i]>=0&&frq[i]<=2.);
+//	sd[i] /= (n-1); //we want the sum-of-squares not the variance.
+	sd[i] = sqrt(sd[i]);
+//	cerr <<i << " "<< mean[i] << " "<< sd[i]<<endl;
+	assert(sd[i]>0);
+	assert(mean[i]>=0&&mean[i]<=2.);
     }
+    return(0);
+}
 
+float correlation(int *x,int *y, float mx, float my, float sx,float sy,int N)
+{
     float lookup[4][4];
+    for(int g1=0;g1<4;g1++)
+    {
+	for(int g2=0;g2<4;g2++)
+	{
+	    if(g1<3&&g2<3)
+	    {
+		lookup[g1][g2]=((float)g1 - mx)*((float)g2 - my) ;
+	    }
+	    else
+	    {
+		lookup[g1][g2]=0.0;
+	    }
+	}
+    }
+    float r2=0.0;
+    for(int k=0;k<N;k++)
+    {
+	if(x[k]<3&&y[k]<3)
+	{
+	    r2+=lookup[x[k]][y[k]];
+	}
+    }
+    r2 /=  (sx*sy);
+    r2  *=   r2;
+    return(r2);
+}
+
+int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
+{
+    int L = cb.getNumberOfSNPs();
+    assert(R2.rows() == R2.cols());    
+    assert(L<=R2.rows());
+    int N = cb.getNumberOfSamples();
+    assert(L>0);
+    assert(N>0);
+    vector<float> frq,s;
+    meanvar(cb,frq,s);
+        
     for(int i=0;i<L;i++)
     {
 	int *x=cb.getGT(i);
 	for(int j=i;j<L;j++)
 	{
-
-	    for(int g1=0;g1<4;g1++)
-	    {
-		for(int g2=0;g2<4;g2++)
-		{
-		    if(g1<3&&g2<3)
-		    {
-			lookup[g1][g2]=((float)g1 - frq[i])*((float)g2 - frq[j]) ;
-		    }
-		    else
-		    {
-			lookup[g1][g2]=0.0;
-		    }
-		}
-	    }
-
-	    R2(i,j)=0.0;
-	    float n=0;
 	    int *y=cb.getGT(j);
-	    for(int k=0;k<N;k++)
-	    {
-		if(x[k]<3&&y[k]<3)
-		{
-		    R2(i,j)+=lookup[x[k]][y[k]];
-		}
-	    }
-	    R2(i,j) /=  (s[i]*s[j]);
-	    R2(i,j) *=   R2(i,j);
+	    R2(i,j)=correlation(x,y,frq[i],frq[j],s[i],s[j],N);
 	    R2(j,i) =  R2(i,j);
 	}
     }    
-//    cerr << R2 << endl <<endl;;
+    cerr << R2 << endl <<endl;;
+    exit(1);
     return(0);
 }
 
@@ -215,25 +228,28 @@ int prune(circularBuffer & cb,MatrixXf & R2,int buf,int nkeep)
 
     while( ntag<nkeep )
     {
-	//1. calculate score (number of snps tagged) per SNP
+//1. calculate score (number of snps tagged) per SNP
 	score.assign(width,0);
 	for(int i=start;i<stop;i++)
 	{
-	    for(int j=i-buf;j<(i+buf);j++)
+	    if(!cb.isFiltered(i))
 	    {
-		if(!cb.isFiltered(j))
+		for(int j=i-buf;j<(i+buf);j++)
 		{
-//		score[i-start] += R2(i,j);
-		    if(R2(i,j)>=r2_thresh)
+		    if(!cb.isFiltered(j))
 		    {
-			score[i-start]++;
+//		score[i-start] += R2(i,j);
+			if(R2(i,j)>=r2_thresh)
+			{
+			    score[i-start]++;
+			}
 		    }
 		}
 	    }
 	    cerr << i << " "<< score[i-start]<<endl;
 	}
 
-	//2. find the best tag SNP. if there is a tie, take the more common.
+//2. find the best tag SNP. if there is a tie, take the more common.
 	int maxidx=0;
 	for(int i=start;i<stop;i++)
 	{
@@ -247,9 +263,9 @@ int prune(circularBuffer & cb,MatrixXf & R2,int buf,int nkeep)
 	    }
 	}
 
-	//3. set all tagged SNPs to filtered.
+//3. set all tagged SNPs to filtered.
 	cerr << "maxidx="<<maxidx;
-	for(int i=start;i<stop;i++)
+	for(int i=0;i<cb.getNumberOfSNPs();i++)
 	{
 	    if(R2(i,maxidx+start)>=r2_thresh)
 	    {
@@ -271,8 +287,8 @@ int prune(circularBuffer & cb,MatrixXf & R2,int buf,int nkeep)
 
 int prune_main(int argc,char **argv) {
     assert(argc==3);
-    int w = 100;
-    int b = 100;
+    int w = 10;
+    int b = 10;
 
     circularBuffer cb(argv[2],"",w,b);
     int chunk=0;
