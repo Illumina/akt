@@ -208,72 +208,55 @@ int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
 	    R2(j,i) =  R2(i,j);
 	}
     }    
-    cerr << R2 << endl <<endl;;
-    exit(1);
+//    cerr << R2 << endl <<endl;;
     return(0);
 }
 
-int prune(circularBuffer & cb,MatrixXf & R2,int buf,int nkeep)
+
+
+int prune(circularBuffer & cb,vector<list<int > > & R2,int buf,int nkeep)
 {
     float r2_thresh = 0.8;
-    assert(buf < 2*R2.rows());
     int npruned = 0;
-    vector<int> score;
-    int start = buf;
-    int stop = R2.rows() - buf;
-    int width = stop - start;
-    assert(nkeep<=width);
     list<int> tags;
     int ntag=0;
 
     while( ntag<nkeep )
     {
-//1. calculate score (number of snps tagged) per SNP
-	score.assign(width,0);
-	for(int i=start;i<stop;i++)
+ 
+//1. find the best tag SNP. if there is a tie, take the more common.
+	int maxidx=0;
+	for(size_t i=0;i<R2.size();i++)
 	{
-	    if(!cb.isFiltered(i))
+	    if(R2[i].size() > R2[maxidx].size())
 	    {
-		for(int j=i-buf;j<(i+buf);j++)
+		maxidx=i;
+	    }
+	    else if(R2[i].size() == R2[maxidx].size() && cb.getMAF(i)>cb.getMAF(maxidx))
+	    {
+		maxidx=i;
+	    }
+	}
+
+//2. set all tagged SNPs to filtered.
+	cerr << "maxidx="<<maxidx;
+	cb.setFilter(maxidx);
+	for(list<int>::iterator it=R2[maxidx].begin();it!=R2[maxidx].end();it++)
+	{
+	    cb.setFilter(*it);
+	    R2[*it].clear();
+	}
+	R2[maxidx].clear();
+	for(size_t i=0;i<R2.size();i++)
+	{
+	    for(list<int>::iterator it=R2[i].begin();it!=R2[i].end();it++)
+	    {
+		if(cb.isFiltered(*it))
 		{
-		    if(!cb.isFiltered(j))
-		    {
-//		score[i-start] += R2(i,j);
-			if(R2(i,j)>=r2_thresh)
-			{
-			    score[i-start]++;
-			}
-		    }
+		    R2[i].erase(it);
 		}
 	    }
-	    cerr << i << " "<< score[i-start]<<endl;
 	}
-
-//2. find the best tag SNP. if there is a tie, take the more common.
-	int maxidx=0;
-	for(int i=start;i<stop;i++)
-	{
-	    if(score[i-start]>score[maxidx])
-	    {
-		maxidx=i-start;
-	    }
-	    else if(score[i-start]==score[maxidx] && cb.getMAF(i)>cb.getMAF(maxidx))
-	    {
-		maxidx=i-start;		    
-	    }
-	}
-
-//3. set all tagged SNPs to filtered.
-	cerr << "maxidx="<<maxidx;
-	for(int i=0;i<cb.getNumberOfSNPs();i++)
-	{
-	    if(R2(i,maxidx+start)>=r2_thresh)
-	    {
-		cb.setFilter(i);
-		cerr << " "<<i;
-	    }
-	}
-	cerr << endl;
 	tags.push_back(maxidx);
 	ntag++;
     }
@@ -289,17 +272,49 @@ int prune_main(int argc,char **argv) {
     assert(argc==3);
     int w = 10;
     int b = 10;
-
+    float r2_thresh=0.8;
     circularBuffer cb(argv[2],"",w,b);
     int chunk=0;
     int nsnp=w+2*b;
     MatrixXf R2 = MatrixXf::Zero(nsnp,nsnp);    
+    vector<list<int > > G;
+    G.reserve(2e6);//might be pretty big.
+    int count=0;
+    int nread;
     while(cb.next()) 
     {
+	int nsnp=cb.getNumberOfSNPs();
+	if(nsnp<(w+2*b)) break;
 	correlationMatrix(cb,R2);
-	prune(cb,R2,w,10);
+	int start=b;
+	int stop =b+w;
+	if(chunk==0){
+	    start=0;
+	}
+	for(int i=start;i<stop;i++)
+	{
+	    G.push_back(list<int>());
+	    for(int j=max(0,i-b);j<(i+b);j++)
+	    {
+		if(R2(i,j)>=r2_thresh)
+		{
+		    G.back().push_back(count+j);
+		}
+	    }
+	}
+//	prune(cb,R2,w,10);
+	count+=w;
 	chunk++;
     }
-    cerr << "Retained "<<cb.getNwrote()<<"/"<<cb.getNread()<<" after pruning"<<endl;
+    for(size_t i=0;i<G.size();i++)
+    {
+	cerr << i << " ";
+	for(list<int>::iterator it=G[i].begin();it!=G[i].end();it++)
+	{
+	    cerr << *it << " ";
+	}
+	cerr << endl;
+    }
+//    cerr << "Retained "<<cb.getNwrote()<<"/"<<cb.getNread()<<" after pruning"<<endl;
     return(0);
 }
