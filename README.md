@@ -1,6 +1,6 @@
 # akt - ancestry and kinship toolkit
 
-Copyright (c) 2016, Illumina, Inc. All rights reserved.
+Copyright (c) 2016, Illumina, Inc. All rights reserved. This software is not commercially supported.
 
 Ancestry and Kinship Tools (AKT) provides a number of useful statistical genetics routines using the [htslib](http://www.htslib.org/) API for input/output. This means it can seamlessly read BCF/VCF files and play nicely with [bcftools](http://samtools.github.io/bcftools/bcftools.html).
 
@@ -10,7 +10,7 @@ Please cite the [AKT pre-print](http://biorxiv.org/content/early/2016/04/10/0478
 
 ##License
 
-AKT is freely available under the [GPL3 license](https://github.com/Illumina/agg/blob/master/LICENSE). AKT is not commercially supported.
+AKT is freely available under the [GPL3 license](https://github.com/Illumina/agg/blob/master/LICENSE). 
 
 AKT relies on HTSlib and Eigen. [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page) is a header-only library for matrix algebra released under the [MPL2 license](https://www.mozilla.org/en-US/MPL/2.0/). [HTSlib](http://www.htslib.org/) is a library for efficently parsing vcf/bcf files released under the [MIT/Expat License](http://choosealicense.com/licenses/mit/).
 
