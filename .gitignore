@@ -1,5 +1,6 @@
 *~
 akt
+*.pico
 
 
 # Compiled Object files
@@ -32,3 +33,4 @@ akt
 *.app
 
 version.h
+
