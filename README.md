@@ -29,7 +29,7 @@ make no_omp
 Everything will be run on a single thread, so the `-n` option does nothing
 in `akt kin` and `akt ibd`.
 
-##Using akt
+##Quick start
 akt uses the syntax
 ```
 ./akt COMMAND <options>
@@ -58,4 +58,4 @@ Usage:	akt <command> [options]
 
 Full documentation is available in [docs/usage.md](docs/usage.md) along with a large set of example use cases in [docs/examples.md](docs/examples.md)
 
-##Quick start
+
