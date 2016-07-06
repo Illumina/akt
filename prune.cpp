@@ -2,9 +2,11 @@
 
 using namespace Eigen;
 
+//#define DEBUG
 
 circularBuffer::circularBuffer(const string & fname,const string & filter,int window,int overlap)
 {
+    _write=false;
     _sr =  bcf_sr_init() ; 
     cerr<<"Input: "<<fname<<endl;
     if(bcf_sr_add_reader(_sr,fname.c_str())!=1)
@@ -31,25 +33,35 @@ circularBuffer::circularBuffer(const string & fname,const string & filter,int wi
 	_line[i] = bcf_init1();
 	_gt[i] = (int *)malloc(_ngt*sizeof(int));
     }
-    _hdr_out=_hdr_in;
+
 //    _hdr_out = bcf_hdr_subset(_hdr_in,0,NULL,NULL);
 //    bcf_hdr_add_sample(_hdr_out, NULL);     
-    _keep.assign(_bufsize,true);
+
     _maf.assign(_bufsize,-1);
-    _fout = hts_open("-", "wb");
-    bcf_hdr_write(_fout,_hdr_out);
+    if(_write)
+    {
+	_hdr_out=_hdr_in;
+	_fout = hts_open("-", "wb");
+	_keep.assign(_bufsize,true);
+	bcf_hdr_write(_fout,_hdr_out);
+    }
     _nread=_nwrote=0;
 }
 
 circularBuffer::~circularBuffer()
 {
-    flush(_nsnp);
-    hts_close(_fout);
+    if(_write)
+    {
+	flush(_nsnp);
+	hts_close(_fout);
+	bcf_hdr_destroy(_hdr_out);
+    }
     bcf_sr_destroy(_sr);
+
     for(int i=0;i<_bufsize;i++)
     {
 	free(_gt[i]);
-//	bcf_destroy(_line[i]);
+	bcf_destroy(_line[i]);
     }    
     free(_gt);
     delete[] _line;
@@ -63,10 +75,8 @@ int circularBuffer::flush(int nflush)
     {
 	int idx = _offset;
 	assert(idx<_bufsize);
-#ifdef DEBUG
-	cerr <<"Write: "<<count<< "/"<<nflush<<" "<<idx <<" "<< _line[idx]->pos+1<<endl;
-#endif
-	if(_keep[idx])
+
+	if(_write&&_keep[idx])
 	{
 	    bcf_write1(_fout, _hdr_out, _line[idx]);
 	    _nwrote++;
@@ -89,14 +99,13 @@ int circularBuffer::next()
     while(_nsnp<_bufsize && bcf_sr_next_line(_sr))
     {
 	int idx = (_offset+_nsnp)%_bufsize;
-	_line[idx] = bcf_dup(bcf_sr_get_line(_sr,0));
-	if(	_line[idx]->n_allele==2)
+	bcf_copy(_line[idx],bcf_sr_get_line(_sr,0));
+	if(_line[idx]->n_allele==2)
 	{
-#ifdef DEBUG
-	    cerr<<"Read: idx="<<idx<<" nsnp="<<_nsnp<<" bufsize="<<_bufsize<<endl;
-	    cerr<<_line[idx]->pos+1<<endl;
-#endif
-	    _keep[idx]=true;
+	    if(_write)
+	    {	    
+		_keep[idx]=true;
+	    }
 	    assert(bcf_get_genotypes(_hdr_in, _line[idx], &_gt[idx], &_ngt)==2*_nsample);
 	    _maf[idx]=0.0;
 	    for(int i=0;i<_nsample;i++) 
@@ -129,25 +138,32 @@ int meanvar(circularBuffer & cb, vector<float> & mean, vector<float> & sd)
 
     for(int i=0;i<L;i++)
     {
-	float n = 0;
+	int ac=0,n=0;
 	int *x=cb.getGT(i);
 	for(int k=0;k<N;k++)
 	{
 	    assert(x[k]>=0 && x[k]<=3);
 	    if(x[k]<3)
 	    {
-		mean[i]+=x[k];
+		ac+=x[k];
 		n++;
 	    }
 	}	
-	mean[i] /=n;	    
-	for(int k=0;k<N;k++)
+	mean[i] = (float)ac/(float)n;	    
+	if(ac>0 && ac<(2*n) )
 	{
-	    if(x[k]<3)
+	    for(int k=0;k<N;k++)
 	    {
-		sd[i] += pow(x[k] - mean[i],2.0);
-	    }
-	}	
+		if(x[k]<3)
+		{
+		    sd[i] += pow(x[k] - mean[i],2.0);
+		}
+	    }	
+	}
+	else
+	{
+	    sd[i]=0.0;
+	}
 //	sd[i] /= (n-1); //we want the sum-of-squares not the variance.
 	sd[i] = sqrt(sd[i]);
 //	cerr <<i << " "<< mean[i] << " "<< sd[i]<<endl;
@@ -197,7 +213,6 @@ int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
     assert(N>0);
     vector<float> frq,s;
     meanvar(cb,frq,s);
-        
     for(int i=0;i<L;i++)
     {
 	int *x=cb.getGT(i);
@@ -208,113 +223,191 @@ int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
 	    R2(j,i) =  R2(i,j);
 	}
     }    
-//    cerr << R2 << endl <<endl;;
     return(0);
 }
 
-
-
-int prune(circularBuffer & cb,vector<list<int > > & R2,int buf,int nkeep)
+int prune(vector<list<int > > & R2,vector<float> maf,int window,vector<int> & keep,int nkeep)
 {
     float r2_thresh = 0.8;
-    int npruned = 0;
-    list<int> tags;
-    int ntag=0;
-
-    while( ntag<nkeep )
+    keep.clear();
+    assert(window>0);
+    assert(nkeep>0);
+    int ntag=0,nselect=0;
+    int b = window/2;
+    int nsnp=R2.size();
+    vector<bool> tagged(nsnp,false);    
+    keep.clear();
+    while( nselect<nkeep && ntag<nsnp)
     {
- 
+
 //1. find the best tag SNP. if there is a tie, take the more common.
 	int maxidx=0;
+	int maxscore = -1;
+	ntag=0;
 	for(size_t i=0;i<R2.size();i++)
 	{
-	    if(R2[i].size() > R2[maxidx].size())
+	    if(!tagged[i])
 	    {
-		maxidx=i;
+		int score = R2[i].size();
+		for(list<int>::iterator it=R2[i].begin();it!=R2[i].end();it++)
+		{
+		    assert(*it>=0);
+		    assert(*it<nsnp);
+		    if(tagged[*it])
+		    {
+			score--;
+		    }
+		}
+		assert(score>=0);
+		if(score==maxscore && maf[i]>maf[maxidx])
+		{
+		    maxscore = score;
+		    maxidx=i;
+		}
+		else if(score > maxscore)
+		{
+		    maxscore = score;
+		    maxidx=i;
+		}
+//		cerr << i <<" "<< score<<" " << R2[i].size()<<endl;
 	    }
-	    else if(R2[i].size() == R2[maxidx].size() && cb.getMAF(i)>cb.getMAF(maxidx))
+	    else
 	    {
-		maxidx=i;
+		ntag++;
 	    }
 	}
 
-//2. set all tagged SNPs to filtered.
-	cerr << "maxidx="<<maxidx;
-	cb.setFilter(maxidx);
-	for(list<int>::iterator it=R2[maxidx].begin();it!=R2[maxidx].end();it++)
+//2. update list of tagged SNPs (will no longer be counted in scores).
+#ifdef DEBUG
+	cerr << "maxidx="<<maxidx<<" maxscore="<<maxscore<<" ntag="<<ntag<<endl;
+#endif
+	assert(ntag==nsnp || maxscore>=1);
+	if(maxscore>=1)
 	{
-	    cb.setFilter(*it);
-	    R2[*it].clear();
-	}
-	R2[maxidx].clear();
-	for(size_t i=0;i<R2.size();i++)
-	{
-	    for(list<int>::iterator it=R2[i].begin();it!=R2[i].end();it++)
+	    if(tagged[maxidx])
 	    {
-		if(cb.isFiltered(*it))
-		{
-		    R2[i].erase(it);
-		}
+		die("duplicated tag SNP selected");
 	    }
+
+	    for(list<int>::iterator it=R2[maxidx].begin();it!=R2[maxidx].end();it++)
+	    {
+		tagged[*it] = true;
+	    }
+	    assert(tagged[maxidx]);
+	    keep.push_back(maxidx);
+	    nselect++;
 	}
-	tags.push_back(maxidx);
-	ntag++;
     }
-    exit(1);
-    for(list<int>::iterator it=tags.begin();it!=tags.end();it++)
-    {
-	cb.setKeep(*it);
-    }
+    sort(keep.begin(),keep.end());
+    
     return(0);
 }
 
 int prune_main(int argc,char **argv) {
     assert(argc==3);
-    int w = 10;
-    int b = 10;
+    int w = 500;
+    int b = 500;
     float r2_thresh=0.8;
     circularBuffer cb(argv[2],"",w,b);
     int chunk=0;
     int nsnp=w+2*b;
     MatrixXf R2 = MatrixXf::Zero(nsnp,nsnp);    
     vector<list<int > > G;
-    G.reserve(2e6);//might be pretty big.
+    G.reserve(1e6);//might be pretty big. ~7million SNPs with MAF>=5% in 1000G.
     int count=0;
     int nread;
+    vector<float> maf;
+    maf.reserve(1e6);
+    vector<bcf1_t *> lines;
+    lines.reserve(1e6);
+    //create a 0-sample header for writing.
+    bcf_hdr_t *hdr_in = cb.getHeader();
+    bcf_hdr_t *hdr_out = bcf_hdr_subset(cb.getHeader(),0,NULL,NULL);
+    bcf_hdr_add_sample(hdr_out, NULL);
+
     while(cb.next()) 
     {
 	int nsnp=cb.getNumberOfSNPs();
-	if(nsnp<(w+2*b)) break;
 	correlationMatrix(cb,R2);
 	int start=b;
 	int stop =b+w;
-	if(chunk==0){
+	if(chunk==0)
+	{
 	    start=0;
+	}
+	if(nsnp<(w+2*b)) 
+	{
+	    stop=nsnp;
 	}
 	for(int i=start;i<stop;i++)
 	{
 	    G.push_back(list<int>());
-	    for(int j=max(0,i-b);j<(i+b);j++)
+	    maf.push_back(cb.getMAF(i));
+	    lines.push_back(bcf_dup(cb.getLine(i)));
+	    bcf_subset(hdr_in,lines.back(),0,NULL);
+	    for(int j=max(0,i-b);j<min(nsnp,i+b);j++)
 	    {
 		if(R2(i,j)>=r2_thresh)
 		{
 		    G.back().push_back(count+j);
 		}
 	    }
+	    assert(G.back().size()>0);
 	}
-//	prune(cb,R2,w,10);
 	count+=w;
 	chunk++;
     }
+    cerr << "buffered "<<G.size() << " SNPs for pruning"<<endl;
+
+
+#ifdef DEBUG
     for(size_t i=0;i<G.size();i++)
     {
-	cerr << i << " ";
+	cerr << i << ": " << G[i].size() << ": ";
 	for(list<int>::iterator it=G[i].begin();it!=G[i].end();it++)
 	{
 	    cerr << *it << " ";
 	}
 	cerr << endl;
     }
-//    cerr << "Retained "<<cb.getNwrote()<<"/"<<cb.getNread()<<" after pruning"<<endl;
+#endif
+
+    for(size_t i=0;i<G.size();i++)
+    {
+	if(G[i].size()==0)
+	{
+	    cerr << "SNP "<<i<<" did not tag anything (including itself)"<<endl;
+	    exit(1);
+	}
+    }
+
+    vector<int> keep;
+    prune(G,maf,1000,keep,1000);
+    
+    htsFile *fout = hts_open("-", "wv");    
+    bcf_hdr_write(fout,hdr_out);
+    cerr << "keeping "<<keep.size()<<"/"<<lines.size()<<endl;
+    int last_pos=-1;
+
+    for(vector<int>::iterator it=keep.begin();it!=keep.end();it++)
+    {
+#ifdef DEBUG
+	cerr << *it << "/"<<lines.size()<<" "<<lines[*it]->pos<<endl;
+#endif
+	if(lines[*it]->pos <= last_pos)
+	{
+	    die("duplicated positions");
+	}
+	last_pos = lines[*it]->pos;
+	bcf_write1(fout,hdr_out,lines[*it]);
+    }
+
+    //cleanup
+    for(vector<bcf1_t *>::iterator it=lines.begin();it!=lines.end();it++)
+    {
+	bcf_destroy(*it);
+    }
+    hts_close(fout);
+    bcf_hdr_destroy(hdr_out);
     return(0);
 }
