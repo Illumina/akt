@@ -1,34 +1,29 @@
 #!/bin/bash
 
-echo -e "# akt - ancestry and kinship toolkit" > ../README.md
-echo See http://illumina.github.io/akt/index.html for documentation. >>   ../README.md
-echo   >> ../README.md
-cat License.md >> ../README.md
-cat Install.md >> ../README.md
-echo >> ../README.md
-echo "##Using akt" >> ../README.md
-cat Using.md >> ../README.md; 		../akt 2> tmp; 				sed -e '/replace_akt_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat kin.md >> ../README.md; 		../akt kin 2> tmp; 			sed -e '/replace_kin_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat relatives.md >> ../README.md; 	../akt relatives 2> tmp; 	sed -e '/replace_relatives_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat mendel.md >> ../README.md; 	../akt mendel 2> tmp; 	sed -e '/replace_mendel_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat pca.md >> ../README.md; 		../akt pca 2> tmp; 			sed -e '/replace_pca_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat cluster.md >> ../README.md; 	../akt cluster 2> tmp; 		sed -e '/replace_cluster_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat stats.md >> ../README.md; 		../akt stats 2> tmp; 		sed -e '/replace_stats_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat ibd.md >> ../README.md; 		../akt ibd 2> tmp; 			sed -e '/replace_ibd_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat LDplot.md >> ../README.md; 		../akt LDplot 2> tmp; 		sed -e '/replace_LDplot_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat admix.md >> ../README.md; 		../akt admix 2> tmp; 		sed -e '/replace_admix_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
-cat metafreq.md >> ../README.md; 		../akt metafreq 2> tmp; 		sed -e '/replace_metafreq_run/{' -e 'r tmp' -e 'd' -e '}' -i ../README.md; 
 
-echo -e "##Example Workflow" >> ../README.md
-cat Data.md >> ../README.md
-cat Cryptic.md >> ../README.md
-cat Mendel_example.md >> ../README.md
-cat Ancestry.md >> ../README.md
-cat AF.md >> ../README.md
-cat SegIBD.md >> ../README.md
-cat Corplot.md >> ../README.md
-cat AdFrac.md >> ../README.md
-cat MF.md >> ../README.md
+echo "#Using akt" >> usage.md
+cat Using.md >> usage.md; 		../akt 2> tmp; 				sed -e '/replace_akt_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat kin.md >> usage.md; 		../akt kin 2> tmp; 			sed -e '/replace_kin_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat relatives.md >> usage.md; 	../akt relatives 2> tmp; 	sed -e '/replace_relatives_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat mendel.md >> usage.md; 	../akt mendel 2> tmp; 	sed -e '/replace_mendel_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat pca.md >> usage.md; 		../akt pca 2> tmp; 			sed -e '/replace_pca_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat cluster.md >> usage.md; 	../akt cluster 2> tmp; 		sed -e '/replace_cluster_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat stats.md >> usage.md; 		../akt stats 2> tmp; 		sed -e '/replace_stats_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat ibd.md >> usage.md; 		../akt ibd 2> tmp; 			sed -e '/replace_ibd_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat LDplot.md >> usage.md; 		../akt LDplot 2> tmp; 		sed -e '/replace_LDplot_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat admix.md >> usage.md; 		../akt admix 2> tmp; 		sed -e '/replace_admix_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat metafreq.md >> usage.md; 		../akt metafreq 2> tmp; 		sed -e '/replace_metafreq_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+
+echo -e "#Example Workflow" >> examples.md
+cat Data.md >> examples.md
+cat Cryptic.md >> examples.md
+cat Mendel_example.md >> examples.md
+cat Ancestry.md >> examples.md
+cat AF.md >> examples.md
+cat SegIBD.md >> examples.md
+cat Corplot.md >> examples.md
+cat AdFrac.md >> examples.md
+cat MF.md >> examples.md
 
 
 declare -A options;
@@ -48,7 +43,8 @@ options+=(["-m"]="maf_option");
 
 for i in "${!options[@]}"; do
    line=`grep "^$i" common_options.md`
-   sed -i -e 's/'"${options["$i"]}"'/'"$line"'/g' ../README.md
+   sed -i -e 's/'"${options["$i"]}"'/'"$line"'/g' examples.md
+   sed -i -e 's/'"${options["$i"]}"'/'"$line"'/g' usage.md
 done
 
 rm tmp;
