@@ -31,16 +31,16 @@ static void usage(){
     cerr << "Performs principal component analysis on a vcf/bcf" << endl;
     cerr << "Usage:" << endl;
     cerr << "./akt pca input.bcf" << endl;
-	umessage('T');
-	umessage('o');
-	umessage('O');
-	umessage('r');
-	umessage('R');
-	umessage('s');
-	umessage('S');
-	umessage('h');
-	umessage('m');
-    cerr << "\t -w --weight:			VCF with weights for PCA" << endl;
+    umessage('o');
+    umessage('O');
+    umessage('T');
+    umessage('r');
+    umessage('R');
+    umessage('S');
+    umessage('s');
+//    umessage('h');
+//    umessage('m');
+    cerr << "\t -W --weight:			VCF with weights for PCA" << endl;
     cerr << "\t -N --npca:			first N principle components" << endl;
     cerr << "\t -a --alg:			exact SVD (slow)" << endl;
     cerr << "\t -C --covdef:			definition of SVD matrix: 0=(G-mu) 1=(G-mu)/sqrt(p(1-p)) 2=diag-G(2-G) default(1)" << endl;
@@ -540,10 +540,10 @@ int pca_main(int argc,char **argv) {
     static struct option loptions[] =    {
         {"out",1,0,'o'},	
         {"outf",1,0,'O'},	
-        {"weight",1,0,'w'},
+        {"weight",1,0,'W'},
         {"region",1,0,'r'},
-		{"regions-file",1,0,'R'},
-		{"targets-file",1,0,'T'},
+	{"regions-file",1,0,'R'},
+	{"targets-file",1,0,'T'},
         {"maf",1,0,'m'},
         {"thin",1,0,'h'},
         {"npca",1,0,'N'},
@@ -554,8 +554,8 @@ int pca_main(int argc,char **argv) {
         {"samples-file",1,0,'S'},
         {0,0,0,0}
     };
-    float  m=.05;
-    int thin=400;
+    float  m=0;
+    int thin=1;
     int n=20; bool don = false;
     bool a=false;
     int e=200;
@@ -572,19 +572,17 @@ int pca_main(int argc,char **argv) {
     bool used_r = false;
     bool used_R = false;
 
-	int covn = 1;
+    int covn = 1;
 	
-	string svfilename = "";
-	
-    while ((c = getopt_long(argc, argv, "o:O:w:m:h:N:ae:r:R:s:S:T:C:F:",loptions,NULL)) >= 0) {  
-        switch (c)
-        {
-		case 'o': o = true; out_filename = optarg; break;
+    string svfilename = "";
+    
+    while ((c = getopt_long(argc, argv, "o:O:W:N:ae:r:R:s:S:T:C:F:",loptions,NULL)) >= 0) 
+    {
+	switch (c)
+	{
+	case 'o': o = true; out_filename = optarg; break;
         case 'O': outf += (string)(optarg); break;
-        case 'w': w = true; weight_filename = (string)optarg; break;
-        case 'm': m = atof(optarg); break;
-
-        case 'h': thin = atoi(optarg); break;
+        case 'W': w = true; weight_filename = (string)optarg; break;
         case 'N': don = true; n = atoi(optarg); break;
         case 'C': covn = atoi(optarg); break;
         case 'a': a = true; break;

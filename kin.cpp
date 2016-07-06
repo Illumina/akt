@@ -94,8 +94,6 @@ static void usage()
     umessage('r');
     umessage('T');
     umessage('t');
-    umessage('m');
-    umessage('h');
     cerr << "\t    --force:			run kin without -R/-T/-F" << endl;
     cerr << "\nSample filtering options:"<<endl;
     umessage('s');
@@ -238,9 +236,7 @@ int kin_main(int argc, char* argv[])
 	{"method",1,0,'M'},
 	{"freq-file",1,0,'F'},	
 	{"minkin",1,0,'k'},
-	{"thin",1,0,'h'},
 	{"nthreads",1,0,'n'},
-	{"maf",1,0,'m'},
 	{"aftag",1,0,'a'},
 	{"samples",1,0,'s'},
 	{"samples-file",1,0,'S'},
@@ -280,8 +276,6 @@ int kin_main(int argc, char* argv[])
 	case 'F': frq_file=optarg;break;
 	case 'M': method=atoi(optarg);break;
 	case 'k': tk = true; min_kin = atof(optarg); break;
-	case 'h': thin = atoi(optarg); break;
-	case 'm': min_freq = atof(optarg); break;
 	case 'n': nthreads = atoi(optarg); break;
 	case FORCE: force = true; break;
 	case 'a': af_tag = string(optarg); break;
