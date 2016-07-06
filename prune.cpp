@@ -219,6 +219,7 @@ int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
     assert(N>0);
     vector<float> frq,s;
     meanvar(cb,frq,s);
+#pragma omp parallel
     for(int i=0;i<L;i++)
     {
 	int *x=cb.getGT(i);
@@ -311,8 +312,8 @@ int prune(vector<list<int > > & R2,vector<float> maf,int window,vector<int> & ke
 
 int prune_main(int argc,char **argv) {
     assert(argc==3);
-    int w = 500;
-    int b = 500;
+    int w = 250;
+    int b = 250;
     float r2_thresh=0.8;
     circularBuffer cb(argv[2],"",w,b);
     int chunk=0;
@@ -330,10 +331,10 @@ int prune_main(int argc,char **argv) {
     bcf_hdr_t *hdr_in = cb.getHeader();
     bcf_hdr_t *hdr_out = bcf_hdr_subset(cb.getHeader(),0,NULL,NULL);
     bcf_hdr_add_sample(hdr_out, NULL);
-
+    omp_set_num_threads(24);
     while(cb.next()) 
     {
-	cerr << "chunk="<<chunk<<endl;
+	cerr << "count="<<count<<endl;
 	int nsnp=cb.getNumberOfSNPs();
 	correlationMatrix(cb,R2);
 	int start=b;
@@ -389,7 +390,7 @@ int prune_main(int argc,char **argv) {
     }
 
     vector<int> keep;
-    prune(G,maf,1000,keep,1000);
+    prune(G,maf,2*b,keep,1000);
     
     htsFile *fout = hts_open("-", "wv");    
     bcf_hdr_write(fout,hdr_out);
