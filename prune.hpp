@@ -8,16 +8,24 @@ public:
     ~circularBuffer();
     int next();
     int flush(int nflush);
+    
+    //get stuff
+    bcf_hdr_t *getHeader() {return ( _hdr_in); }
     int getNumberOfSNPs() {return (_nsnp) ; }
     int *getGT(int i) { return(_gt[(_offset+i)%_bufsize]); }
     float getMAF(int i) { return(_maf[(_offset+i)%_bufsize]); }
     int  getNumberOfSamples() { return( _nsample ); }
-    bool isFull() { return( _nsnp==_bufsize); }
-    int setFilter(int i) { _keep[(_offset+i)%_bufsize]=false; }
-    int setKeep(int i) { _keep[(_offset+i)%_bufsize]=true; }
-    bool isFiltered(int i) { return(!_keep[(_offset+i)%_bufsize]); }
     int getNread() {return(_nread);}
     int getNwrote() {return(_nwrote);};
+    bcf1_t *getLine(int i) {return( _line[(_offset+i)%_bufsize]) ; }
+//set stuff
+    int setFilter(int i) { _keep[(_offset+i)%_bufsize]=false; }
+    int setKeep(int i) { _keep[(_offset+i)%_bufsize]=true; }
+
+//check stuff
+    bool isFull() { return( _nsnp==_bufsize); }
+    bool isFiltered(int i) { return(!_keep[(_offset+i)%_bufsize]); }
+
 
 private:
     int **_gt,_ngt;
@@ -28,7 +36,9 @@ private:
     int _nsnp,_offset,_nsample,_overlap,_window,_bufsize;
     htsFile *_fout;
     vector <bool> _keep;
+    bool _write;//write output?
     int _nread,_nwrote;
     vector<float> _maf;
 };
+
 
