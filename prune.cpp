@@ -100,13 +100,18 @@ int circularBuffer::next()
     {
 	int idx = (_offset+_nsnp)%_bufsize;
 	bcf_copy(_line[idx],bcf_sr_get_line(_sr,0));
+	bcf_unpack(_line[idx],BCF_UN_ALL);
 	if(_line[idx]->n_allele==2)
 	{
 	    if(_write)
 	    {	    
 		_keep[idx]=true;
 	    }
-	    assert(bcf_get_genotypes(_hdr_in, _line[idx], &_gt[idx], &_ngt)==2*_nsample);
+	    int *test=NULL,ntest=0;
+	    if(bcf_get_genotypes(_hdr_in, _line[idx], &_gt[idx], &_ngt)!=2*_nsample)
+	    {
+		die("problem reading genotypes ngt != 2*n");
+	    }
 	    _maf[idx]=0.0;
 	    for(int i=0;i<_nsample;i++) 
 	    {
@@ -148,7 +153,8 @@ int meanvar(circularBuffer & cb, vector<float> & mean, vector<float> & sd)
 		ac+=x[k];
 		n++;
 	    }
-	}	
+	}
+	if(n==0) die("no data");
 	mean[i] = (float)ac/(float)n;	    
 	if(ac>0 && ac<(2*n) )
 	{
@@ -166,7 +172,7 @@ int meanvar(circularBuffer & cb, vector<float> & mean, vector<float> & sd)
 	}
 //	sd[i] /= (n-1); //we want the sum-of-squares not the variance.
 	sd[i] = sqrt(sd[i]);
-//	cerr <<i << " "<< mean[i] << " "<< sd[i]<<endl;
+//	cerr <<i << " "<< mean[i] << " "<< sd[i]<< " n="<<n<<endl;
 	assert(sd[i]>0);
 	assert(mean[i]>=0&&mean[i]<=2.);
     }
@@ -327,6 +333,7 @@ int prune_main(int argc,char **argv) {
 
     while(cb.next()) 
     {
+	cerr << "chunk="<<chunk<<endl;
 	int nsnp=cb.getNumberOfSNPs();
 	correlationMatrix(cb,R2);
 	int start=b;
