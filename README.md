@@ -4,9 +4,11 @@ Copyright (c) 2016, Illumina, Inc. All rights reserved. This software is not com
 
 Ancestry and Kinship Tools (AKT) provides a number of useful statistical genetics routines using the [htslib](http://www.htslib.org/) API for input/output. This means it can seamlessly read BCF/VCF files and play nicely with [bcftools](http://samtools.github.io/bcftools/bcftools.html).
 
+Full documentation is available in [docs/usage.md](docs/usage.md) along with a large set of example use cases in [docs/examples.md](docs/examples.md)
+
 Please cite the [AKT pre-print](http://biorxiv.org/content/early/2016/04/10/047829) if you find this software useful.
 
-##License
+##License and dependencies
 
 AKT is freely available under the [GPL3 license](https://github.com/Illumina/agg/blob/master/LICENSE). 
 
@@ -53,7 +55,3 @@ Usage:	akt <command> [options]
 	metafreq                 examine two files for AF differences
 
 ```
-
-Full documentation is available in [docs/usage.md](docs/usage.md) along with a large set of example use cases in [docs/examples.md](docs/examples.md)
-
-
