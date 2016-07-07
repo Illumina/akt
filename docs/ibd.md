@@ -1,22 +1,22 @@
 ##ibd
-```
-replace_ibd_run
-```
-* targetfile_option
-* regions_option
-* samples_option
-* samplesfile_option
-* thin_option
-* aftag_option
-* pairfile_option
-* nthread_option
-* maf_option
-* -e : Probability of error per base
-* -M : Lower bound of likelihood ratio score
-* -L : Lower bound of segment length
-* -w : Number of markers per window
-* -x : Number of hom-ref hom-alt matches allowed in a window before breaking a region in first stage.
-* -l : Minimum IBD region to output
+
+Detects large chunks of DNA shared Identical-by-Descent (IBD) between pairs of samples.
+
+targetfile_option
+regions_option
+samples_option
+samplesfile_option
+nthread_option
+maf_option
+**-h** *VALUE* keep every *VALUE*th marker  
+**-a** *STRING* allele frequency tag (default AF)  
+**-f** *FILE* file containing sample pairs to perform calculations on  
+**-e** *VALUE* Probability of error per base  
+**-M** *VALUE* Lower bound of likelihood ratio score  
+**-L** *VALUE* Lower bound of segment length  
+**-w** *VALUE* Number of markers per window  
+**-x** *VALUE* Number of hom-ref hom-alt matches allowed in a window before breaking a region in first stage.  
+**-l** *VALUE* Minimum IBD region to output  
 
 This tool lets us find regions which are shared IBD between two samples. 
 ```
