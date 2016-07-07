@@ -1,5 +1,5 @@
 #!/bin/bash
-
+rm usage.md
 cat Using.md >> usage.md; 		../akt 2> tmp; 				sed -e '/replace_akt_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat pca.md >> usage.md; 		../akt pca 2> tmp; 			sed -e '/replace_pca_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat kin.md >> usage.md; 		../akt kin 2> tmp; 			sed -e '/replace_kin_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
