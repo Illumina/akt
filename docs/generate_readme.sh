@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-echo "#Using akt" >> usage.md
+
 cat Using.md >> usage.md; 		../akt 2> tmp; 				sed -e '/replace_akt_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat kin.md >> usage.md; 		../akt kin 2> tmp; 			sed -e '/replace_kin_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat relatives.md >> usage.md; 	../akt relatives 2> tmp; 	sed -e '/replace_relatives_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
@@ -14,6 +14,21 @@ cat LDplot.md >> usage.md; 		../akt LDplot 2> tmp; 		sed -e '/replace_LDplot_run
 cat admix.md >> usage.md; 		../akt admix 2> tmp; 		sed -e '/replace_admix_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat metafreq.md >> usage.md; 		../akt metafreq 2> tmp; 		sed -e '/replace_metafreq_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 
+
+sed -i s,"output_option","**-o** *FILE* see common options",g usage.md
+sed -i s,"outputfmt_option","**-O** *z|b|v|u* see common options",g usage.md  
+sed -i s,"regionsfile_option","**-R** *FILE* see common options",g usage.md  
+sed -i s,"regions_option","**-r** *REGION* see common options",g usage.md  
+sed -i s,"targetfile_option","**-T** *FILE* see common options",g usage.md  
+sed -i s,"target_option","**-t** *TARGET* see common options",g usage.md  
+sed -i s,"samplesfile_option","**-S** *SAMPLES* see common options",g usage.md 
+sed -i s,"samples_option","**-s** *SAMPLES* see common options",g usage.md   
+sed -i s,"nthread_option","**-n** *VALUE* see common options",g usage.md  
+sed -i s,"maf_option","**-m** *VALUE* see common options",g usage.md
+
+rm tmp;
+
+
 echo -e "#Example Workflow" >> examples.md
 cat Data.md >> examples.md
 cat Cryptic.md >> examples.md
@@ -25,26 +40,3 @@ cat Corplot.md >> examples.md
 cat AdFrac.md >> examples.md
 cat MF.md >> examples.md
 
-
-declare -A options;
-options=(["-o"]="output_option"); 
-options+=(["-O"]="outputfmt_option");
-options+=(["-r"]="regions_option");
-options+=(["-R"]="regionsfile_option");
-options+=(["-s"]="samples_option");
-options+=(["-S"]="samplesfile_option");
-options+=(["-T"]="targetfile_option");
-options+=(["-t"]="target_option");
-options+=(["-n"]="nthread_option");
-options+=(["-a"]="aftag_option");
-options+=(["-f"]="pairfile_option");
-options+=(["-h"]="thin_option");
-options+=(["-m"]="maf_option");
-
-for i in "${!options[@]}"; do
-   line=`grep "^$i" common_options.md`
-   sed -i -e 's/'"${options["$i"]}"'/'"$line"'/g' examples.md
-   sed -i -e 's/'"${options["$i"]}"'/'"$line"'/g' usage.md
-done
-
-rm tmp;
