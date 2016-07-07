@@ -5,8 +5,8 @@ Calculates kinship coefficients (and other related metrics) from multi-sample VC
 **-k** *value* Only output pairs with kinship coefficient greater than *value*  
 **-F** *FILE* a file containing population allele frequencies to use in kinship calculation  
 **-M** *0/1/2* type of estimator.  0:[plink (default)](https://www.cog-genomics.org/plink2/ibd) 1:[king-robust](http://bioinformatics.oxfordjournals.org/content/26/22/2867.full) 2:[genetic-relationship-matrix](http://cnsgenomics.com/software/gcta/estimate_grm.html)  
-**-a** *TAG* Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF.  
-**-n** *VALUE see common options  
+aftag_option
+nthread_option
 regionsfile_option
 regions_option
 targetfile_option
