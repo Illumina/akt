@@ -1,5 +1,7 @@
 ##kin
 
+Calculates kinship coefficients (and other related metrics) from multi-sample VCF/BCFs. Can be used to detect (closely) related or duplicated samples.
+
 **-k** *value* Only output pairs with kinship coefficient greater than *value*  
 **-F** *FILE* a file containing population allele frequencies to use in kinship calculation  
 **-M** *0/1/2* type of estimator.  0:[plink (default)](https://www.cog-genomics.org/plink2/ibd) 1:[king-robust](http://bioinformatics.oxfordjournals.org/content/26/22/2867.full) 2:[genetic-relationship-matrix](http://cnsgenomics.com/software/gcta/estimate_grm.html)  

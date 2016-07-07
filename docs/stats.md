@@ -1,21 +1,21 @@
 ##stats
-```
-replace_stats_run
-```
-* -F : Correlation with variants in a window of size f base pairs to left and right or each variant. 
-* -b : The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.
-* -x : Do not calculate covariance matrix.
-* -c : Output all correlation.
-* -C : Output correlation values greater than this.
-* aftag_option
-* output_option
-* outputfmt_option
-* regions_option
-* regionsfile_option
-* samples_option
-* samplesfile_option
 
-This tool lets us calculate allele frequencies and correlation matrices from multisample vcfs. Running 
+This tool lets us calculate allele frequencies and correlation matrices from multisample vcfs.
+
+**F** *VALUE* Correlation with variants in a window of size f base pairs to left and right or each variant.  
+**b** The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.  
+**x** Do not calculate covariance matrix.  
+**c** Output all correlation.  
+**C** Output correlation values greater than this.  
+aftag_option
+output_option
+outputfmt_option
+regions_option
+regionsfile_option
+samples_option
+samplesfile_option
+
+ Running 
 ```
 ./akt stats panel.bcf -F 10000 -O b -o tmp.bcf -a "TAG" -c
 ```

@@ -4,10 +4,11 @@ cat Using.md >> usage.md; 		../akt 2> tmp; 				sed -e '/replace_akt_run/{' -e 'r
 cat pca.md >> usage.md; 		../akt pca 2> tmp; 			sed -e '/replace_pca_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat kin.md >> usage.md; 		../akt kin 2> tmp; 			sed -e '/replace_kin_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat relatives.md >> usage.md; 	../akt relatives 2> tmp; 	sed -e '/replace_relatives_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+cat ibd.md >> usage.md; 		../akt ibd 2> tmp; 			sed -e '/replace_ibd_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat mendel.md >> usage.md; 	../akt mendel 2> tmp; 	sed -e '/replace_mendel_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat cluster.md >> usage.md; 	../akt cluster 2> tmp; 		sed -e '/replace_cluster_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat stats.md >> usage.md; 		../akt stats 2> tmp; 		sed -e '/replace_stats_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
-cat ibd.md >> usage.md; 		../akt ibd 2> tmp; 			sed -e '/replace_ibd_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
+
 cat LDplot.md >> usage.md; 		../akt LDplot 2> tmp; 		sed -e '/replace_LDplot_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat admix.md >> usage.md; 		../akt admix 2> tmp; 		sed -e '/replace_admix_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat metafreq.md >> usage.md; 		../akt metafreq 2> tmp; 		sed -e '/replace_metafreq_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 

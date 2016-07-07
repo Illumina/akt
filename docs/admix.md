@@ -1,12 +1,10 @@
 ##admix
-```
-replace_admix_run
 
-```
-* -c : Which columns in input file to use.
-* -C : file with vectors whose transformation to admixture fractions is known.
+The `admix` function attempts to use the output of `akt pca` to assign admixture fractions to data based on known populations.
 
-`admix` attempts to use the output of `pca` to assign admixture fractions to data based on known populations.
+**-c** *VALUE* Which columns in input file to use.
+**-C** *VALUE* file with vectors whose transformation to admixture fractions is known.
+
 The input file should be in the form
 ```
 e1 e2 e3 ... ed POP a1 a2 a3 ... ad
@@ -24,13 +22,16 @@ a = T^{-1}(e-v)
 `admix` calculates this inverse mapping.
 
 ```
-~/ancestry_tools$ ./akt admix pcadata -c 2-6 -C pca_to_admix.txt > admixtures
+./akt admix pcadata -c 2-6 -C pca_to_admix.txt > admixtures
 ```
+
 The file `admixtures` contains
+
 ```
 SAMPLE_ID %POP1 %POP2 ... %POPD
 ...
 ```
+
 A vector must be chosen to fix the zero point of the transformation (the vector `v` above). 
 For K populations the `-C` input file can contain K or K+1 lines.
 If K+1 vectors are given the one with the lowest norm in the space of admixtures equals `v`.
