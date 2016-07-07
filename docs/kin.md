@@ -5,12 +5,13 @@
 **-M** *0/1/2* type of estimator.  0:[plink (default)](https://www.cog-genomics.org/plink2/ibd) 1:[king-robust](http://bioinformatics.oxfordjournals.org/content/26/22/2867.full) 2:[genetic-relationship-matrix](http://cnsgenomics.com/software/gcta/estimate_grm.html)  
 **-a** *TAG* Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF.  
 **-n** *VALUE see common options  
-**-R** *FILE* see common options  
-**-r** *REGION* see common options  
-**-T** *FILE* see common options  
-**-t** *TARGET* see common options  
-**-s** *SAMPLES* see common options  
-**-S** *SAMPLES* see common options  
+regionsfile_option
+regions_option
+targetfile_option
+target_option
+samplesfile_option
+samples_option
+
 
 Run the kinship calculation by giving akt a multi-sample vcf/bcf file:
 
