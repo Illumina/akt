@@ -86,8 +86,8 @@ Calculates kinship coefficients (and other related metrics) from multi-sample VC
 **-k** *value* Only output pairs with kinship coefficient greater than *value*  
 **-F** *FILE* a file containing population allele frequencies to use in kinship calculation  
 **-M** *0/1/2* type of estimator.  0:[plink (default)](https://www.cog-genomics.org/plink2/ibd) 1:[king-robust](http://bioinformatics.oxfordjournals.org/content/26/22/2867.full) 2:[genetic-relationship-matrix](http://cnsgenomics.com/software/gcta/estimate_grm.html)  
-**-a** *TAG* Allele frequency tag e.g. "TAG" reads or writes "TAG_AF" in the target VCF.  
-**-n** *VALUE see common options  
+**-a** *TAG* Allele frequency tag e.g. 'EUR_AF'  
+**-n** *VALUE* see common options  
 **-R** *FILE* see common options  
 **-r** *REGION* see common options  
 **-T** *FILE* see common options  
@@ -307,7 +307,7 @@ This tool lets us calculate allele frequencies and correlation matrices from mul
 **x** Do not calculate covariance matrix.  
 **c** Output all correlation.  
 **C** Output correlation values greater than this.  
-aftag_option
+**-a** *TAG* Allele frequency tag e.g. 'EUR_AF'  
 **-o** *FILE* see common options  
 **-O** *z|b|v|u* see common options  
 **-r** *REGION* see common options  
@@ -398,7 +398,7 @@ This tool lets us find sites with statistically significant differences in frequ
 **-T** *FILE* see common options  
 **-r** *REGION* see common options  
 **-R** *FILE* see common options  
-aftag_option
+**-a** *TAG* Allele frequency tag e.g. 'EUR_AF'  
 **-o** *FILE* see common options  
 **-O** *z|b|v|u* see common options  
 

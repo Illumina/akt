@@ -24,7 +24,7 @@ sed -i s,"samplesfile_option","**-S** *SAMPLES* see common options  ",g usage.md
 sed -i s,"samples_option","**-s** *SAMPLES* see common options  ",g usage.md   
 sed -i s,"nthread_option","**-n** *VALUE* see common options  ",g usage.md  
 sed -i s,"maf_option","**-m** *VALUE* see common options  ",g usage.md
-
+sed -i s,"aftag_option","**-a** *TAG* Allele frequency tag e.g. 'EUR_AF'  ",g usage.md
 rm tmp;
 
 
