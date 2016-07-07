@@ -435,3 +435,5 @@ Here was filter low frequency variants (and indels) with bcftools and pipe the o
  bcftools view -t ^X -v snps -i 'MAF>=0.05 && N_ALT==1' ~/kimura/resources/1000G/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.bcf -Ou  | ./akt thin -n 48 - | bgzip -c > thinned.vcf.gz
 ```
 
+**Note:** This routine is somewhat slow (the above command takes a few hours). We provided a set of reliable thinned SNPs for both WGS and Exome data on builds 37 and 38 of the human genome. These site-only VCFs are under `data/` in the akt repository.
+
