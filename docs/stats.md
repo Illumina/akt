@@ -2,11 +2,11 @@
 
 This tool lets us calculate allele frequencies and correlation matrices from multisample vcfs.
 
-**F** *VALUE* Correlation with variants in a window of size f base pairs to left and right or each variant.  
-**b** The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.  
-**x** Do not calculate covariance matrix.  
-**c** Output all correlation.  
-**C** Output correlation values greater than this.  
+**-F** *VALUE* Correlation with variants in a window of size f base pairs to left and right or each variant.  
+**-b** The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.  
+**-x** Do not calculate covariance matrix.  
+**-c** Output all correlation.  
+**-C** Output correlation values greater than this.  
 aftag_option
 output_option
 outputfmt_option

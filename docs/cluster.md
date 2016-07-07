@@ -1,16 +1,16 @@
 ##cluster
 
-**k** *VALUE* Number of clusters. Examine the data to guess this or analyse silhouette scores.
-**i** *VALUE* Random seed.
-**a** *0/1/2* 0:to use k++ means clustering, 1:to use EM with Gaussians, 2:to use density method.
-**C** *FILE* file with initial guess for cluster centres. If analysing 2d data this should contain 2 columns and K rows.
-**c** *VALUE* Which columns in input file to use.
-**I** *VALUE* Maximum number of iterations to use for alg 0 or 1.
-**d** *VALUE* radius around each point for counting density.
-**p** *VALUE* min density for cluster centre.
-**D** *VALUE* min radius for cluster centre.
-**-density-plot** plot delta-density graph and finish.
-**e** Calculate silhouette score (goodness of cluster assignment).
+**-k** *VALUE* Number of clusters. Examine the data to guess this or analyse silhouette scores.  
+**-i** *VALUE* Random seed.  
+**-a** *0/1/2* 0:to use k++ means clustering, 1:to use EM with Gaussians, 2:to use density method.  
+**-C** *FILE* file with initial guess for cluster centres. If analysing 2d data this should contain 2 columns and K rows.  
+**-c** *VALUE* Which columns in input file to use.  
+**-I** *VALUE* Maximum number of iterations to use for alg 0 or 1.  
+**-d** *VALUE* radius around each point for counting density.  
+**-p** *VALUE* min density for cluster centre.  
+**-D** *VALUE* min radius for cluster centre.  
+**-density-plot** plot delta-density graph and finish.  
+**-e** Calculate silhouette score (goodness of cluster assignment).  
 
 e.g. cluster the first three principle components from the output of vcfpca using k++ means. 
 

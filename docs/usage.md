@@ -35,7 +35,7 @@ There are a number of options that are shared by multiple akt subcommands which 
 **-S** *SAMPLES* File of sample names to include or exclude if prefixed with "^"  
 **-s** *SAMPLES* Comma-separated list of samples to include or exclude if prefixed with "^"  
 **-n** *VALUE* Number of threads to use.  
-**-o** *FILE* Output file name
+**-o** *FILE* Output file name  
 **-O** *v/z/b/u* Output format of vcf b=compressed bcf, z=compressed vcf, u=uncompressed bcf, v=uncompressed vcf
 **-m** *VALUE* Minimum MAF a site to be counted
 
@@ -132,7 +132,7 @@ Takes the output from `akt kin` and detects/reconstructs pedigrees from the info
 **-k** *VALUE* Only keep links with kinship above this threshold (searches in this set for duplicate, parent-child and sibling links).  
 **-i** *VALUE* Iteration parameter for unrelated set output.  
 **-p** *PREFIX* Prefix for output files.  
-**-g** If present output graphviz files. These can be visulaised using e.g. `neato -Tpng -O out.allgraph` or for family pedigrees `dot -Tpng -O out.Fam0.graph`.  
+**-g** If present output graphviz files. These can be visualised using e.g. `neato -Tpng -O out.allgraph` or for family pedigrees `dot -Tpng -O out.Fam0.graph`.  
 
 ```
 ./akt relatives allibd -g > allrelatives
@@ -213,15 +213,17 @@ Profiles Mendelian inheritance/inconsistency patterns in a sample. Useful for ev
 **-t** *TARGET* see common options  
 **-r** *REGION* see common options  
 **-R** *FILE* see common options  
-**-i** *EXPRESSION* Apply filters see [bcftools expressions](https://samtools.github.io/bcftools/bcftools.html#expressions)
-**-p** *FILE* The `-p` option specifies the pedigree structure and uses the well-known six column plink .fam format:
+**-i** *EXPRESSION* Apply filters see [bcftools expressions](https://samtools.github.io/bcftools/bcftools.html#expressions)  
+**-p** *FILE* The `-p` option specifies the pedigree structure and uses the well-known six column plink .fam 
+
+Expected pedigree format:
 
 1. Family ID
 2. Individual ID
 3. Paternal ID
 4. Maternal ID
 5. Sex (1=male; 2=female; other=unknown)
-6. Phenotype
+6. Phenotype (optional)
 
 Here is an example pedigree file for the [CEPH1463](http://www.nature.com/nmeth/journal/v12/n10/fig_tab/nmeth.3505_SF4.html) pedigree:
 
@@ -246,17 +248,17 @@ PG NA12893 NA12877 NA12878      1 -9
 ```
 ##cluster
 
-**k** *VALUE* Number of clusters. Examine the data to guess this or analyse silhouette scores.
-**i** *VALUE* Random seed.
-**a** *0/1/2* 0:to use k++ means clustering, 1:to use EM with Gaussians, 2:to use density method.
-**C** *FILE* file with initial guess for cluster centres. If analysing 2d data this should contain 2 columns and K rows.
-**c** *VALUE* Which columns in input file to use.
-**I** *VALUE* Maximum number of iterations to use for alg 0 or 1.
-**d** *VALUE* radius around each point for counting density.
-**p** *VALUE* min density for cluster centre.
-**D** *VALUE* min radius for cluster centre.
-**-density-plot** plot delta-density graph and finish.
-**e** Calculate silhouette score (goodness of cluster assignment).
+**-k** *VALUE* Number of clusters. Examine the data to guess this or analyse silhouette scores.  
+**-i** *VALUE* Random seed.  
+**-a** *0/1/2* 0:to use k++ means clustering, 1:to use EM with Gaussians, 2:to use density method.  
+**-C** *FILE* file with initial guess for cluster centres. If analysing 2d data this should contain 2 columns and K rows.  
+**-c** *VALUE* Which columns in input file to use.  
+**-I** *VALUE* Maximum number of iterations to use for alg 0 or 1.  
+**-d** *VALUE* radius around each point for counting density.  
+**-p** *VALUE* min density for cluster centre.  
+**-D** *VALUE* min radius for cluster centre.  
+**-density-plot** plot delta-density graph and finish.  
+**-e** Calculate silhouette score (goodness of cluster assignment).  
 
 e.g. cluster the first three principle components from the output of vcfpca using k++ means. 
 
@@ -302,11 +304,11 @@ Unassigned data points are always put in cluster 0. The silhouette score for una
 
 This tool lets us calculate allele frequencies and correlation matrices from multisample vcfs.
 
-**F** *VALUE* Correlation with variants in a window of size f base pairs to left and right or each variant.  
-**b** The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.  
-**x** Do not calculate covariance matrix.  
-**c** Output all correlation.  
-**C** Output correlation values greater than this.  
+**-F** *VALUE* Correlation with variants in a window of size f base pairs to left and right or each variant.  
+**-b** The number in the -F argument now interpreted as number of flanking variants instead of flanking positions.  
+**-x** Do not calculate covariance matrix.  
+**-c** Output all correlation.  
+**-C** Output correlation values greater than this.  
 **-a** *TAG* Allele frequency tag e.g. 'EUR_AF'  
 **-o** *FILE* see common options  
 **-O** *z|b|v|u* see common options  
@@ -352,8 +354,8 @@ gnuplot> plot 'sigma' matrix with image
 
 The `admix` function attempts to use the output of `akt pca` to assign admixture fractions to data based on known populations.
 
-**-c** *VALUE* Which columns in input file to use.
-**-C** *VALUE* file with vectors whose transformation to admixture fractions is known.
+**-c** *VALUE* Which columns in input file to use.  
+**-C** *VALUE* file with vectors whose transformation to admixture fractions is known.  
 
 The input file should be in the form
 ```
