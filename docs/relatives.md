@@ -5,7 +5,7 @@ Takes the output from `akt kin` and detects/reconstructs pedigrees from the info
 **-k** *VALUE* Only keep links with kinship above this threshold (searches in this set for duplicate, parent-child and sibling links).  
 **-i** *VALUE* Iteration parameter for unrelated set output.  
 **-p** *PREFIX* Prefix for output files.  
-**-g** If present output graphviz files. These can be visulaised using e.g. `neato -Tpng -O out.allgraph` or for family pedigrees `dot -Tpng -O out.Fam0.graph`.  
+**-g** If present output graphviz files. These can be visualised using e.g. `neato -Tpng -O out.allgraph` or for family pedigrees `dot -Tpng -O out.Fam0.graph`.  
 
 ```
 ./akt relatives allibd -g > allrelatives

@@ -2,8 +2,8 @@
 
 The `admix` function attempts to use the output of `akt pca` to assign admixture fractions to data based on known populations.
 
-**-c** *VALUE* Which columns in input file to use.
-**-C** *VALUE* file with vectors whose transformation to admixture fractions is known.
+**-c** *VALUE* Which columns in input file to use.  
+**-C** *VALUE* file with vectors whose transformation to admixture fractions is known.  
 
 The input file should be in the form
 ```

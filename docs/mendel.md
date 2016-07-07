@@ -6,15 +6,17 @@ output_option
 target_option
 regions_option
 regionsfile_option
-**-i** *EXPRESSION* Apply filters see [bcftools expressions](https://samtools.github.io/bcftools/bcftools.html#expressions)
-**-p** *FILE* The `-p` option specifies the pedigree structure and uses the well-known six column plink .fam format:
+**-i** *EXPRESSION* Apply filters see [bcftools expressions](https://samtools.github.io/bcftools/bcftools.html#expressions)  
+**-p** *FILE* The `-p` option specifies the pedigree structure and uses the well-known six column plink .fam 
+
+Expected pedigree format:
 
 1. Family ID
 2. Individual ID
 3. Paternal ID
 4. Maternal ID
 5. Sex (1=male; 2=female; other=unknown)
-6. Phenotype
+6. Phenotype (optional)
 
 Here is an example pedigree file for the [CEPH1463](http://www.nature.com/nmeth/journal/v12/n10/fig_tab/nmeth.3505_SF4.html) pedigree:
 
