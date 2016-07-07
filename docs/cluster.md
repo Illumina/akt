@@ -1,5 +1,7 @@
 ##cluster
 
+Perform unsupervised clustering on some data, for example the output from `akt pca`.
+
 **-k** *VALUE* Number of clusters. Examine the data to guess this or analyse silhouette scores.  
 **-i** *VALUE* Random seed.  
 **-a** *0/1/2* 0:to use k++ means clustering, 1:to use EM with Gaussians, 2:to use density method.  
