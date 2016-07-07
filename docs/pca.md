@@ -1,7 +1,6 @@
 ##pca
-```
-Performs principal component analysis on a BCF/VCF. Can also be used to project samples onto pre-calculated principal components from another cohort. Uses a randomised SVD by default for very fast computation. WGS data is far denser than required for a meaningful PCA, it is recommended you provide a thinned set of sites via the `-R` command.
 
+Performs principal component analysis on a BCF/VCF. Can also be used to project samples onto pre-calculated principal components from another cohort. Uses a randomised SVD by default for very fast computation. WGS data is far denser than required for a meaningful PCA, it is recommended you provide a thinned set of sites via the `-R` command.
 
 output_option
 outputfmt_option
