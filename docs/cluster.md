@@ -9,7 +9,7 @@
 **-d** *VALUE* radius around each point for counting density.  
 **-p** *VALUE* min density for cluster centre.  
 **-D** *VALUE* min radius for cluster centre.  
-**-density-plot** plot delta-density graph and finish.  
+**--density-plot** plot delta-density graph and finish.  
 **-e** Calculate silhouette score (goodness of cluster assignment).  
 
 e.g. cluster the first three principle components from the output of vcfpca using k++ means. 
