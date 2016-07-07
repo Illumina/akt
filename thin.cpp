@@ -1,5 +1,5 @@
 #include "thin.hpp"
-
+#include <time.h>
 using namespace Eigen;
 
 //#define DEBUG
@@ -21,7 +21,7 @@ static void usage(){
     fprintf(stderr, "    -w, --window                window size within to consider possible tag SNPs (default 250)\n");
     fprintf(stderr, "    -c, --correlation           minimum r^2 value to consider a SNP tagged (default 0.5)\n");
     fprintf(stderr, "    -k, --nkeep                 number of tag SNPs to selection (default 20000)\n");
-    fprintf(stderr, "    -@, --nthread               number of threads to use\n");
+    fprintf(stderr, "    -n, --nthread               number of threads to use\n");
     exit(1);
 }
 
@@ -262,7 +262,7 @@ int correlationMatrix(circularBuffer & cb,MatrixXf & R2)
     return(0);
 }
 
-int selectTagSNPs(vector<list<int > > & R2,vector<float> maf,int window,vector<int> & keep,int nkeep)
+int selectTagSNPs(vector<vector<int > > & R2,vector<float> maf,int window,vector<int> & keep,int nkeep)
 {
     float r2_thresh = 0.8;
     keep.clear();
@@ -275,7 +275,10 @@ int selectTagSNPs(vector<list<int > > & R2,vector<float> maf,int window,vector<i
     keep.clear();
     while( nselect<nkeep && ntag<nsnp)
     {
-
+	if(nselect%100==0)
+	{
+	    cerr <<"Selected "<<nselect<<" tag markers\r";
+	}
 //1. find the best tag SNP. if there is a tie, take the more common.
 	int maxidx=0;
 	int maxscore = -1;
@@ -285,27 +288,30 @@ int selectTagSNPs(vector<list<int > > & R2,vector<float> maf,int window,vector<i
 	    if(!tagged[i])
 	    {
 		int score = R2[i].size();
-		for(list<int>::iterator it=R2[i].begin();it!=R2[i].end();it++)
+		if(score>=maxscore)
 		{
-		    assert(*it>=0);
-		    assert(*it<nsnp);
-		    if(tagged[*it])
+		    for(vector<int>::iterator it=R2[i].begin();it!=R2[i].end();it++)
 		    {
-			score--;
+			assert(*it>=0);
+			assert(*it<nsnp);
+			if(tagged[*it])
+			{
+			    score--;
+			}
 		    }
-		}
-		assert(score>=0);
-		if(score==maxscore && maf[i]>maf[maxidx])
-		{
-		    maxscore = score;
-		    maxidx=i;
-		}
-		else if(score > maxscore)
-		{
-		    maxscore = score;
-		    maxidx=i;
-		}
+		    assert(score>=0);
+		    if(score==maxscore && maf[i]>maf[maxidx])
+		    {
+			maxscore = score;
+			maxidx=i;
+		    }
+		    else if(score > maxscore)
+		    {
+			maxscore = score;
+			maxidx=i;
+		    }
 //		cerr << i <<" "<< score<<" " << R2[i].size()<<endl;
+		}
 	    }
 	    else
 	    {
@@ -325,7 +331,7 @@ int selectTagSNPs(vector<list<int > > & R2,vector<float> maf,int window,vector<i
 		die("duplicated tag SNP selected");
 	    }
 
-	    for(list<int>::iterator it=R2[maxidx].begin();it!=R2[maxidx].end();it++)
+	    for(vector<int>::iterator it=R2[maxidx].begin();it!=R2[maxidx].end();it++)
 	    {
 		tagged[*it] = true;
 	    }
@@ -335,7 +341,7 @@ int selectTagSNPs(vector<list<int > > & R2,vector<float> maf,int window,vector<i
 	}
     }
     sort(keep.begin(),keep.end());
-    
+    cerr <<endl<<"Finshed tag selection"<<endl;
     return(0);
 }
 
@@ -387,7 +393,7 @@ int thin_main(int argc,char **argv)
     int chunk=0;
     int nsnp=3*w;
     MatrixXf R2 = MatrixXf::Zero(nsnp,nsnp);    
-    vector<list<int > > G;
+    vector<vector<int > > G;
     G.reserve(1e6);//might be pretty big. ~7million SNPs with MAF>=5% in 1000G.
     int count=0;
     int nread;
@@ -400,6 +406,8 @@ int thin_main(int argc,char **argv)
     bcf_hdr_t *hdr_out = bcf_hdr_subset(cb.getHeader(),0,NULL,NULL);
     bcf_hdr_add_sample(hdr_out, NULL);
     omp_set_num_threads(nthread);
+
+    clock_t wall0 = clock();
     while(cb.next()) 
     {
 	cerr <<"Read "<<count<<" markers\r";
@@ -417,7 +425,7 @@ int thin_main(int argc,char **argv)
 	}
 	for(int i=start;i<stop;i++)
 	{
-	    G.push_back(list<int>());
+	    G.push_back(vector<int>());
 	    maf.push_back(cb.getMAF(i));
 	    lines.push_back(bcf_dup(cb.getLine(i)));
 	    bcf_subset(hdr_in,lines.back(),0,NULL);
@@ -434,13 +442,13 @@ int thin_main(int argc,char **argv)
 	chunk++;
     }
     cerr << "Read "<<G.size() << " SNPs for pruning"<<endl;
-
+    cerr << "Reading took "<<(float)(clock()-wall0)/CLOCKS_PER_SEC<<" seconds"<<endl;
 
 #ifdef DEBUG
     for(size_t i=0;i<G.size();i++)
     {
 	cerr << i << ": " << G[i].size() << ": ";
-	for(list<int>::iterator it=G[i].begin();it!=G[i].end();it++)
+	for(vector<int>::iterator it=G[i].begin();it!=G[i].end();it++)
 	{
 	    cerr << *it << " ";
 	}
@@ -457,8 +465,10 @@ int thin_main(int argc,char **argv)
 	}
     }
 
+    wall0 = clock();
     vector<int> keep;
     selectTagSNPs(G,maf,w,keep,nkeep);
+    cerr << "tagging took "<<(float)(clock()-wall0)/CLOCKS_PER_SEC<<" seconds"<<endl;
     
     htsFile *fout;
     if(outfile==NULL)
@@ -473,16 +483,17 @@ int thin_main(int argc,char **argv)
     bcf_hdr_write(fout,hdr_out);
     cerr << "Kept "<<keep.size()<<"/"<<lines.size()<<" markers after tag SNP selection"<<endl;
     int last_pos=-1;
-
+    int prev_rid=-1;
     for(vector<int>::iterator it=keep.begin();it!=keep.end();it++)
     {
 #ifdef DEBUG
 	cerr << *it << "/"<<lines.size()<<" "<<lines[*it]->pos<<endl;
 #endif
-	if(lines[*it]->pos <= last_pos)
+	if(lines[*it]->rid==prev_rid && lines[*it]->pos <= last_pos)
 	{
 	    die("duplicated positions");
 	}
+	prev_rid = lines[*it]->rid;
 	last_pos = lines[*it]->pos;
 	bcf_write1(fout,hdr_out,lines[*it]);
     }
