@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
     admix_main(argc, argv); 
   } else if(((string)argv[1]) == "metafreq") {
     metafreq_main(argc, argv); 
+  } else if(((string)argv[1]) == "prune") {
+    prune_main(argc, argv); 
   } 
   else if(((string)argv[1]) == "thin") {
     thin_main(argc, argv); 
