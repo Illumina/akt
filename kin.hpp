@@ -17,9 +17,22 @@
 #include <iterator>
 #include <map>
 #include <string>
+#include <math.h>
 
 ///Size of bitset. Arbitrary but 128 works well in practice
-#define L 128
+#define  BITSET_SIZE 256
+
+//timings on a single threaded AMD 6348  without  -mpopcnt
+// 512 1m22.346s
+// 256 1m32.888s
+// 128 2m0.927s
+// 64 2m45.818s
+
+//with -mpopcnt
+//512 0m32.280s
+//256 0m31.677s
+//128 0m51.172s
+
 
 using namespace std;
 
@@ -40,7 +53,8 @@ public:
     float _n00,_n10,_n11,_n20,_n21,_n22;
     int _nsample,_markers,_bc;  
     vector<float> _af;//allele freqs
-    vector< vector< vector< bitset<L> > > > _bits; ///[sample][site][type][val]
+    vector< vector< vector< bitset<BITSET_SIZE> > > > _bits; ///[sample][site][type][val]
+    vector<float> _lookup;
 };
 
 #endif
