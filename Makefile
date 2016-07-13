@@ -50,7 +50,7 @@ version.o: version.c filter.h version.h
 ##akt code
 relatives.o: relatives.cpp 
 	$(CXX) $(CXXFLAGS)  -c relatives.cpp $(IFLAGS)
-vcfpca.o: vcfpca.cpp 
+vcfpca.o: vcfpca.cpp RedSVD.hpp
 	$(CXX) $(CXXFLAGS) -c vcfpca.cpp $(IFLAGS)
 cluster.o: cluster.cpp 
 	$(CXX) $(CXXFLAGS)  -c cluster.cpp $(IFLAGS)
