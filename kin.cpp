@@ -121,7 +121,7 @@ void Kinship::addGenotypes(int *gt_arr,float p)
     { 
 	if(_bc == 0)
 	{ 
-	    _bits[i].push_back( vector< bitset<L> >(4, bitset<L>() ) ); 
+	    _bits[i].push_back( vector< bitset<BITSET_SIZE> >(4, bitset<BITSET_SIZE>() ) ); 
 	}
 	if(gt_arr[2*i] != -1 && gt_arr[2*i+1] != -1)
 	{
@@ -134,15 +134,21 @@ void Kinship::addGenotypes(int *gt_arr,float p)
 	}
     }
 ///chunks of size L
-    _bc = (_bc+1)%(L);			  
+    _bc = (_bc+1)%(BITSET_SIZE);
     ++_markers;
 }
 
 Kinship::Kinship(int nsample)
 {
+    // _lookup.resize(65536);
+    // for(int i=0;i<_lookup.size();i++)
+    // {
+    // 	_lookup[i] = (float)((bitset<BITSET_SIZE>(i)).count());
+    // }
+
     _nsample=nsample;
     _markers=0;
-    _bits.assign(_nsample, vector< vector< bitset<L> > >() );
+    _bits.assign(_nsample, vector< vector< bitset<BITSET_SIZE> > >() );
     _n00=0;
     _n10=0;
     _n11=0;
@@ -163,9 +169,20 @@ void Kinship::estimateKinship(int j1,int j2,float & ibd0, float & ibd1, float & 
     ks=-1;
     for(size_t i=0; i<_bits[j1].size(); ++i)
     {
-	ibd0 += (_bits[j1][i][0] & _bits[j2][i][2]).count() + (_bits[j1][i][2] & _bits[j2][i][0]).count();//opposite homozygotes. NAA,aa
-	ibd2 += (_bits[j1][i][0] & _bits[j2][i][0]).count() + (_bits[j1][i][1] & _bits[j2][i][1]).count() + (_bits[j1][i][2] & _bits[j2][i][2]).count();//same genotype.  
-	ibd3 += (float)(_bits[j1][i][3] | _bits[j2][i][3]).count();//missing in both.
+	// //opposite homozygotes. NAA,aa
+	// ibd0 += _lookup[(_bits[j1][i][0] & _bits[j2][i][2]).to_ulong()] + _lookup[(_bits[j1][i][2] & _bits[j2][i][0]).to_ulong()];
+	// //same genotype.  
+	// ibd2 += _lookup[(_bits[j1][i][0] & _bits[j2][i][0]).to_ulong()] + _lookup[(_bits[j1][i][1] & _bits[j2][i][1]).to_ulong()] + _lookup[(_bits[j1][i][2] & _bits[j2][i][2]).to_ulong()];
+	// //missing in both.
+	// ibd3 += _lookup[(_bits[j1][i][3] | _bits[j2][i][3]).to_ulong()];
+
+//opposite homozygotes. NAA,aa
+	ibd0 += (_bits[j1][i][0] & _bits[j2][i][2]).count() + (_bits[j1][i][2] & _bits[j2][i][0]).count();
+//same genotype.  
+	ibd2 += (_bits[j1][i][0] & _bits[j2][i][0]).count() + (_bits[j1][i][1] & _bits[j2][i][1]).count() + (_bits[j1][i][2] & _bits[j2][i][2]).count();
+//missing in both.
+	ibd3 += (_bits[j1][i][3] | _bits[j2][i][3]).count();
+
     }
 //consistent with IBD1 N - (NAA,AA + Naa,aa)
     ibd1 = _markers-ibd3-ibd0-ibd2;

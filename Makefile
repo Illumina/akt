@@ -3,8 +3,8 @@ CXX=g++
 
 OMP=-fopenmp
 
-CXXFLAGS = -O3  $(OMP)
-CFLAGS = -O3  $(OMP)
+CXXFLAGS = -O3  $(OMP) -mpopcnt
+CFLAGS = -O3  $(OMP) 
 
 all: akt
 
