@@ -22,19 +22,6 @@
 ///Size of bitset. 
 #define  BITSET_SIZE 256
 
-//1000G Phase3 (N=2504) on 17,000SNPs
-//timings on a single threaded AMD 6348  without  -mpopcnt
-// 512 1m22.346s
-// 256 1m32.888s
-// 128 2m0.927s
-// 64 2m45.818s
-
-//with -mpopcnt
-//512 0m32.280s
-//256 0m31.677s
-//128 0m51.172s
-
-
 using namespace std;
 
 extern void read_pairs(ifstream &in, vector< pair<string, string> > &relpairs, map<string,int> &name_to_id);
