@@ -19,7 +19,7 @@
 #include <string>
 #include <math.h>
 
-///Size of bitset. Arbitrary but 128 works well in practice
+///Size of bitset. 
 #define  BITSET_SIZE 256
 
 //timings on a single threaded AMD 6348  without  -mpopcnt
