@@ -22,6 +22,7 @@
 ///Size of bitset. 
 #define  BITSET_SIZE 256
 
+//1000G Phase3 (N=2504) on 17,000SNPs
 //timings on a single threaded AMD 6348  without  -mpopcnt
 // 512 1m22.346s
 // 256 1m32.888s
