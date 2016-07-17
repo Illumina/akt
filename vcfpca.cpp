@@ -14,7 +14,7 @@
  
 #include "akt.hpp"
 #include "Eigen/Dense"
-#include "RedSVD.hpp"
+#include "RandomSVD.hpp"
 #include "reader.hpp"
 
 using namespace Eigen;
@@ -432,7 +432,7 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 		V.noalias() = svd.matrixV().block(0,0,vsize,npca);
     } else {	//RedSVD algorithm
 		int e = min(  min(N,vsize)-npca  , extra);
-		RedSVD::RedSVD<MatrixXf> svd(A, npca + e);
+		RandomSVD svd(A, npca + e,6);
 		for(int j=0; j<npca; ++j){ 
 			P.col(j).noalias() = svd.matrixU().col(j) * svd.singularValues()(j) ;
 			if(out_sv){ out_file << svd.singularValues()(j) << "\n"; }
