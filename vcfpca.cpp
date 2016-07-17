@@ -15,6 +15,7 @@
 #include "akt.hpp"
 #include "Eigen/Dense"
 #include "RandomSVD.hpp"
+#include "RedSVD.hpp"
 #include "reader.hpp"
 
 using namespace Eigen;
@@ -421,7 +422,10 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
     ///Do the SVD of A
     bool out_sv = false; 
     ofstream out_file;
-    if(svfilename != ""){ out_sv = true; out_file.open ( svfilename.c_str() ); }
+    if(svfilename != "")
+    {
+	out_sv = true; out_file.open ( svfilename.c_str() );
+    }
 		
     if(a){ //Jacobi algorithm
 		JacobiSVD<MatrixXf> svd(A, ComputeThinU | ComputeThinV);
@@ -432,7 +436,8 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 		V.noalias() = svd.matrixV().block(0,0,vsize,npca);
     } else {	//RedSVD algorithm
 		int e = min(  min(N,vsize)-npca  , extra);
-		RandomSVD svd(A, npca + e,6);
+		RandomSVD svd(A, npca + e);
+//		RedSVD::RedSVD<MatrixXf> svd(A, npca + e);
 		for(int j=0; j<npca; ++j){ 
 			P.col(j).noalias() = svd.matrixU().col(j) * svd.singularValues()(j) ;
 			if(out_sv){ out_file << svd.singularValues()(j) << "\n"; }
