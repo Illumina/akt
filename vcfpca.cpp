@@ -15,7 +15,6 @@
 #include "akt.hpp"
 #include "Eigen/Dense"
 #include "RandomSVD.hpp"
-#include "RedSVD.hpp"
 #include "reader.hpp"
 
 using namespace Eigen;
