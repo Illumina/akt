@@ -5,8 +5,6 @@
 #include "Eigen/Dense"
 #include "Eigen/Eigenvalues"
 
-using namespace std;
-
 class RandomSVD {
 
 public:
@@ -17,7 +15,11 @@ public:
 	{
 	    r=mat.rows();
 	}
-	
+	if(q<1) 
+	{
+	    q=1;
+	}
+
 	Eigen::MatrixXf R;
 	rnorm(R,mat.cols(),r);
 	Eigen::MatrixXf Y  = mat * R;
