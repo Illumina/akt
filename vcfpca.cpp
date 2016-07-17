@@ -289,7 +289,7 @@ for(int j2=j1; j2<N; ++j2){
  *
  */
 void calcpca(string input_name, bool o, string outf, string output_name, float m, int k, bool a, int npca, int extra,
-string regions, bool regions_is_file, string pfilename, sample_args sargs, int covn, string svfilename) {
+	     string regions, bool regions_is_file, string pfilename, sample_args sargs, int covn, string svfilename,int niteration) {
 	
 	cerr << "Reading data..." << endl;
 	  
@@ -436,7 +436,7 @@ string regions, bool regions_is_file, string pfilename, sample_args sargs, int c
 		V.noalias() = svd.matrixV().block(0,0,vsize,npca);
     } else {	//RedSVD algorithm
 		int e = min(  min(N,vsize)-npca  , extra);
-		RandomSVD svd(A, npca + e);
+		RandomSVD svd(A, npca + e,niteration);
 //		RedSVD::RedSVD<MatrixXf> svd(A, npca + e);
 		for(int j=0; j<npca; ++j){ 
 			P.col(j).noalias() = svd.matrixU().col(j) * svd.singularValues()(j) ;
@@ -546,6 +546,7 @@ int pca_main(int argc,char **argv) {
         {"out",1,0,'o'},	
         {"outf",1,0,'O'},	
         {"weight",1,0,'W'},
+        {"iterations",1,0,'q'},
         {"region",1,0,'r'},
 	{"regions-file",1,0,'R'},
 	{"targets-file",1,0,'T'},
@@ -563,7 +564,7 @@ int pca_main(int argc,char **argv) {
     int thin=1;
     int n=20; bool don = false;
     bool a=false;
-    int e=200;
+    int e=100;
     bool o=false; string out_filename="";
     bool w=false; string weight_filename;
     string outf = "w";
@@ -580,11 +581,12 @@ int pca_main(int argc,char **argv) {
     int covn = 1;
 	
     string svfilename = "";
-    
-    while ((c = getopt_long(argc, argv, "o:O:W:N:ae:r:R:s:S:T:C:F:",loptions,NULL)) >= 0) 
+    int niteration=10;
+    while ((c = getopt_long(argc, argv, "q:o:O:W:N:ae:r:R:s:S:T:C:F:",loptions,NULL)) >= 0) 
     {
 	switch (c)
 	{
+	case 'q': niteration = atoi(optarg); break;
 	case 'o': o = true; out_filename = optarg; break;
         case 'O': outf += (string)(optarg); break;
         case 'W': w = true; weight_filename = (string)optarg; break;
@@ -621,7 +623,7 @@ int pca_main(int argc,char **argv) {
 	}
 	else{
 		cerr << "MAF lower bound: " << m << "\nThin: "<< thin <<" \nNumber principle components: "<<n<<endl;
-		calcpca(input,o,outf,out_filename,m,thin,a,n,e,regions,regions_is_file,pfilename,sargs, covn, svfilename);
+		calcpca(input,o,outf,out_filename,m,thin,a,n,e,regions,regions_is_file,pfilename,sargs, covn, svfilename,niteration);
 	}
 
 
