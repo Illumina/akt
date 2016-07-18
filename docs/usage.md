@@ -430,7 +430,6 @@ The default values are appropriate for WGS data after filtering for MAF>=5% (abo
 **-k** *VALUE* number of tag SNPs to selection (default 20000)
 **-n** *VALUE* see common options  
 
-###example
 Here was filter low frequency variants (and indels) with bcftools and pipe the output straight to `akt thin` to select a subset of markers:
 
 ```
