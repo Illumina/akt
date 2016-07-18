@@ -1,3 +1,11 @@
+// Randomised SVD implementation
+// Copyright (c) 2016 Illumina, Inc.
+// See LICENSE
+// Auther: Jared O'Connell <joconnell@illumina.com>
+//
+//This is an implementation of the algorithm described in Halko 2011:
+//http://arxiv.org/pdf/0909.4061.pdf
+
 #pragma once
 
 #include "math.h"
