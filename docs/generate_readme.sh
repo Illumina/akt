@@ -12,7 +12,8 @@ cat stats.md >> usage.md; 		../akt stats 2> tmp; 		sed -e '/replace_stats_run/{'
 cat LDplot.md >> usage.md; 		../akt LDplot 2> tmp; 		sed -e '/replace_LDplot_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat admix.md >> usage.md; 		../akt admix 2> tmp; 		sed -e '/replace_admix_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
 cat metafreq.md >> usage.md; 		../akt metafreq 2> tmp; 		sed -e '/replace_metafreq_run/{' -e 'r tmp' -e 'd' -e '}' -i usage.md; 
-cat thin.md >> usage.md
+cat tag.md >> usage.md
+cat prune.md >> usage.md
 
 sed -i s,"output_option","**-o** *FILE* see common options  ",g usage.md
 sed -i s,"outputfmt_option","**-O** *z|b|v|u* see common options  ",g usage.md  

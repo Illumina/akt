@@ -18,8 +18,8 @@ static void usage()
     fprintf(stderr, "\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "    -o, --out                   site-only vcf containg pruned variants\n");
-    fprintf(stderr, "    -w, --window                window size within to consider possible tag SNPs (default 250)\n");
-    fprintf(stderr, "    -b, --buffer                the buffer/step size to move forward\n");
+    fprintf(stderr, "    -w, --window                window size within to consider possible tag SNPs (default 1000)\n");
+    fprintf(stderr, "    -b, --buffer                consider -b/+b variants either side of a variant for tagging (default 1000)\n");
     fprintf(stderr, "    -c, --correlation           minimum r^2 value to consider a SNP tagged (default 0.5)\n");
     fprintf(stderr, "    -n, --nthread               number of threads to use\n");
     exit(1);
