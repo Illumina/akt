@@ -8,7 +8,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	45c10fa
+Version:	585722b
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
 
 Usage:	akt <command> [options]
@@ -21,6 +21,8 @@ Usage:	akt <command> [options]
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
 	stats                    calculate AF and LD metrics
+	prune                     perorms LD pruning of variants
+	tag                      selects a set of K tagging variants
 	metafreq                 examine two files for AF differences
 
 ```
@@ -416,7 +418,7 @@ Higher scores indicate a more statistically significant difference. These values
 and typically the chi-squared test is more likely to reject the null-hypothesis that
 the two cohorts have identical distributions.
 
-##thin
+##tag
 
 Performs tag SNP selection . This is useful for choosing a subset of variants to use in analyses that do not require anywhere near the number of markers typically obtained from WGS (notably `pca`/`kin`) and assume linkage equilibrium between markers. Note this routine is rather different to PLINK's pruning method. We attempt to find the *K* (non-redundant) variants that tag as much variation as possible via a greedy algorithm. Whereas PLINK prunes away variants that can be predicted from other variants. In practice, for applications such as PCA/kinship calculations, it appears any set of reasonably common and sparse markers is appropriate.
 
@@ -428,12 +430,20 @@ The default values are appropriate for WGS data after filtering for MAF>=5% (abo
 **-k** *VALUE* number of tag SNPs to selection (default 20000)
 **-n** *VALUE* see common options  
 
-###example
-Here was filter low frequency variants (and indels) with bcftools and pipe the output straight to `akt thin` to select a subset of markers:
+Here is how to filter low frequency variants (and indels) with bcftools and pipe the output straight to `akt thin` to select a subset of markers:
 
 ```
- bcftools view -t ^X -v snps -i 'MAF>=0.05 && N_ALT==1' ~/kimura/resources/1000G/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.bcf -Ou  | ./akt thin -n 48 - | bgzip -c > thinned.vcf.gz
+ bcftools view -t ^X -v snps -i 'MAF>=0.05 && N_ALT==1' ~/kimura/resources/1000G/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.bcf -Ou  | ./akt tag -n 48 - | bgzip -c > tag_snps.vcf.gz
 ```
 
 **Note:** This routine is somewhat slow (the above command takes a few hours). We provided a set of reliable thinned SNPs for both WGS and Exome data on builds 37 and 38 of the human genome. These site-only VCFs are under `data/` in the akt repository.
 
+##prune
+
+This is similar to of PLINKs pairwise LD-pruning routine. The algorithm slides along the genome, and calculates the squared correlation coefficient (r2) between plus and minus *b* flanking variants of a given variant. If r2 is greater than the specified threshold, than the variant with the **higher** MAF is removed. For WGS data, this can still result in a very dense set of markers due to the large number of rare variants that are in LD with very few other markers.
+
+
+Example:
+```
+ bcftools view -v snps -i 'MAC>1' -Ou uk10.chr20.bcf | ~/workspace/akt/akt prune - -Ou | bcftools view -Ob -o uk10k.chr20.pruned.bcf
+```

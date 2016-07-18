@@ -1,4 +1,4 @@
-#include "thin.hpp"
+#include "tag.hpp"
 #include <time.h>
 
 using namespace Eigen;
@@ -14,8 +14,8 @@ using namespace Eigen;
  */
 static void usage(){ 
     fprintf(stderr, "\n");
-    fprintf(stderr, "About:   akt thin - selects a set of tag SNPs\n");
-    fprintf(stderr, "Usage:   ./akt thin input.bcf\n");
+    fprintf(stderr, "About:   akt tag - selects a set of tag SNPs\n");
+    fprintf(stderr, "Usage:   ./akt tag input.bcf\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "    -o, --out                   site only vcf with tag SNPs\n");
@@ -110,7 +110,7 @@ int selectTagSNPs(vector<vector<int > > & R2,vector<float> maf,int window,vector
     return(0);
 }
 
-int thin_main(int argc,char **argv) 
+int tag_main(int argc,char **argv) 
 {
     int nkeep=20000;
     int c;
