@@ -430,7 +430,7 @@ The default values are appropriate for WGS data after filtering for MAF>=5% (abo
 **-k** *VALUE* number of tag SNPs to selection (default 20000)
 **-n** *VALUE* see common options  
 
-Here was filter low frequency variants (and indels) with bcftools and pipe the output straight to `akt thin` to select a subset of markers:
+Here is how to filter low frequency variants (and indels) with bcftools and pipe the output straight to `akt thin` to select a subset of markers:
 
 ```
  bcftools view -t ^X -v snps -i 'MAF>=0.05 && N_ALT==1' ~/kimura/resources/1000G/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.bcf -Ou  | ./akt tag -n 48 - | bgzip -c > tag_snps.vcf.gz
