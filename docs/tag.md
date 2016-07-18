@@ -10,7 +10,6 @@ output_option
 **-k** *VALUE* number of tag SNPs to selection (default 20000)
 nthread_option
 
-###example
 Here was filter low frequency variants (and indels) with bcftools and pipe the output straight to `akt thin` to select a subset of markers:
 
 ```
