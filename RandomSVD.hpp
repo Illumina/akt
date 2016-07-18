@@ -32,11 +32,12 @@ public:
 	rnorm(R,mat.cols(),r);
 	Eigen::MatrixXf Y  = mat * R;
 	orthonormalize(Y);
+	Eigen::MatrixXf Ystar;
 	for(int i=0;i<q;i++)
 	{
-	    Y=mat.transpose() * Y;
-	    orthonormalize(Y);
-	    Y=mat * Y;
+	    Ystar=mat.transpose() * Y;
+	    orthonormalize(Ystar);
+	    Y=mat * Ystar;
 	    orthonormalize(Y);
 	}	    
 	Eigen::MatrixXf B = Y.transpose() * mat;
