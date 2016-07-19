@@ -58,7 +58,8 @@ static void usage()
  * @param [in] vcf2  site only vcf containing PCA weights
  *
  */
-void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
+void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
+{
 	
     int Nsamples;
     int Npca=0;  
@@ -72,19 +73,25 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
     sr->collapse=COLLAPSE_NONE;
 
     ///set the regions
-    if ( bcf_sr_set_regions(sr, vcf2.c_str(), 1)<0 ){
+    if ( bcf_sr_set_regions(sr, vcf2.c_str(), 1)<0 )
+    {
 	cerr << "Failed to read the regions: " <<  vcf2 << endl; exit(1);
     }
     ///input file
-    if(!(bcf_sr_add_reader (sr, vcf1.c_str() ))){
+    if(!(bcf_sr_add_reader (sr, vcf1.c_str() )))
+    {
 	cerr << "Problem opening " + vcf1 << endl; exit(1);
     }
     ///sites file
-    if(!(bcf_sr_add_reader (sr, vcf2.c_str() ))){
+    if(!(bcf_sr_add_reader (sr, vcf2.c_str() )))
+    {
 	cerr << "Problem opening " + vcf2 << endl; exit(1);
     }
     ///subsample
-    if(sargs.subsample){ bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); }
+    if(sargs.subsample)
+    {
+	bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file);
+    }
 		
     int ret;
     bcf1_t *line0, *line1;
@@ -92,13 +99,15 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
     float *wts=NULL;int nwts=0;
 
     int N = bcf_hdr_nsamples(sr->readers[0].header); ///number of samples;
-    if(N<=0) {
+    if(N<=0)
+    {
 	cerr<<"ERROR: no samples found in "+vcf1<<endl;
 	exit(1);
     }
     cerr << N << " samples" << endl;
     Nsamples = N;
-    for(int i=0; i<N; ++i){ 
+    for(int i=0; i<N; ++i)
+    { 
 	string tmp = sr->readers[0].header->samples[i]; 
 	names.push_back(tmp);
     }	
@@ -110,11 +119,16 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
     float *af_ptr=NULL,af;///read AF
     int nval = 0;
 		
-    while(bcf_sr_next_line (sr)) { //read
+    while(bcf_sr_next_line (sr))
+    { //read
 
-	if(bcf_sr_has_line(sr,1)){ ++n1; }	//in sites file	
+	if(bcf_sr_has_line(sr,1))
+	{
+	    ++n1;
+	}	//in sites file	
 	
-	if(bcf_sr_has_line(sr,0) &&  (bcf_sr_has_line(sr,1))){	//in both files
+	if(bcf_sr_has_line(sr,0) &&  (bcf_sr_has_line(sr,1)))
+	{	//in both files
 	    ++n0;
 	    line1 =  bcf_sr_get_line(sr, 1);
 	    ret =  bcf_get_info_float(sr->readers[1].header, line1, "AF", &af_ptr, &nval); ///get allele frequency
@@ -216,13 +230,16 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
 
     cerr << n0 << "/" << n1 << " of sites were in "<< vcf1 << endl;
 
-    if(n0==0){
+    if(n0==0)
+    {
 	cerr << "No intersecting SNPs found.  Check chromosome prefix matches on sites and input file." << endl; exit(1);
     }
     ///print projections to stdout
-    for(int n=0; n<Nsamples; ++n){
+    for(int n=0; n<Nsamples; ++n)
+    {
 	cout << names[n] << "\t";
-	for(int i=0;i<Npca;i++){ 
+	for(int i=0;i<Npca;i++)
+	{ 
 	    cout << PC[n][i] << "\t";
 	}
 	cout << "\n";
@@ -246,7 +263,8 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs) {
  * @param [in] M   number of markers
  *
  */
-void DatatoMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, int M, int covn){
+void DatatoMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, int M, int covn)
+{
     int ct = 0;
     for(int i=0; i<M; ++i)
     {
@@ -279,20 +297,32 @@ void DatatoMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, in
  * @param [in] M   number of markers
  *
  */
-void DatatoSymmMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, int M){
+void DatatoSymmMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N, int M)
+{
 
     float norm = 0;
-    for(int i=0; i<M; ++i){ norm += 0.5 * AF[i] * ( 1.0 - AF[i] * 0.5 ); } norm /= 4;
+    for(int i=0; i<M; ++i)
+    {
+	norm += 0.5 * AF[i] * ( 1.0 - AF[i] * 0.5 );
+    }
+    norm /= 4;
 
-    for(int j1=0; j1<N; ++j1){
-	for(int j2=j1; j2<N; ++j2){
+    for(int j1=0; j1<N; ++j1)
+    {
+	for(int j2=j1; j2<N; ++j2)
+	{
 	    A(j1,j2) = 0;
-	    if( j1 == j2){
-		for(int i=0; i<M; ++i){
+	    if( j1 == j2)
+	    {
+		for(int i=0; i<M; ++i)
+		{
 		    A(j1,j2) += (G[i*N + j1] - AF[i]) * (G[i*N + j1] - AF[i]) - G[i*N + j1]*(2 - G[i*N + j1]);
 		}
-	    } else {
-		for(int i=0; i<M; ++i){
+	    }
+	    else
+	    {
+		for(int i=0; i<M; ++i)
+		{
 		    A(j1,j2) += (G[i*N + j1] - AF[i]) * (G[i*N + j2] - AF[i]);
 		}
 	    }
@@ -333,36 +363,49 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
     sr->require_index = 1;
 
     //set the regions
-    if(regions != ""){
-	if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 ){
+    if(regions != "")
+    {
+	if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 )
+	{
 	    cerr << "Failed to read the regions: " <<  regions << endl; exit(1);
 	}
-	if(regions_is_file){ pfilename = regions; }
+	if(regions_is_file)
+	{
+	    pfilename = regions;
+	}
     }
     //input file
-    if(!(bcf_sr_add_reader (sr, input_name.c_str() ))){
+    if(!(bcf_sr_add_reader (sr, input_name.c_str() )))
+    {
 	string tmp = input_name;
 	cerr << "Problem opening " + tmp << endl; exit(1);
     }
     //sites file
-    if(pfilename != ""){
-	if(!(bcf_sr_add_reader (sr, pfilename.c_str() ))){
+    if(pfilename != "")
+    {
+	if(!(bcf_sr_add_reader (sr, pfilename.c_str() )))
+	{
 	    string tmp = pfilename;
 	    cerr << "Problem opening " + pfilename << endl; exit(1);
 	}
     }
     //subset samples
-    if(sargs.subsample){ bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file); }
+    if(sargs.subsample)
+    {
+	bcf_hdr_set_samples(sr->readers[0].header, sargs.sample_names, sargs.sample_is_file);
+    }
 		
     int N = bcf_hdr_nsamples(sr->readers[0].header);	///number of samples
-    if(N<=0) {
+    if(N<=0)
+    {
 	cerr<<"ERROR: no samples found in "+input_name<<endl;
 	exit(1);
     }
     int *gt_arr=(int *)malloc(N*2*sizeof(int)),ngt=N*2,ngt_arr=N*2;
 	
     cerr << N << " samples" << endl;
-    for(int i=0; i<N; ++i){ 
+    for(int i=0; i<N; ++i)
+    { 
 	string tmp = sr->readers[0].header->samples[i]; 
 	names.push_back(tmp);
     }
@@ -375,21 +418,29 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
     int count=0;
     bcf1_t *line;///bcf/vcf line structure.
 	
-    while(bcf_sr_next_line (sr)) { //read
+    while(bcf_sr_next_line (sr))
+    { //read
 		
 	bool read = ( pfilename == "" ) ? true : (bcf_sr_has_line(sr,0) && bcf_sr_has_line(sr,1));
-	if( read ){	//present in sites file and sample file.
-			
+	if( read )
+	{	//present in sites file and sample file.			
 	    line =  bcf_sr_get_line(sr, 0);
 	    ngt = bcf_get_genotypes(sr->readers[0].header, line, &gt_arr, &ngt_arr);    
-	    if(ngt < 0){ cerr << "Bad genotypes at " << 
-		    bcf_hdr_id2name(sr->readers[0].header,line->rid) << ":" << line->pos+1 << endl; exit(1); }
+	    if(ngt < 0)
+	    {
+		cerr << "Bad genotypes at " <<  bcf_hdr_id2name(sr->readers[0].header,line->rid) << ":" << line->pos+1 << endl;
+		exit(1);
+	    }
 			
 	    int mac = 0,nmiss=0;
-	    for(int i=0;i<2*N;i++){	//calc allele count
-		if(gt_arr[i]!=bcf_gt_missing){
+	    for(int i=0;i<2*N;i++)
+	    {	//calc allele count
+		if(gt_arr[i]!=bcf_gt_missing)
+		{
 		    mac += bcf_gt_allele(gt_arr[i]);
-		} else {
+		}
+		else
+		{
 		    ++nmiss;
 		}
 	    }
@@ -400,19 +451,25 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
 	    if(mac > (2*N-nmiss)*m) ++count;
 
 	    //keep every k of these sites
-	    if(count%k==0 && mac > (2*N-nmiss)*m ){ //remember, 0%k == 0
+	    if(count%k==0 && mac > (2*N-nmiss)*m )
+	    { //remember, 0%k == 0
 				
 		float mu = 0;	///actual mean =/= frq because default = 2*frq
 		sites.push_back(nline);
 
-		for(int i=0;i<N;i++){
-		    if( gt_arr[2*i] < 0 || gt_arr[2*i+1] < 0 ){
+		for(int i=0;i<N;i++)
+		{
+		    if( gt_arr[2*i] < 0 || gt_arr[2*i+1] < 0 )
+		    {
 			cerr << "Fix Ploidy on " << line->rid << ":" << line->pos+1 << " sample " 
 			     << sr->readers[0].header->samples[i] << endl; exit(1);
 		    }
-		    if(gt_arr[2*i]!=bcf_gt_missing && gt_arr[2*i+1]!=bcf_gt_missing){
+		    if(gt_arr[2*i]!=bcf_gt_missing && gt_arr[2*i+1]!=bcf_gt_missing)
+		    {
 			G.push_back((float)(bcf_gt_allele(gt_arr[2*i])+bcf_gt_allele(gt_arr[2*i+1])));
-		    } else {
+		    }
+		    else
+		    {
 			G.push_back(2*frq);      ///if missing push the "expected genotype" based on allele frequency.
 		    }
 		    mu += G.back();
@@ -421,19 +478,30 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
 		++nkept;
 	    }
 	} //end sites file check
-	if( bcf_sr_has_line(sr,0) ){ ++nline; } //lines in sample file
-	if( pfilename != "" && bcf_sr_has_line(sr,1) ) { ++npanel; };
+	if( bcf_sr_has_line(sr,0) )
+	{
+	    ++nline;
+	} //lines in sample file
+	if( pfilename != "" && bcf_sr_has_line(sr,1) )
+	{
+	    ++npanel;
+	};
     }  
 	
     bcf_sr_destroy(sr);	
     free(gt_arr);	
 	
-    if( pfilename != "" ){ cerr << nkept << "/"<<npanel<<" of study markers were in the sites file"<<endl; }
-    else{
+    if( pfilename != "" )
+    {
+	cerr << nkept << "/"<<npanel<<" of study markers were in the sites file"<<endl;
+    }
+    else
+    {
 	cerr << "Kept " << nkept << " markers out of " << nline << endl;
     }
 
-    if( nkept == 0 ){ 
+    if( nkept == 0 )
+    { 
 	cerr << "ERROR: no intersecting SNPs found.  Check chromosome prefix matches on sites and input file." << endl; exit(1);
     }
     int M = nkept;
@@ -587,7 +655,10 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
 		
     } 
     ///print projections to stdout
-    for(int j=0; j<N; ++j){ cout << names[j] << "\t" << P.row(j) << endl; }
+    for(int j=0; j<N; ++j)
+    {
+	cout << names[j] << "\t" << P.row(j) << endl;
+    }
 	
 
 }
@@ -595,7 +666,8 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
 
 
         
-int pca_main(int argc,char **argv) {
+int pca_main(int argc,char **argv)
+{
     
     int c;
     if(argc<3) usage();
