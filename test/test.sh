@@ -11,7 +11,7 @@ wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.cs
 time ../akt pca -R $reg $data  > pca1.txt
 
 ##project data onto 1000G PCs
-time ../akt pca -w $reg $data  > pca2.txt
+time ../akt pca -W $reg $data  > pca2.txt
 Rscript ../scripts/1000G_pca.R pca2.txt 
 
 ##calculate kinship coefficients
