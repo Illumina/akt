@@ -16,7 +16,8 @@
 class RandomSVD {
 
 public:
- 
+    //N:nsample L:nsnp e: desired number of PCs
+    //mat is an N x L
     RandomSVD(Eigen::MatrixXf & mat,int e,int q=3)	{
 	int r = e;
 	if(r>mat.rows())
@@ -29,22 +30,22 @@ public:
 	}
 
 	Eigen::MatrixXf R;
-	rnorm(R,mat.cols(),r);
-	Eigen::MatrixXf Y  = mat * R;
+	rnorm(R,mat.cols(),r);//L x e
+	Eigen::MatrixXf Y  = mat * R;//N x e
 	orthonormalize(Y);
 	Eigen::MatrixXf Ystar;
 	for(int i=0;i<q;i++)
 	{
-	    Ystar=mat.transpose() * Y;
+	    Ystar=mat.transpose() * Y; // L x e
 	    orthonormalize(Ystar);
 	    Y=mat * Ystar;
 	    orthonormalize(Y);
 	}	    
-	Eigen::MatrixXf B = Y.transpose() * mat;
+	Eigen::MatrixXf B = Y.transpose() * mat;//e x L
 	Eigen::JacobiSVD<Eigen::MatrixXf> svd(B, Eigen::ComputeThinU | Eigen::ComputeThinV);
-	_U = Y * svd.matrixU();
-	_S = svd.singularValues();
-	_V = svd.matrixV();
+	_U = Y * svd.matrixU(); //N x e matrix 
+	_S = svd.singularValues(); //diagonal e x e matrix
+	_V = svd.matrixV(); //L x e matrix.
     }
     
     Eigen::MatrixXf matrixU() const{
