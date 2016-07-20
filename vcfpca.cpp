@@ -546,7 +546,7 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
     else//approximate randomised svd
     {
 	int e = min(  min(N,vsize)-npca  , extra);
-	RandomSVD svd(A, npca + e,niteration);
+	RandomSVD<MatrixXf> svd(A, npca + e,niteration);
 	for(int j=0; j<npca; ++j)
 	{ 
 	    P.col(j).noalias() = svd.matrixU().col(j) * svd.singularValues()(j) ;

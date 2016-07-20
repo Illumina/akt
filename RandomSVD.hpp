@@ -1,6 +1,5 @@
 // Randomised SVD implementation
 // Copyright (c) 2016 Illumina, Inc.
-// See LICENSE
 // Auther: Jared O'Connell <joconnell@illumina.com>
 //
 //This is an implementation of the algorithm described in Halko 2011:
@@ -13,12 +12,15 @@
 #include "Eigen/Dense"
 #include "Eigen/Eigenvalues"
 
+template<typename MatrixType>    
 class RandomSVD {
-
+    typedef typename MatrixType::Scalar Scalar;
+    typedef  Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorType;    
+    
 public:
     //N:nsample L:nsnp e: desired number of PCs
     //mat is an N x L
-    RandomSVD(Eigen::MatrixXf & mat,int e,int q=3)	{
+    RandomSVD(const MatrixType & mat,int e,int q=3)	{
 	int r = e;
 	if(r>mat.rows())
 	{
@@ -29,11 +31,11 @@ public:
 	    q=1;
 	}
 
-	Eigen::MatrixXf R;
+	MatrixType R;
 	rnorm(R,mat.cols(),r);//L x e
-	Eigen::MatrixXf Y  = mat * R;//N x e
+	MatrixType Y  = mat * R;//N x e
 	orthonormalize(Y);
-	Eigen::MatrixXf Ystar;
+	MatrixType Ystar;
 	for(int i=0;i<q;i++)
 	{
 	    Ystar=mat.transpose() * Y; // L x e
@@ -41,30 +43,31 @@ public:
 	    Y=mat * Ystar;
 	    orthonormalize(Y);
 	}	    
-	Eigen::MatrixXf B = Y.transpose() * mat;//e x L
-	Eigen::JacobiSVD<Eigen::MatrixXf> svd(B, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	MatrixType B = Y.transpose() * mat;//e x L
+	Eigen::JacobiSVD<MatrixType > svd(B, Eigen::ComputeThinU | Eigen::ComputeThinV);
 	_U = Y * svd.matrixU(); //N x e matrix 
 	_S = svd.singularValues(); //diagonal e x e matrix
 	_V = svd.matrixV(); //L x e matrix.
     }
-    
-    Eigen::MatrixXf matrixU() const{
+
+    MatrixType matrixU() const{
 	return _U;
     }
-    
-    Eigen::VectorXf singularValues() const {
+
+    VectorType singularValues() const {
 	return _S;
     }
-    
-    Eigen::MatrixXf matrixV() const {
+
+    MatrixType matrixV() const {
 	return _V;
     }
     
 private:
-    Eigen::MatrixXf _U;
-    Eigen::VectorXf _S;
-    Eigen::MatrixXf _V;
-    inline void rnorm(Eigen::MatrixXf & X,int nrow, int ncol) {
+    MatrixType _U;
+    VectorType _S;
+    MatrixType _V;    
+
+    inline void rnorm(MatrixType & X,int nrow, int ncol) {
 	X.resize(nrow,ncol);
 	float pi = 3.141592653589793238462643383279502884;
 	float rmax = (float)RAND_MAX;
@@ -83,9 +86,9 @@ private:
 	    }	
 	}
     }
-    
-    inline void orthonormalize(Eigen::MatrixXf & mat) {
-	Eigen::MatrixXf  thinQ;
+
+    inline void orthonormalize(MatrixType & mat) {
+	MatrixType  thinQ;
 	thinQ.setIdentity(mat.rows(), mat.cols());
 	mat = mat.householderQr().householderQ()*thinQ;
     }
