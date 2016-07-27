@@ -3,9 +3,11 @@
 #include <iomanip>  
 using namespace std;
 
-typedef struct _args {
-  bool regions_is_file;
-  char *pedigree,*inputfile,*include,*regions,*targets,*outfile;  
+typedef struct _args
+{
+    bool regions_is_file;
+    bool targets_is_file;
+    char *pedigree,*inputfile,*include,*regions,*targets,*outfile;  
 } args;
 
 /**
@@ -15,7 +17,8 @@ typedef struct _args {
  * List of input options
  *
  */
-static void usage(){ 
+static void usage()
+{ 
   fprintf(stderr, "\n");
   fprintf(stderr, "About:   akt mendel - profiles duo/trios\n");
   fprintf(stderr, "Usage:   ./akt mendel input.bcf -p pedigree.fam\n");
@@ -25,6 +28,7 @@ static void usage(){
   fprintf(stderr, "    -o, --out                   output a site only vcf.gz annotated with site specific error rates\n");
   fprintf(stderr, "    -i, --include               variant filters to apply eg. -i 'TYPE==snp && QUAL>=10 && DP<100000 && HWE<10' \n");  
   fprintf(stderr, "    -t, --targets [^]<region>   Set regions. Exclude regions with \"^\" prefix\n");
+  fprintf(stderr, "    -T, --targets-file <file>   restrict to targets listed in a file\n");
   fprintf(stderr, "    -r, --regions <region>      restrict to comma-separated list of regions\n");
   fprintf(stderr, "    -R, --regions-file <file>   restrict to regions listed in a file\n");
   exit(1);
@@ -39,7 +43,8 @@ static void usage(){
  * @param [in] par parent alternate allele count (3==missing)
  *
  */
-bool duoMendel(int kid,int par) {
+bool duoMendel(int kid,int par)
+{
   if( (kid==0&&par==2) || (kid==2&&par==0) )
     return(true);
   else
@@ -55,7 +60,8 @@ bool duoMendel(int kid,int par) {
  * @param [in] dad alternate allele count (3==missing)
  *
  */
-bool trioMendel(int kid,int mum,int dad) {
+bool trioMendel(int kid,int mum,int dad)
+{
   if(kid>=3||(dad>=3&&mum>=3))//cant evaluate
     return(false);
   if(mum>=3)
@@ -82,15 +88,18 @@ bool trioMendel(int kid,int mum,int dad) {
 
 
 
-inline int genotype(int *gt,int i) {
-  if(!bcf_gt_is_missing(gt[i*2])&&!bcf_gt_is_missing(gt[2*i+1])&&gt[i*2]>=0&&gt[i*2+1]>=0) {
+inline int genotype(int *gt,int i)
+{
+  if(!bcf_gt_is_missing(gt[i*2])&&!bcf_gt_is_missing(gt[2*i+1])&&gt[i*2]>=0&&gt[i*2+1]>=0)
+  {
     return( bcf_gt_allele(gt[i*2]) + bcf_gt_allele(gt[i*2+1]) );
   }
   else
     return(3);
 }
 
-bcf1_t *bcf_copy_sans_format(bcf1_t *dst, bcf1_t *src) {
+bcf1_t *bcf_copy_sans_format(bcf1_t *dst, bcf1_t *src)
+{
   //    bcf1_sync(src);
 
     bcf_clear(dst);
@@ -108,14 +117,13 @@ bcf1_t *bcf_copy_sans_format(bcf1_t *dst, bcf1_t *src) {
 }
 
 
-int mendel(args & a) {
-
-
+int mendel(args & a)
+{
   //open a file.
   bcf_srs_t *sr =  bcf_sr_init() ; 
 
   if(a.targets!=NULL){
-    if ( bcf_sr_set_targets(sr, a.targets, 0 ,0)<0 ) {
+    if ( bcf_sr_set_targets(sr, a.targets, a.targets_is_file ,0)<0 ) {
       cerr << "ERROR: Failed to set targets " <<a.targets<<endl;;
       exit(1);
     }
@@ -308,19 +316,22 @@ int mendel_main(int argc,char **argv) {
     {"pedigree",1,0,'p'},
     {"include",1,0,'i'},
     {"targets",required_argument,NULL,'t'},
+    {"targets-file",required_argument,NULL,'T'},
     {"regions-file",required_argument,NULL,'R'},
     {"regions",required_argument,NULL,'r'},
     {0,0,0,0}
   };
   a.regions_is_file=false;
+  a.targets_is_file=false;
   a.targets=a.pedigree=a.inputfile=a.include=a.regions=a.outfile=NULL;
 
-  while ((c = getopt_long(argc, argv, "o:p:i:t:r:R:",loptions,NULL)) >= 0) {  
+  while ((c = getopt_long(argc, argv, "o:p:i:t:T:r:R:",loptions,NULL)) >= 0) {  
     switch (c)      {
     case 'o': a.outfile = optarg; break;
     case 'p': a.pedigree = optarg; break;
     case 'i': a.include = optarg; break;
     case 't': a.targets = optarg; break;
+    case 'T': a.targets = optarg; break;
     case 'r': a.regions = optarg; break;
     case 'R': a.regions = optarg; a.regions_is_file=true; break;
     }
