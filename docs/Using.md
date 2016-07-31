@@ -20,6 +20,5 @@ There are a number of options that are shared by multiple akt subcommands which 
 **-s** *SAMPLES* Comma-separated list of samples to include or exclude if prefixed with "^"  
 **-n** *VALUE* Number of threads to use.  
 **-o** *FILE* Output file name  
-**-O** *v/z/b/u* Output format of vcf b=compressed bcf, z=compressed vcf, u=uncompressed bcf, v=uncompressed vcf
-**-m** *VALUE* Minimum MAF a site to be counted
-
+**-O** *v/z/b/u* Output format of vcf b=compressed bcf, z=compressed vcf, u=uncompressed bcf, v=uncompressed vcf 
+**-m** *VALUE* Minimum MAF a site to be counted 
