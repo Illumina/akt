@@ -29,7 +29,7 @@ sed -i s,"aftag_option","**-a** *TAG* Allele frequency tag e.g. 'EUR_AF'  ",g us
 rm tmp;
 
 
-echo -e "#Example Workflow" >> examples.md
+echo -e "#Example Workflow" > examples.md
 cat Data.md >> examples.md
 cat Cryptic.md >> examples.md
 cat Mendel_example.md >> examples.md
