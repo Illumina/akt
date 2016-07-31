@@ -23,7 +23,7 @@ are calculated using Fisher's exact (QF) and chi-squared (QX) tests. Higher valu
 more significant differences. A good predictor
 of population differences is simply the difference in allele frequency.
 Observing AF=0.99 in one group and AF=0.05 in another is a sure sign those groups differ at that site.
-![alt text](https://raw.githubusercontent.com/Illumina/akt/metafreq/docs/test_metafreq.png)
+![alt text](https://github.com/Illumina/akt/blob/master/docs/test_metafreq.png)
 
 The QF score is correlated with allele frequency difference as it should be. Of course, the QF score
 is much more powerful for significance testing. As well as differentiating
