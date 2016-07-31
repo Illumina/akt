@@ -47,7 +47,6 @@ Usage:	akt <command> [options]
 	pca                      principal component analysis
 	kin                      detect average IBD sharing
 	relatives                discover pedigrees
-	ibd                      detect segments shared IBD
 	mendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
