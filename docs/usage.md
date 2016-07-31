@@ -37,8 +37,11 @@ There are a number of options that are shared by multiple akt subcommands which 
 **-s** *SAMPLES* Comma-separated list of samples to include or exclude if prefixed with "^"  
 **-n** *VALUE* Number of threads to use.  
 **-o** *FILE* Output file name  
-**-O** *v/z/b/u* Output format of vcf b=compressed bcf, z=compressed vcf, u=uncompressed bcf, v=uncompressed vcf 
-**-m** *VALUE* Minimum MAF a site to be counted 
+**-O** *v/z/b/u* Output format of vcf b=compressed bcf, z=compressed vcf, u=uncompressed bcf, v=uncompressed vcf  
+**-m** *VALUE* Minimum MAF a site to be counted  
+
+
+
 ##pca
 
 Performs principal component analysis on a BCF/VCF. Can also be used to project samples onto pre-calculated principal components from another cohort. Uses a randomised SVD by default for very fast computation. WGS data is far denser than required for a meaningful PCA, it is recommended you provide a thinned set of sites via the `-R` command.
