@@ -51,7 +51,7 @@ static void usage(){
     cerr << "\tpca                      principal component analysis" << endl;
     cerr << "\tkin                      detect average IBD sharing" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
-    cerr << "\tibd                      detect segments shared IBD" << endl;
+//    cerr << "\tibd                      detect segments shared IBD" << endl;
     cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;
     cerr << "\tcluster                  perform cluster analyses" << endl;
     cerr << "\tLDplot                   output correlation matrix" << endl;
@@ -72,7 +72,8 @@ int main(int argc, char **argv) {
   else if(((string)argv[1]) == "pca") {
     pca_main(argc, argv);
   } else if(((string)argv[1]) == "ibd") {
-    ibd_main(argc, argv);
+      die("ibd is deprecated");
+//    ibd_main(argc, argv);
   } else if(((string)argv[1]) == "kin") {
     kin_main(argc, argv);
   } else if(((string)argv[1]) == "relatives") {
