@@ -38,7 +38,7 @@ time ../akt stats $data -O b -o sites.bcf -r 20
 bcftools index sites.bcf
 
 ##calculate ibd sharing
-time ../akt ibd $data -r 20 -T sites.bcf -s "HG00475,HG00542" > ibd.out
+#time ../akt ibd $data -r 20 -T sites.bcf -s "HG00475,HG00542" > ibd.out
 
 ##create LD plot
 time ../akt LDplot $data -r 20:0-200000 > LDplot.out
