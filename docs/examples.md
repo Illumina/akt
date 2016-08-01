@@ -144,7 +144,7 @@ or if you want to use unrelated samples use the subsetting option
 ```
 Alternatively we can project samples onto 1000Genomes phase3 princple components using
 ```
-./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -w data/wgs.grch37.vcf.gz > test_pcaproj
+./akt pca ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -W data/wgs.grch37.vcf.gz > test_pcaproj
 ```
 
 Plotting the projections of all samples onto the first three principle components gives

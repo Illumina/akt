@@ -8,7 +8,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	58a3594
+Version:	7c5b06c
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
 
 Usage:	akt <command> [options]
@@ -16,6 +16,7 @@ Usage:	akt <command> [options]
 	pca                      principal component analysis
 	kin                      detect average IBD sharing
 	relatives                discover pedigrees
+	ibd                      detect segments shared IBD
 	mendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
@@ -27,7 +28,7 @@ Usage:	akt <command> [options]
 ```
 
 ##common options 
-There are a number of options that are shared by multiple akt subcommands which we list here. We have tried to keep these consistent with [bcftools](http://samtools.github.io/bcftools/bcftools.html) where possible. Note that several options (`kin`/`pca`) prefer a thinned set of sites for faster analysis, we encourage users to provide one of our [pre-calculated site lists](https://github.com/Illumina/akt/tree/master/data) using the `-R` option for much faster computation.
+There are a number of options that are shared by multiple akt subcommands which we list here. We have tried to keep these consistent with [bcftools](http://samtools.github.io/bcftools/bcftools.html) where possible.
 
 **-R** *FILE* a file (tabixed VCF or bed) containing the markers to perform analysis on. **-R**/**-r** uses tabixes jumping for fast look up  
 **-r** *REGION* same as **-R** but a string containing the region eg. `chr1:1000000-2000000`  
