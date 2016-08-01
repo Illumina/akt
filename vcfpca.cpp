@@ -36,6 +36,7 @@ static void usage()
     umessage('T');
     umessage('r');
     umessage('R');
+    cerr << "\t    --force:			run pca without -R/-T/-F" << endl;
     umessage('S');
     umessage('s');
 //    umessage('h');
@@ -665,7 +666,7 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
 
 
 
-        
+#define FORCE 100
 int pca_main(int argc,char **argv)
 {
     
@@ -687,8 +688,10 @@ int pca_main(int argc,char **argv)
         {"extra",1,0,'e'},
         {"samples",1,0,'s'},
         {"samples-file",1,0,'S'},
+	{"force",0,0,FORCE},	
         {0,0,0,0}
     };
+    bool force = false;
     float  m=0;
     int thin=1;
     int n=20; bool don = false;
@@ -723,7 +726,7 @@ int pca_main(int argc,char **argv)
         case 'C': covn = atoi(optarg); break;
         case 'a': a = true; break;
         case 'e': e = atoi(optarg); break;
-
+	case FORCE: force = true; break;
         case 'r': regions = (optarg); used_r = true; break;
 	case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
 	case 'T': pfilename = (optarg);  break;    
@@ -736,6 +739,10 @@ int pca_main(int argc,char **argv)
 	    if(optarg!=NULL) {cerr << "Unknown argument:"+(string)optarg << endl; exit(1);}
 	    else {cerr << "Unknown argument:"; exit(1);}
         }
+    }
+    if(!force  && regions.empty() && weight_filename.empty())
+    {
+	die("None of -R/-W were provided.\n       kin does not require a dense set of markers and this can substantially increase compute time.\n       You can disable this error with --force");
     }
 
     if(optind>=argc-1) {cerr<<"No input .bcf/.vcf provided!"<<endl;exit(1);}
