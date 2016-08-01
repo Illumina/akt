@@ -26,7 +26,7 @@ then run
 The transformation specified in
 data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopulations
 (AFR, AMR, EAS, EUR, SAS) if (and ONLY if) the PCA is done by projection using the
-`-w` option and the file `wgs.grch37.vcf.gz` or `wgs.hg19.vcf.gz`
+`-W` option and the file `wgs.grch37.vcf.gz` or `wgs.hg19.vcf.gz`
 ```
 ./akt admix test_pcaproj -c 2-6 -C data/1000G.pca_to_admix > test_alladmix
 ```
