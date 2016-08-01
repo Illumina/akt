@@ -1,5 +1,8 @@
 ##Changelog
 
+##2016.08.01
+* removed akt ibd
+
 ##2016.06.03
 * kin re-factoring
  * added `-M 0/1/2` for plink/kin/grm kinship calculations
