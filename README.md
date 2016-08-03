@@ -34,12 +34,11 @@ akt uses the syntax
 ```
 ./akt COMMAND <options>
 ```
+
 To see a list of available functionality use:
 ```
-./akt
-
 Program:	akt (Ancestry and Kinship Tools)
-Version:	ff35fad
+Version:	a963bf1
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
 
 Usage:	akt <command> [options]
@@ -51,6 +50,7 @@ Usage:	akt <command> [options]
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
 	stats                    calculate AF and LD metrics
+	prune                     perorms LD pruning of variants
+	tag                      selects a set of K tagging variants
 	metafreq                 examine two files for AF differences
-
 ```
