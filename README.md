@@ -59,6 +59,7 @@ Some useful routine analyses (assumes you are in the akt directory):
 ```
 #Do a PCA:
 ./akt pca -R data/wgs.grch37.vcf.gz input.bcf > pca.txt
+Rscript scripts/pca.R pca.txt
 
 #Project samples onto 1000G principal components
 ./akt pca -W data/wgs.grch37.vcf.gz input.bcf > 1000G.pca.txt
