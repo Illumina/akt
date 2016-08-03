@@ -6,6 +6,7 @@ output_option
 outputfmt_option
 regions_option
 regionsfile_option
+target_option
 targetfile_option
 samples_option
 samplesfile_option

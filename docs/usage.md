@@ -8,7 +8,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	a963bf1
+Version:	7c5b06c
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
 
 Usage:	akt <command> [options]
@@ -50,6 +50,7 @@ Performs principal component analysis on a BCF/VCF. Can also be used to project 
 **-O** *z|b|v|u* see common options  
 **-r** *REGION* see common options  
 **-R** *FILE* see common options  
+**-t** *TARGET* see common options  
 **-T** *FILE* see common options  
 **-s** *SAMPLES* see common options  
 **-S** *SAMPLES* see common options  
