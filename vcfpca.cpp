@@ -358,7 +358,8 @@ void DatatoSymmMatrix(Ref<MatrixXf> A, vector<float> &G, vector<float> AF, int N
  *
  */
 void calcpca(string input_name, bool o, string outf, string output_name, float m, int k, bool a, int npca, int extra,
-	     string regions, bool regions_is_file, string pfilename, sample_args sargs, int covn, string svfilename,int niteration) {
+	     string targets,string regions, bool regions_is_file,  sample_args sargs, int covn, string svfilename,int niteration) 
+{
 	
     cerr << "Reading data..." << endl;
 	  
@@ -368,19 +369,33 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
   
     bcf_srs_t *sr =  bcf_sr_init() ; ///htslib synced reader.
     sr->require_index = 1;
-
+    string pfilename="";
     //set the regions
-    if(regions != "")
+    if(!regions.empty())
     {
 	if ( bcf_sr_set_regions(sr, regions.c_str(), regions_is_file)<0 )
 	{
-	    cerr << "Failed to read the regions: " <<  regions << endl; exit(1);
+	    cerr << "Failed to read the regions: " <<  regions << endl; 
+	    exit(1);
 	}
 	if(regions_is_file)
 	{
 	    pfilename = regions;
 	}
     }
+    if(!targets.empty())
+    {
+	if ( bcf_sr_set_targets(sr, targets.c_str(), regions_is_file,0)<0 )
+	{
+	    cerr << "Failed to read the targets: " <<  targets << endl; 
+	    exit(1);
+	}
+	if(regions_is_file)
+	{
+	    pfilename = targets;
+	}
+    }
+
     //input file
     if(!(bcf_sr_add_reader (sr, input_name.c_str() )))
     {
@@ -534,7 +549,8 @@ void calcpca(string input_name, bool o, string outf, string output_name, float m
     ofstream out_file;
     if(svfilename != "")
     {
-	out_sv = true; out_file.open ( svfilename.c_str() );
+	out_sv = true; 
+	out_file.open( svfilename.c_str() );
     }
 		
     if(a)//Jacobi algorithm
@@ -684,10 +700,10 @@ int pca_main(int argc,char **argv)
         {"weight",1,0,'W'},
         {"iterations",1,0,'q'},
         {"region",1,0,'r'},
+        {"target",1,0,'t'},
 	{"regions-file",1,0,'R'},
 	{"targets-file",1,0,'T'},
         {"maf",1,0,'m'},
-        {"thin",1,0,'h'},
         {"npca",1,0,'N'},
         {"alg",0,0,'a'},
         {"covdef",0,0,'C'},
@@ -709,8 +725,7 @@ int pca_main(int argc,char **argv)
     
     sample_args sargs;
 
-    string pfilename = "";
-
+    string targets = "";
     string regions = "";
     bool regions_is_file = false;
     bool used_r = false;
@@ -720,7 +735,7 @@ int pca_main(int argc,char **argv)
 	
     string svfilename = "";
     int niteration=10;
-    while ((c = getopt_long(argc, argv, "q:o:O:W:N:ae:r:R:s:S:T:C:F:",loptions,NULL)) >= 0) 
+    while ((c = getopt_long(argc, argv, "q:o:O:W:N:ae:t:T:r:R:s:S:C:F:",loptions,NULL)) >= 0) 
     {
 	switch (c)
 	{
@@ -735,7 +750,8 @@ int pca_main(int argc,char **argv)
 	case FORCE: force = true; break;
         case 'r': regions = (optarg); used_r = true; break;
 	case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
-	case 'T': pfilename = (optarg);  break;    
+	case 't': targets = (optarg);  break;    
+	case 'T': targets = (optarg);  regions_is_file=true; break;    
 	case 'F': svfilename = (optarg);  break;    
 
         case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
@@ -746,26 +762,38 @@ int pca_main(int argc,char **argv)
 	    else {cerr << "Unknown argument:"; exit(1);}
         }
     }
-    if(!force  && regions.empty() && weight_filename.empty())
+    if(!force  && targets.empty() && regions.empty() && weight_filename.empty())
     {
-	die("None of -R/-W were provided.\n       kin does not require a dense set of markers and this can substantially increase compute time.\n       You can disable this error with --force");
+	die("None of -t/-r/-T/-R/-W were provided.\n       kin does not require a dense set of markers and this can substantially increase compute time.\n       You can disable this error with --force");
     }
 
-    if(optind>=argc-1) {cerr<<"No input .bcf/.vcf provided!"<<endl;exit(1);}
-    if(!pfilename.empty()||used_R) thin=1;
-    if( used_r && used_R ){ cerr << "-r and -R cannot be used simultaneously" << endl; exit(1); }
-	
+    if(optind>=argc-1) 
+    {
+	die("No input .bcf/.vcf provided!");
+    }
+
+    if( used_r && used_R )
+    { 
+	die("-r and -R cannot be used simultaneously");
+    }
+
+    if(!targets.empty() && !regions.empty())
+    {
+	die("-t/-T and -r/-R cannot be used simultaneously");
+    }
 
     optind++;
     string input = argv[optind];
     cerr <<"Input: " << input << endl; 
-    if(w){ 
+    if(w)
+    { 
 	cerr << "Using file " << weight_filename << " for PCA weights" << endl; 
 	pca(input,weight_filename, don, n, sargs);
     }
-    else{
+    else
+    {
 	cerr << "MAF lower bound: " << m << "\nThin: "<< thin <<" \nNumber principle components: "<<n<<endl;
-	calcpca(input,o,outf,out_filename,m,thin,a,n,e,regions,regions_is_file,pfilename,sargs, covn, svfilename,niteration);
+	calcpca(input,o,outf,out_filename,m,thin,a,n,e,targets,regions,regions_is_file,sargs, covn, svfilename,niteration);
     }
 
 
