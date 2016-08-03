@@ -8,7 +8,7 @@ To see a list of available tools use
 ```
 
 Program:	akt (Ancestry and Kinship Tools)
-Version:	7c5b06c
+Version:	a963bf1
 Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.
 
 Usage:	akt <command> [options]
@@ -16,7 +16,6 @@ Usage:	akt <command> [options]
 	pca                      principal component analysis
 	kin                      detect average IBD sharing
 	relatives                discover pedigrees
-	ibd                      detect segments shared IBD
 	mendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
@@ -402,10 +401,10 @@ Here is how to filter low frequency variants (and indels) with bcftools and pipe
 
 ##prune
 
-This is similar to of PLINKs pairwise LD-pruning routine. The algorithm slides along the genome, and calculates the squared correlation coefficient (r2) between plus and minus *b* flanking variants of a given variant. If r2 is greater than the specified threshold, than the variant with the **higher** MAF is removed. For WGS data, this can still result in a very dense set of markers due to the large number of rare variants that are in LD with very few other markers.
+This is similar to PLINK's pairwise LD-pruning routine. The algorithm slides along the genome, and calculates the squared correlation coefficient (r2) between plus and minus *b* flanking variants of a given variant. If r2 is greater than the specified threshold, than the variant with the **higher** MAF is removed. For WGS data, this can still result in a very dense set of markers due to the large number of rare variants that are in LD with very few other markers.
 
 
 Example:
 ```
- bcftools view -v snps -i 'MAC>1' -Ou uk10.chr20.bcf | ~/workspace/akt/akt prune - -Ou | bcftools view -Ob -o uk10k.chr20.pruned.bcf
+ bcftools view -v snps -i 'MAC>1' -Ou uk10.chr20.bcf | akt prune - -Ou | bcftools view -Ob -o uk10k.chr20.pruned.bcf
 ```
