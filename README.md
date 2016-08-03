@@ -54,3 +54,20 @@ Usage:	akt <command> [options]
 	tag                      selects a set of K tagging variants
 	metafreq                 examine two files for AF differences
 ```
+
+Some useful routine analyses (assumes you are in the akt directory):
+```
+#Do a PCA:
+./akt pca -R data/wgs.grch37.vcf.gz input.bcf > pca.txt
+
+#Project samples onto 1000G principal components
+./akt pca -W data/wgs.grch37.vcf.gz input.bcf > 1000G.pca.txt
+Rscript scripts/1000G_pca.R 1000G.pca.txt
+
+#Find close relatives/duplicates:
+./akt pca -R data/wgs.grch37.vcf.gz input.bcf > kinship.txt
+awk '{if($5>.15) print $0}' kinship.txt
+
+#reconstruct pedigrees:
+akt relatives -p pedigree kinship.txt 
+```
