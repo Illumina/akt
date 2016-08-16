@@ -178,8 +178,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
 		    ret =  bcf_get_info_float(sr->readers[1].header , line1, "WEIGHT", &wts, &nwts);
 		    if(ret<=0)
 		    {
-			cerr << bcf_hdr_id2name(sr->readers[1].header,line1->rid)<<":"<<line1->pos+1 << endl;
-			cerr << "no weights" << endl; 
+			cerr << "INFO/WEIGHT field is missing!" << endl; 
 			exit(1);
 		    }
 			
