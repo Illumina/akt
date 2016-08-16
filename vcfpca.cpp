@@ -139,6 +139,10 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
 	    ++n0;
 	    line1 =  bcf_sr_get_line(sr, 1);
 	    ret =  bcf_get_info_float(sr->readers[1].header, line1, "AF", &af_ptr, &nval); ///get allele frequency
+	    if(ret<=0)
+	    {
+		die("no INFO/AF field in weights file");
+	    }
 	    af = af_ptr[0];
 
 	    line0 =  bcf_sr_get_line(sr, 0);
@@ -178,7 +182,8 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
 		    ret =  bcf_get_info_float(sr->readers[1].header , line1, "WEIGHT", &wts, &nwts);
 		    if(ret<=0)
 		    {
-			cerr << "INFO/WEIGHT field is missing!" << endl; 
+			cerr << bcf_hdr_id2name(sr->readers[1].header,line1->rid)<<":"<<line1->pos+1 << endl;
+			cerr << "no weights" << endl; 
 			exit(1);
 		    }
 			
