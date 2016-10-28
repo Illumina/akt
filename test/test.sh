@@ -35,7 +35,7 @@ time ../akt cluster pca1.txt -c 2-3 -a 2 -d 1 -p -1 -D 700 > cluster.out
 
 ##calculate stats for chrom 20
 time ../akt stats $data -O b -o sites.bcf -r 20
-bcftools index sites.bcf
+#bcftools index sites.bcf
 
 ##calculate ibd sharing
 #time ../akt ibd $data -r 20 -T sites.bcf -s "HG00475,HG00542" > ibd.out
