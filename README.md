@@ -71,3 +71,4 @@ awk '{if($5>.15) print $0}' kinship.txt
 akt relatives -p pedigree kinship.txt 
 ```
 Full documentation is available in [docs/usage.md](docs/usage.md) along with a large set of example use cases in [docs/examples.md](docs/examples.md)
+
