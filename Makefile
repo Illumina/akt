@@ -80,8 +80,10 @@ tag.o: tag.cpp  tag.hpp
 	$(CXX) $(CXXFLAGS) -c tag.cpp $(IFLAGS)
 prune.o: prune.cpp  prune.hpp 
 	$(CXX) $(CXXFLAGS) -c prune.cpp $(IFLAGS)
-akt: version.h akt.cpp  admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o metafreq.o tag.o prune.o circularBuffer.o $(HTSLIB)
-	$(CXX) $(CXXFLAGS)   -o akt akt.cpp metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o prune.o grm.o tag.o circularBuffer.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+tdt.o: tdt.cpp 
+	$(CXX) $(CXXFLAGS) -c tdt.cpp $(IFLAGS)
+akt: version.h akt.cpp tdt.o  admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o metafreq.o tag.o prune.o circularBuffer.o $(HTSLIB)
+	$(CXX) $(CXXFLAGS)   -o akt akt.cpp tdt.o metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o prune.o grm.o tag.o circularBuffer.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h
 

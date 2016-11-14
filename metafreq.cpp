@@ -102,8 +102,8 @@ int metafreq_main(int argc, char* argv[])
   if(argc<3) usage();
   static struct option loptions[] =    {
     {"regions",1,0,'r'},	
-	{"regions-file",1,0,'R'},
-	{"targets-file",1,0,'T'},
+    {"regions-file",1,0,'R'},
+    {"targets-file",1,0,'T'},
     {"output",1,0,'o'},
     {"outputfmt",1,0,'O'},
     {"aftag",1,0,'a'},
