@@ -60,7 +60,7 @@ int tdt(char *input_file,char *pedigree_file)
   bool diploid_warn=false;
 
   cerr << "Reading input from "<<input_file<<endl;
-  cout << "CHROM\tPOS\tREF\tALT\tDAD\tMUM\tDAD_GT\tMUM_GT\tRR_0\tRA_0\tAA_0\tMISS_0\tRR_1\tRA_1\tAA_1\tMISS_0\tRR_2\tRA_2\tAA_2\tMISS_0"<<endl;
+  cout << "CHROM\tPOS\tREF\tALT\tDAD\tMUM\tDAD_GT\tMUM_GT\tRR_0\tRA_0\tAA_0\tMISS_0\tRR_1\tRA_1\tAA_1\tMISS_1\tRR_2\tRA_2\tAA_2\tMISS_2"<<endl;
   while(bcf_sr_next_line (sr)) 
   { 
       line =  bcf_sr_get_line(sr, 0);
@@ -100,7 +100,7 @@ int tdt(char *input_file,char *pedigree_file)
 			  int child_status=ped.getStatus(it1->second[i]);
 			  if(child_status>=0 && child_status<3)
 			  {
-			      freq[child_status*3 + child_gt]++;
+			      freq[child_status*4 + child_gt]++;
 			  } 
 		      }
 		      for(size_t i=0;i<freq.size();i++)
