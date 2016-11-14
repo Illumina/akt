@@ -18,6 +18,7 @@ sampleInfo::sampleInfo(string fname,bcf_hdr_t *hdr)
   bcf_hdr_set_samples(hdr,sample_list.c_str(),0);
   int new_N=bcf_hdr_nsamples(hdr);
   vector<string> new_fid(new_N),new_id(new_N),new_dad(new_N),new_mum(new_N);
+  vector<int> new_sex(new_N),new_status(new_N);
   for(int i=0;i<new_N;i++) 
   {
       new_id[i]=(string)hdr->samples[i];
@@ -27,8 +28,12 @@ sampleInfo::sampleInfo(string fname,bcf_hdr_t *hdr)
       assert(idx<N);//sample wasnt in original pedigree (thsi shouldnt actually happen due to set_samples
       new_fid[i]=fid[idx];
       new_dad[i]=dad[idx];
-      new_mum[i]=mum[idx];      
+      new_mum[i]=mum[idx];
+      new_sex[i]=sex[idx];
+      new_status[i]=status[idx];            
   }
+  sex=new_sex;
+  status=new_status;
   id=new_id;
   fid=new_fid;
   dad=new_dad;
