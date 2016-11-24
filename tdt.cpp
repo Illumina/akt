@@ -18,6 +18,7 @@ static void usage()
   fprintf(stderr, "\n");
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "    -p, --pedigree              pedigree information in plink .fam format\n");
+  fprintf(stderr, "    -c, --per-child             output transitions per-child\n");
   exit(1);
 }
 
@@ -33,7 +34,7 @@ inline int genotype(int *gt,int i)
     return(3);
 }
 
-int tdt(char *input_file,char *pedigree_file)
+int tdt(char *input_file,char *pedigree_file,bool perchild)
 {
   //open a file.
   bcf_srs_t *sr =  bcf_sr_init() ; 
@@ -60,7 +61,14 @@ int tdt(char *input_file,char *pedigree_file)
   bool diploid_warn=false;
 
   cerr << "Reading input from "<<input_file<<endl;
-  cout << "CHROM\tPOS\tREF\tALT\tDAD\tMUM\tDAD_GT\tMUM_GT\tRR_0\tRA_0\tAA_0\tMISS_0\tRR_1\tRA_1\tAA_1\tMISS_1\tRR_2\tRA_2\tAA_2\tMISS_2"<<endl;
+  if(perchild)
+  {
+      cout << "CHROM\tPOS\tREF\tALT\tDAD\tMUM\tKID\tDAD_GT\tMUM_GT\tKID_GT\tSTATUS"<<endl;
+  }
+  else
+  {
+      cout << "CHROM\tPOS\tREF\tALT\tDAD\tMUM\tDAD_GT\tMUM_GT\tRR_0\tRA_0\tAA_0\tMISS_0\tRR_1\tRA_1\tAA_1\tMISS_1\tRR_2\tRA_2\tAA_2\tMISS_2"<<endl;
+  }
   while(bcf_sr_next_line (sr)) 
   { 
       line =  bcf_sr_get_line(sr, 0);
@@ -92,22 +100,37 @@ int tdt(char *input_file,char *pedigree_file)
 		  int dad_gt=gt[it1->first.first];
 		  int mum_gt=gt[it1->first.second];
 		  if(dad_gt<3 && mum_gt<3 && (dad_gt>0||mum_gt>0))
-		  {		      
-		      cout << bcf_hdr_id2name(hdr,line->rid)<<"\t"<<line->pos+1<<"\t"<<line->d.allele[0]<<"\t"<<line->d.allele[1]<<"\t"<<*ped.getID(it1->first.first)<<"\t"<<*ped.getID(it1->first.second)<<"\t"<< GENOTYPE[dad_gt]<<"\t"<<GENOTYPE[mum_gt];
-		      for(size_t i=0;i<it1->second.size();i++)
+		  {
+		      if(perchild)
 		      {
-			  int child_gt=gt[it1->second[i]];
-			  int child_status=ped.getStatus(it1->second[i]);
-			  if(child_status>=0 && child_status<3)
+			  for(size_t i=0;i<it1->second.size();i++)
 			  {
-			      freq[child_status*4 + child_gt]++;
-			  } 
+			      int child_gt=gt[it1->second[i]];
+			      int child_status=ped.getStatus(it1->second[i]);
+			      if(child_status>=0 && child_status<3)
+			      {
+				  cout << bcf_hdr_id2name(hdr,line->rid)<<"\t"<<line->pos+1<<"\t"<<line->d.allele[0]<<"\t"<<line->d.allele[1]<<"\t"<<*ped.getID(it1->first.first)<<"\t"<<*ped.getID(it1->first.second)<<"\t"<<*ped.getID(it1->second[i])<<"\t"<< GENOTYPE[dad_gt]<<"\t"<<GENOTYPE[mum_gt]<<"\t"<<GENOTYPE[child_gt]<<"\t"<<child_status<<endl;
+			      } 
+			  }			  
 		      }
-		      for(size_t i=0;i<freq.size();i++)
+		      else
 		      {
-			  cout << "\t"<<freq[i];
+			  cout << bcf_hdr_id2name(hdr,line->rid)<<"\t"<<line->pos+1<<"\t"<<line->d.allele[0]<<"\t"<<line->d.allele[1]<<"\t"<<*ped.getID(it1->first.first)<<"\t"<<*ped.getID(it1->first.second)<<"\t"<< GENOTYPE[dad_gt]<<"\t"<<GENOTYPE[mum_gt];
+			  for(size_t i=0;i<it1->second.size();i++)
+			  {
+			      int child_gt=gt[it1->second[i]];
+			      int child_status=ped.getStatus(it1->second[i]);
+			      if(child_status>=0 && child_status<3)
+			      {
+				  freq[child_status*4 + child_gt]++;
+			      } 
+			  }
+			  for(size_t i=0;i<freq.size();i++)
+			  {
+			      cout << "\t"<<freq[i];
+			  }
+			  cout << endl;
 		      }
-		      cout << endl;
 		  }
 	      }	      
 	  }
@@ -123,21 +146,23 @@ int tdt_main(int argc,char **argv) {
   if(argc<3) usage();
   static struct option loptions[] =    {
     {"pedigree",1,0,'p'},
+    {"per-child",0,0,'c'},	
     {0,0,0,0}
   };
   char *inputfile=NULL,*pedigree=NULL;
-
-  while ((c = getopt_long(argc, argv, "p:",loptions,NULL)) >= 0) 
+  bool perchild=false;
+  while ((c = getopt_long(argc, argv, "p:c",loptions,NULL)) >= 0) 
   { 
       switch (c)      
       {
       case 'p': pedigree = optarg; break;
+      case 'c': perchild = true; break;
       }
   }
   optind++;
   inputfile=argv[optind];
   if(inputfile==NULL) die("no input provided");
   if(pedigree==NULL) die("the -p argument is required");
-  tdt(inputfile,pedigree);
+  tdt(inputfile,pedigree,perchild);
   return(0);
 }

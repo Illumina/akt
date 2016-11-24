@@ -13,7 +13,7 @@ if(NROW(mendel.trio)>0) {
     tab$error_rate <- 100*tapply(mendel.trio$NERROR,mendel.trio$type2,sum)/(tab$RR+tab$RA+tab$AA)
     tab$het_rate <- 100*tab$RA/(tab$RR+tab$RA+tab$AA)
     cat("\nTrio summary:\n")
-    print(tab,row.names=FALSE)
+    print(tab,row.names=FALSE,digits=3)
 }
 
 mendel.duo <- subset(mendel,DAD_GT=="."|MUM_GT==".")
@@ -26,7 +26,7 @@ if(NROW(mendel.duo)>0) {
     tab$error_rate <- 100*tapply(mendel.duo$NERROR,mendel.duo$type2,sum)/(tab$RR+tab$RA+tab$AA)
     tab$het_rate <- 100*tab$RA/(tab$RR+tab$RA+tab$AA)
     cat("\nDuo summary:\n")
-    print(tab,row.names=FALSE)
+    print(tab,row.names=FALSE,digits=3)
 }
 
 ## par(mar=c(4,4,1,1))

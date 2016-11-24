@@ -113,7 +113,10 @@ int sampleInfo::buildIndex()
 	  parent_map[key].push_back(i);		
       }
   }
+  int num_affected=0;
+  int num_unaffected=0;
   int num_nuclear=0;
+  int       num_sample_in_nuc=0;
   for( map<pair<int,int>, vector<int>  >::iterator it1=parent_map.begin();it1!=parent_map.end();it1++)
   {
 #ifdef DEBUG_PEDIGREE
@@ -124,9 +127,18 @@ int sampleInfo::buildIndex()
       }	  
       cerr<<endl;
 #endif
+      for(size_t i=0;i<it1->second.size();i++)
+      {
+	  if(status[it1->second[i]]==0) num_affected++;
+	  if(status[it1->second[i]]==2) num_unaffected++;
+      }	  
+      
       num_nuclear++;
+      num_sample_in_nuc+=2+it1->second.size();
   }
-  cerr << num_nuclear << " nuclear families (both parents assayed)"<<endl;
+  cerr << num_nuclear << " nuclear families (both parents assayed) containing "<<num_sample_in_nuc<<endl;
+  cerr << num_affected << "affected children"<<endl;
+  cerr << num_unaffected << "unaffected children"<<endl;
   return(0);
 }
 
