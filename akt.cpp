@@ -56,9 +56,11 @@ static void usage(){
     cerr << "\tcluster                  perform cluster analyses" << endl;
     cerr << "\tLDplot                   output correlation matrix" << endl;
     cerr << "\tstats                    calculate AF and LD metrics" << endl;
-    cerr << "\tprune                     perorms LD pruning of variants" << endl;
+    cerr << "\tprune                    perorms LD pruning of variants" << endl;
     cerr << "\ttag                      selects a set of K tagging variants" << endl;
-    cerr << "\tmetafreq                 examine two files for AF differences" << endl<<endl;
+    cerr << "\tmetafreq                 examine two files for AF differences" << endl;
+    cerr << "\ttdt                      basic parent-child transmission counting for use in TDT" << endl;
+    cerr<<endl;
     exit(1);
 }
 
@@ -95,6 +97,8 @@ int main(int argc, char **argv) {
   } 
   else if(((string)argv[1]) == "tag") {
     tag_main(argc, argv); 
+  } else if(((string)argv[1]) == "tdt") {
+    tdt_main(argc, argv); 
   } 
   // else if(((string)argv[1]) == "grm") {
   //   grm_main(argc, argv); 

@@ -12,10 +12,14 @@ class sampleInfo{
 
   vector<string> fid,id,dad,mum; 
   vector<int> dadidx,mumidx;
+  vector<int> sex,status;
+  map<pair<int,int>, vector<int>  > parent_map; 
   int N,ntrio,nduo;
-
+  int getStatus(int i) {assert(i<N); return status[i];}
+  string *getID(int i)  {assert(i<N); return &id[i];}
  private:
   int readFromPlinkFam(string fname);
   int buildIndex();
+
 };
 

@@ -102,8 +102,8 @@ int metafreq_main(int argc, char* argv[])
   if(argc<3) usage();
   static struct option loptions[] =    {
     {"regions",1,0,'r'},	
-	{"regions-file",1,0,'R'},
-	{"targets-file",1,0,'T'},
+    {"regions-file",1,0,'R'},
+    {"targets-file",1,0,'T'},
     {"output",1,0,'o'},
     {"outputfmt",1,0,'O'},
     {"aftag",1,0,'a'},
@@ -175,6 +175,9 @@ int metafreq_main(int argc, char* argv[])
 	bcf_hdr_t *new_hdr = bcf_hdr_subset(hdr,0,NULL,NULL); ///creates a new subsetted header (with 0 samples) from src_header
 	bcf_hdr_add_sample(new_hdr, NULL);      /// update internal structures
 
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "META_AF,Number=A,Type=Float,Description=\"Allele frequency estimated from both files\">").c_str());
+	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "META_AC,Number=A,Type=Integer,Description=\"Sm of allele counts count taken from both files\">").c_str());
+	
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AF1,Number=A,Type=Float,Description=\"Allele frequency file1\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AC1,Number=A,Type=Integer,Description=\"Allele count file1\">").c_str());
 	bcf_hdr_append(new_hdr, ("##INFO=<ID=" + af_tag + "AN1,Number=A,Type=Integer,Description=\"Allele number file1\">").c_str());
@@ -323,7 +326,7 @@ int metafreq_main(int argc, char* argv[])
 		float pav = (npres1*p1 + npres2*p2)/(double)(npres1 + npres2);	//average AF
 		float p1f = p1;
 		float p2f = p2;
-
+		int32_t meta_sum = sum1+sum2;
 		if(sum1 == 0 && sum2 == 0){ QF = 0; QX = 0; }
 		else{
 			
@@ -378,7 +381,8 @@ int metafreq_main(int argc, char* argv[])
 		bcf_update_info_float(new_hdr, rec, (af_tag + "AF2").c_str(), &p2f, 1);	
 		bcf_update_info_int32(new_hdr, rec, (af_tag + "AC2").c_str(), &sum2, 1);	
 		bcf_update_info_int32(new_hdr, rec, (af_tag + "AN2").c_str(), &npres2, 1);	
-		bcf_update_info_float(new_hdr, rec, (af_tag + "AF").c_str(), &pav, 1);	
+		bcf_update_info_float(new_hdr, rec, (af_tag + "META_AF").c_str(), &pav, 1);
+		bcf_update_info_int32(new_hdr, rec, (af_tag + "META_AC").c_str(), &meta_sum, 1);			
 
 		//cout << "Writing " << line_copy->pos+1 << " " << npres1 << " " << npres2 << " " << sum1 << " " << sum2 << " " << p1f << " " << p2f << " " << QF << " " << QX << endl;
 

@@ -17,11 +17,12 @@ if(NROW(mendel.trio)>0) {
     tab$het_rate <- 100*tab$RA/(tab$RR+tab$RA+tab$AA)
     cat("\nTrio summary:\n")
     print(tab,row.names=FALSE,digits=3)
+
     cat("\n")
     cat("\n% error excluding RR-RR-RR:",100*sum(tapply(mendel.trio$NERROR,mendel.trio$type1,sum) )/(sum(tab$RR[!(tab$DAD=="RR"&tab$MUM=="RR")])+sum(tab$RA+tab$AA)))
     cat("\n")
     cat("\n")
-    
+
 }
     
     
@@ -35,7 +36,7 @@ if(NROW(mendel.duo)>0) {
     tab$error_rate <- 100*tapply(mendel.duo$NERROR,mendel.duo$type1,sum)/(tab$RR+tab$RA+tab$AA)
     tab$het_rate <- 100*tab$RA/(tab$RR+tab$RA+tab$AA)
     cat("\nDuo summary:\n")
-    print(tab,row.names=FALSE)
+    print(tab,row.names=FALSE,digits=3)
 }
 
 ## par(mar=c(4,4,1,1))
