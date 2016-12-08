@@ -1,5 +1,6 @@
 #this is a basic set of tests for akt.
 wget https://s3-eu-west-1.amazonaws.com/agg-examples/bcftools
+chmod +x bcftools
 
 reg=../data/wgs.grch37.vcf.gz
 ##get data
