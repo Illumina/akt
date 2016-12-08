@@ -59,7 +59,7 @@ static void usage(){
     cerr << "\tprune                    perorms LD pruning of variants" << endl;
     cerr << "\ttag                      selects a set of K tagging variants" << endl;
     cerr << "\tmetafreq                 examine two files for AF differences" << endl;
-    cerr << "\ttdt                      transmission-disequilibrium tests" << endl;
+    cerr << "\ttdt                      basic parent-child transmission counting for use in TDT" << endl;
     cerr<<endl;
     exit(1);
 }

@@ -1,5 +1,5 @@
 #this is a basic set of tests for akt.
-
+wget https://s3-eu-west-1.amazonaws.com/agg-examples/bcftools
 
 reg=../data/wgs.grch37.vcf.gz
 ##get data
@@ -53,3 +53,9 @@ wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHO
 wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHORT.chr20.20140722.sites.vcf.gz.tbi
 
 time ../akt metafreq UK10K_COHORT.chr20.20140722.sites.vcf.gz ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz -Oz -o uk10_1000g.frq.chr20.vcf.gz
+
+##very simple burden TDT (use aggressive filtering!)
+#the akt tdt command is very crude, simply provides the necessary counts for downstream analysis.
+time ./bcftools view -i 'AN>=2*N_SAMPLES' -v snps -r 13:32837617-33025809 -Ou $data | ../akt tdt -p n433.fam - > tdt.txt
+Rscript ../scripts/tdt.R tdt.txt 
+
