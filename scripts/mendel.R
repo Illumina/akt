@@ -9,14 +9,14 @@ mendel$type2 <-apply(mendel[,c('DAD_GT','MUM_GT')],1, function(x) paste(as.chara
 mendel.trio <- subset(mendel,DAD_GT!="."&MUM_GT!=".")
 if(NROW(mendel.trio)>0) {
     rr <- tapply(mendel.trio$CHILD_RR,mendel.trio$type1,sum)
-    tab <- data.frame(DAD=gsub("_.*","",names(rr)),MUM=gsub(".*_","",names(rr)),stringsAsFactors=FALSE)
+    tab <- data.frame(PARENT1=gsub("_.*","",names(rr)),PARENT2=gsub(".*_","",names(rr)),stringsAsFactors=FALSE)
     tab$RR <- rr
     tab$RA <- tapply(mendel.trio$CHILD_RA,mendel.trio$type1,sum)
     tab$AA <- tapply(mendel.trio$CHILD_AA,mendel.trio$type1,sum)
     tab$error_rate <- 100*tapply(mendel.trio$NERROR,mendel.trio$type1,sum)/(tab$RR+tab$RA+tab$AA)
     tab$het_rate <- 100*tab$RA/(tab$RR+tab$RA+tab$AA)
     cat("\nTrio summary:\n")
-    print(tab,row.names=FALSE)
+    print(tab,row.names=FALSE,digits=3)
     cat("\n")
     cat("\n% error excluding RR-RR-RR:",100*sum(tapply(mendel.trio$NERROR,mendel.trio$type1,sum) )/(sum(tab$RR[!(tab$DAD=="RR"&tab$MUM=="RR")])+sum(tab$RA+tab$AA)))
     cat("\n")
