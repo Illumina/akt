@@ -17,6 +17,7 @@
 #include <sstream>
 #include <limits>
 #include <stdlib.h> 
+#include <stdio.h> 
 #include <iterator>
 #include <map>
 #include <list>
