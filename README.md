@@ -48,7 +48,7 @@ Usage:	akt <command> [options]
 	cluster                  perform cluster analyses
 	LDplot                   output correlation matrix
 	stats                    calculate AF and LD metrics
-	prune                     perorms LD pruning of variants
+	prune                    performs LD pruning of variants
 	tag                      selects a set of K tagging variants
 	metafreq                 examine two files for AF differences
 ```
