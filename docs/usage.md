@@ -81,6 +81,7 @@ pc10 pc11 pc12 pc13 pc14
 ```
 First index is the site index and second which is the coefficient (loading) that can be used to project other samples onto these principal components. For example we could project a new set of samples onto these same PCs via:
 ```
+tabix pca.vcf.gz
 ./akt pca new_multisample.bcf -W pca.vcf.gz > projections
 ```
 ##kin
