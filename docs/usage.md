@@ -63,7 +63,7 @@ Performs principal component analysis on a BCF/VCF. Can also be used to project 
 
 
 ```
-./akt pca multisample.bcf -R data/wgs.grch37.vcf.gz -O b -o pca.bcf > pca.txt
+./akt pca multisample.bcf -R data/wgs.grch37.vcf.gz -Oz -o pca.vcf.gz > pca.txt
 ```
 
 The file `pca.txt` contains
@@ -72,7 +72,7 @@ SAMPLE_ID0 P0 P1 P2 P3 P4
 SAMPLE_ID1 P0 P1 P2 P3 P4
 ...
 ```
-The bcf file `pca.bcf` contains
+The vcf file `pca.vcf.gz` contains
 ```
 bcftools query -f "%INFO/WEIGHT\n" pca.bcf
 pc00 pc01 pc02 pc03 pc04
@@ -81,7 +81,7 @@ pc10 pc11 pc12 pc13 pc14
 ```
 First index is the site index and second which is the coefficient (loading) that can be used to project other samples onto these principal components. For example we could project a new set of samples onto these same PCs via:
 ```
-./akt pca new_multisample.bcf -W pca.bcf > projections
+./akt pca new_multisample.bcf -W pca.vcf.gz > projections
 ```
 ##kin
 
