@@ -82,7 +82,9 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
     ///set the regions
     if ( bcf_sr_set_regions(sr, vcf2.c_str(), 1)<0 )
     {
-	cerr << "Failed to read the regions: " <<  vcf2 << endl; exit(1);
+	cerr << "Failed to read the regions: " <<  vcf2 << endl;
+	cerr << "Note: -W/-R needs to be a tabix vcf.gz file." <<endl;
+	exit(1);
     }
     ///input file
     if(!(bcf_sr_add_reader (sr, vcf1.c_str() )))
