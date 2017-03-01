@@ -1,5 +1,8 @@
 ##Changelog
 
+##2017.03.01
+* better error handling in pedigree (.fam) reader
+
 ##2016.08.01
 * removed akt ibd
 

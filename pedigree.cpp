@@ -65,6 +65,7 @@ int sampleInfo::readFromPlinkFam(string fname)
 	inf.ignore(10000,'\n');
     }
     cerr << "Read "<<N<<" individuals from "<<fname<<endl;
+    if(N==0) die("no samples read from "+fname);
   return (0);
 }
 
