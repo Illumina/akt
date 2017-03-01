@@ -138,8 +138,8 @@ int sampleInfo::buildIndex()
       num_sample_in_nuc+=2+it1->second.size();
   }
   cerr << num_nuclear << " nuclear families (both parents assayed) containing "<<num_sample_in_nuc<<endl;
-  cerr << num_affected << "affected children"<<endl;
-  cerr << num_unaffected << "unaffected children"<<endl;
+  cerr << num_affected << " affected children"<<endl;
+  cerr << num_unaffected << " unaffected children"<<endl;
   return(0);
 }
 

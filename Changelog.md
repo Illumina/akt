@@ -1,6 +1,8 @@
 ##Changelog
 
 ##2017.03.01
+* mendel.R tweak
+* stdout tweaks	
 * better error handling in pedigree (.fam) reader
 
 ##2016.08.01

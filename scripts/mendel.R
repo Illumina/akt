@@ -19,7 +19,8 @@ if(NROW(mendel.trio)>0) {
     print(tab,row.names=FALSE,digits=3)
 
     cat("\n")
-    cat("\n% error excluding RR-RR-RR:",100*sum(tapply(mendel.trio$NERROR,mendel.trio$type1,sum) )/(sum(tab$RR[!(tab$DAD=="RR"&tab$MUM=="RR")])+sum(tab$RA+tab$AA)))
+    cat(sum(tapply(mendel.trio$NERROR,mendel.trio$type1,sum))," Mendel conflicts found")
+    cat("\n% conflict excluding RR-RR-RR:",100*sum(tapply(mendel.trio$NERROR,mendel.trio$type1,sum) )/(sum(tab$RR[!(tab$DAD=="RR"&tab$MUM=="RR")])+sum(tab$RA+tab$AA)))
     cat("\n")
     cat("\n")
 
