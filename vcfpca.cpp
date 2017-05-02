@@ -51,8 +51,9 @@ static void usage()
     cerr << "\t -a --alg:			exact SVD (slow)" << endl;
     cerr << "\t -C --covdef:			definition of SVD matrix: 0=(G-mu) 1=(G-mu)/sqrt(p(1-p)) 2=diag-G(2-G) default(1)" << endl;
     cerr << "\t -e --extra:			extra vectors for Red SVD" << endl;
-    cerr << "\t -q --iterations                 number of power iterations (default 10 is sufficient)" << endl;
+    cerr << "\t -q --iterations                number of power iterations (default 10 is sufficient)" << endl;
     cerr << "\t -F --svfile:			File containing singular values" << endl;
+    cerr << "\t -H --assume-homref:            Assume missing genotypes/sites are homozygous reference (useful for projecting a single sample)" << endl;    
     exit(1);
 }
         
@@ -65,7 +66,7 @@ static void usage()
  * @param [in] vcf2  site only vcf containing PCA weights
  *
  */
-void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
+void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs,bool assume_homref)
 {
 	
     int Nsamples;
@@ -134,11 +135,16 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
 	if(bcf_sr_has_line(sr,1))
 	{
 	    ++n1;
-	}	//in sites file	
-	
-	if(bcf_sr_has_line(sr,0) &&  (bcf_sr_has_line(sr,1)))
-	{	//in both files
+	}	//in sites file
+	if(bcf_sr_has_line(sr,0))
+	{
 	    ++n0;
+	}	//in genotypes file.	
+
+	    
+	if(bcf_sr_has_line(sr,1) )// && (bcf_sr_has_line(sr,0) )
+	{	//in both files
+
 	    line1 =  bcf_sr_get_line(sr, 1);
 	    ret =  bcf_get_info_float(sr->readers[1].header, line1, "AF", &af_ptr, &nval); ///get allele frequency
 	    if(ret<=0)
@@ -147,20 +153,31 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
 	    }
 	    af = af_ptr[0];
 
-	    line0 =  bcf_sr_get_line(sr, 0);
-	    ngt = bcf_get_genotypes(sr->readers[0].header, line0, &gt_arr, &ngt_arr);	//get genotypes
+	    ngt=2*N;
+	    if(bcf_sr_has_line(sr,0))
+	    {
+		line0 =  bcf_sr_get_line(sr, 0);
+		ngt = bcf_get_genotypes(sr->readers[0].header, line0, &gt_arr, &ngt_arr);	//get genotypes
+	    }
 
 	    if(ngt==2*N)	///only diploid sites
 	    {
 		for(int i=0; i<2*N; i+=2)	///all samples in vcf
 		{
-		    if(gt_arr[i]!=bcf_gt_missing && gt_arr[i+1]!=bcf_gt_missing)
+		    if(bcf_sr_has_line(sr,0) && gt_arr[i]!=bcf_gt_missing && gt_arr[i+1]!=bcf_gt_missing)
 		    {
 			gs[i/2] = (float)(bcf_gt_allele(gt_arr[i]) + bcf_gt_allele(gt_arr[i+1]));
 		    }
 		    else
-		    { 
-			gs[i/2] = 2*af;	///assign missing sites to expected af
+		    {
+			if(assume_homref)
+			{
+			    gs[i/2] = 0.0;    ///assume missing sites are homozygous reference (works okay for single sample calling when sites are reliable)
+			}
+			else
+			{
+			    gs[i/2] = 2*af;	///assign missing sites to expected af			    
+			}
 		    }
 		}
 	    }
@@ -176,8 +193,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
 		    
 		    if(!(gs[n]>=0 && gs[n]<=2))
 		    {
-			cerr << "ERROR at " << bcf_hdr_id2name(sr->readers[0].header,line0->rid) <<":"<<line0->pos+1 
-			     <<" g = "<<gs[n]<<" af="<<af<<endl;
+			cerr << "ERROR at " << bcf_hdr_id2name(sr->readers[0].header,line0->rid) <<":"<<line0->pos+1 <<" g = "<<gs[n]<<" af="<<af<<endl;
 			exit(1);
 		    }
 		    //read PCA loadings
@@ -242,7 +258,10 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs)
     free(wts);
 
     cerr << n0 << "/" << n1 << " of sites were in "<< vcf1 << endl;
-
+    if(!assume_homref &&  (float)n0/n1 < 0.9)
+    {
+	die("less that 90% of sites in "+vcf2+" were NOT in "+vcf2+"\nTry --assume-homref if you have a small number of samples");
+    }
     if(n0==0)
     {
 	cerr << "No intersecting SNPs found.  Check chromosome prefix matches on sites and input file." << endl; exit(1);
@@ -716,7 +735,8 @@ int pca_main(int argc,char **argv)
         {"extra",1,0,'e'},
         {"samples",1,0,'s'},
         {"samples-file",1,0,'S'},
-	{"force",0,0,FORCE},	
+	{"force",0,0,FORCE},
+	{"assume-homref",0,0,'H'},		
         {0,0,0,0}
     };
     bool force = false;
@@ -738,10 +758,10 @@ int pca_main(int argc,char **argv)
     bool used_R = false;
 
     int covn = 1;
-	
+    bool assume_homref=false;
     string svfilename = "";
     int niteration=10;
-    while ((c = getopt_long(argc, argv, "q:o:O:W:N:ae:t:T:r:R:s:S:C:F:",loptions,NULL)) >= 0) 
+    while ((c = getopt_long(argc, argv, "q:o:O:W:N:Hae:t:T:r:R:s:S:C:F:",loptions,NULL)) >= 0) 
     {
 	switch (c)
 	{
@@ -753,6 +773,7 @@ int pca_main(int argc,char **argv)
         case 'C': covn = atoi(optarg); break;
         case 'a': a = true; break;
         case 'e': e = atoi(optarg); break;
+        case 'H': assume_homref=true; break;	    
 	case FORCE: force = true; break;
         case 'r': regions = (optarg); used_r = true; break;
 	case 'R': regions = (optarg); used_R = true; regions_is_file = true; break;
@@ -794,7 +815,7 @@ int pca_main(int argc,char **argv)
     if(w)
     { 
 	cerr << "Using file " << weight_filename << " for PCA weights" << endl; 
-	pca(input,weight_filename, don, n, sargs);
+	pca(input,weight_filename, don, n, sargs,assume_homref);
     }
     else
     {
