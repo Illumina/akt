@@ -1,4 +1,6 @@
 ##Changelog
+##2017.05.02
+* added --assume-homref flag to pca
 
 ##2017.03.01
 * mendel.R tweak
