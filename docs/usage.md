@@ -1,4 +1,4 @@
-#Using akt
+# Using akt
 
 akt uses the syntax
 ```
@@ -26,7 +26,7 @@ Usage:	akt <command> [options]
 
 ```
 
-##common options 
+## common options 
 There are a number of options that are shared by multiple akt subcommands which we list here. We have tried to keep these consistent with [bcftools](http://samtools.github.io/bcftools/bcftools.html) where possible.
 
 **-R** *FILE* a file (tabixed VCF or bed) containing the markers to perform analysis on. **-R**/**-r** uses tabixes jumping for fast look up  
@@ -42,7 +42,7 @@ There are a number of options that are shared by multiple akt subcommands which 
 
 
 
-##pca
+## pca
 
 Performs principal component analysis on a BCF/VCF. Can also be used to project samples onto pre-calculated principal components from another cohort. Uses a randomised SVD by default for very fast computation. WGS data is far denser than required for a meaningful PCA, it is recommended you provide a thinned set of sites via the `-R` command.
 
@@ -84,7 +84,7 @@ First index is the site index and second which is the coefficient (loading) that
 tabix pca.vcf.gz
 ./akt pca new_multisample.bcf -W pca.vcf.gz > projections
 ```
-##kin
+## kin
 
 Calculates kinship coefficients (and other related metrics) from multi-sample VCF/BCFs. Can be used to detect (closely) related or duplicated samples.
 
@@ -106,8 +106,7 @@ Run the kinship calculation by giving akt a multi-sample vcf/bcf file:
 ```
 $ akt kin multisample.bcf -R data/wgs.grch37.vcf.gz -n 32 > kin.txt
 ```
-###Choice of estimator
-
+### Choice of estimator
 
 The default algorithm (`-M 0`) used to calculate IBD is taken from [PLINK](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) with some minor changes. It outputs the following seven column format:
 
@@ -130,7 +129,7 @@ The second method (`-M 1`) uses the robust kinship coefficent estimate describin
 
 The third method (`-M 2`) outputs the genetic relationship matrix used by [GCTA](http://cnsgenomics.com/software/gcta/) (among other software).  The output format is `ID1 ID2 GR` where `GR` is the genetic correlation between samples `ID1` and `ID2`. This matrix is important for fitting linear mixed-effect models but we have found methods 0 and 1 more appropriate for sample QC purposes.
 
-##relatives
+## relatives
 
 Takes the output from `akt kin` and detects/reconstructs pedigrees from the information. Can also flag duplicated samples and create lists of unrelated samples.
 
@@ -170,7 +169,7 @@ e.g. a sibling pair, is found the samples will appear in `out.fam` without paren
 can't be determined e.g. for parent/child duos a random sample is assigned to be the parent in `out.fam`. The final column
 in the `.fam` file specifies how many potential parents the sample had.
 
-##mendel
+## mendel
 
 Profiles Mendelian inheritance/inconsistency patterns in a sample. Useful for evaluating different sets of filters.
 
@@ -211,7 +210,8 @@ PG NA12887 NA12877 NA12878      2 -9
 PG NA12888 NA12877 NA12878      1 -9
 PG NA12893 NA12877 NA12878      1 -9
 ```
-##cluster
+
+## cluster
 
 Perform unsupervised clustering on some data, for example the output from `akt pca`.
 
@@ -248,7 +248,7 @@ to bad local minimum, individual is of mixed ancestry. You could filter out badl
 ```
 awk '{ if($4 > 0.5) print $0}' clustered > well_clustered
 ```
-###density clustering
+### density clustering
 This is a better clustering algorithm but requires some tuning by hand. First run
 ```
 ./akt cluster projections -c 2-4 -a 2 -d 1 --density-plot > dplot
@@ -267,7 +267,7 @@ gnuplot> splot for [i=0:4:1] 'clustered' every:::i::i
 ```
 Unassigned data points are always put in cluster 0. The silhouette score for unassigned data is undefined.
 
-##stats
+## stats
 
 This tool lets us calculate allele frequencies and correlation matrices from multisample vcfs.
 
@@ -298,7 +298,7 @@ The output, tmp.bcf, has no sample columns and info fields
 Correlation is bounded by [-1,1]. With the `-f 10000` option it will output the correlation of each site with the 
 sites closer than 10000bp to the left and right. The LD metric is described in [this paper](http://www.nature.com/ng/journal/v47/n3/full/ng.3211.html)
 
-##LDplot
+## LDplot
 
 This generates the correlation matrix of all included variants.
 
@@ -317,7 +317,7 @@ with various tools e.g.
 ```
 gnuplot> plot 'sigma' matrix with image
 ```
-##admix
+## admix
 
 The `admix` function attempts to use the output of `akt pca` to assign admixture fractions to data based on known populations.
 
@@ -358,9 +358,7 @@ If K vectors and their images in admixture space are specified then the zero poi
 choosing an arbitrary vector orthogonal to the sides of the tetrahedron made by the K inputs
 and roughly equidistant from them. There are two possible choices of sign: the positive one is always chosen.
 
-
-
-##metafreq
+## metafreq
 
 This tool lets us find sites with statistically significant differences in frequency between two samples. This potentially useful for simple QC: *Which variants in my cohort have drastically different allele frequencies?*. It could also be used to perform a very crude GWAS.
 
@@ -381,7 +379,7 @@ Higher scores indicate a more statistically significant difference. These values
 and typically the chi-squared test is more likely to reject the null-hypothesis that
 the two cohorts have identical distributions.
 
-##tag
+## tag
 
 Performs tag SNP selection . This is useful for choosing a subset of variants to use in analyses that do not require anywhere near the number of markers typically obtained from WGS (notably `pca`/`kin`) and assume linkage equilibrium between markers. Note this routine is rather different to PLINK's pruning method. We attempt to find the *K* (non-redundant) variants that tag as much variation as possible via a greedy algorithm. Whereas PLINK prunes away variants that can be predicted from other variants. In practice, for applications such as PCA/kinship calculations, it appears any set of reasonably common and sparse markers is appropriate.
 
@@ -401,7 +399,7 @@ Here is how to filter low frequency variants (and indels) with bcftools and pipe
 
 **Note:** This routine is somewhat slow (the above command takes a few hours). We provided a set of reliable thinned SNPs for both WGS and Exome data on builds 37 and 38 of the human genome. These site-only VCFs are under `data/` in the akt repository.
 
-##prune
+## prune
 
 This is similar to PLINK's pairwise LD-pruning routine. The algorithm slides along the genome, and calculates the squared correlation coefficient (r2) between plus and minus *b* flanking variants of a given variant. If r2 is greater than the specified threshold, than the variant with the **higher** MAF is removed. For WGS data, this can still result in a very dense set of markers due to the large number of rare variants that are in LD with very few other markers.
 
