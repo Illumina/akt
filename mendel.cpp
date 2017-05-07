@@ -251,7 +251,7 @@ int mendel(args & a)
   else
     die("no variants were checked!");
 
-  cout << "PROBAND_ID\tCHILD_ID\tDAD_ID\tMUM_ID\tDAD_GT\tMUM_GT\tCHILD_RR\tCHILD_RA\tCHILD_AA\tNERROR\tERROR_RATE\tHET_RATE"<<endl;
+  cout << "PED_ID\tCHILD_ID\tDAD_ID\tMUM_ID\tDAD_GT\tMUM_GT\tCHILD_RR\tCHILD_RA\tCHILD_AA\tNERROR\tERROR_RATE\tHET_RATE"<<endl;
 
   string look[] = {"RR","RA","AA"};
   for(int i=0;i<nsample;i++)  {
