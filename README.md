@@ -64,8 +64,8 @@ Rscript scripts/pca.R pca.txt
 Rscript scripts/1000G_pca.R 1000G.pca.txt
 
 #Find close relatives/duplicates:
-./akt pca -R data/wgs.grch37.vcf.gz input.bcf > kinship.txt
-awk '{if($5>.15) print $0}' kinship.txt
+./akt kin -R data/wgs.grch37.vcf.gz input.bcf > kinship.txt
+awk '{if($5>.05) print $0}' kinship.txt
 
 #reconstruct pedigrees:
 akt relatives -p pedigree kinship.txt 
