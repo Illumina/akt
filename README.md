@@ -66,11 +66,14 @@ Rscript scripts/1000G_pca.R 1000G.pca.txt
 #Calculate some (robust) kinship coefficients
 ./akt kin -R data/wgs.grch37.vcf.gz -M 1 input.bcf > kinship.txt
 
-#give me duplicated samples:
-awk '{if($5>.4) print $0}' kinship.txt
+#give me duplicated sample pairs:
+awk '{if($6>.4) print $0}' kinship.txt
 
 #reconstruct pedigrees:
 akt relatives kinship.txt -p pedigree
+
+#give me a list of unrelated samples
+akt unrelated kinship.txt > unrelated.ids
 
 ```
 Full documentation is available in [docs/usage.md](docs/usage.md) along with a large set of example use cases in [docs/examples.md](docs/examples.md)

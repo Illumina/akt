@@ -19,7 +19,7 @@ static void usage()
     cerr << "Print a list of unrelated individuals taking the output from akt kin as input." << endl;
     cerr << "Usage:" << endl;
     cerr << "./akt unrelated ibdfile" << endl;
-    cerr << "\t -k --kmin:			threshold for relatedness (0.05)" << endl;
+    cerr << "\t -k --kmin:			threshold for relatedness (0.025)" << endl;
     cerr << "\t -i --its:			number of iterations to find unrelated (10)" << endl;
     exit(1);
 }
@@ -45,7 +45,7 @@ int unrelated_main(int argc, char* argv[])
             {"its",1,0,'i'},
             {0,0,0,0}
     };
-    float relmin = 0.05;
+    float relmin = 0.025;
     int uits = 10;
     string prefix="out.";
     bool gout = false;
@@ -122,7 +122,8 @@ int unrelated_main(int argc, char* argv[])
 
         for(size_t j=0; j<unrelated.size(); ++j)
         {
-            cout << "Unrel" << uc << "\t" << unrelated[j] << endl; ++uc;
+            cout << unrelated[j] << endl;
+            ++uc;
         }
     }
     cerr << uc << " nominally unrelated samples." << endl;

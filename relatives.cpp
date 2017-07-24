@@ -30,7 +30,6 @@ static void usage() {
     cerr << "                : red		= duplicates" << endl;
     cerr << "                : directed	= from parent to child" << endl;
     exit(1);
-
 }
 
 ///compare graphs based on number of members
@@ -197,7 +196,6 @@ int relatives_main(int argc, char *argv[]) {
             fam_names[(*iter).second->name] = fam_labs.back();
         }
     }
-
 
     cerr << "Attempting to resolve pedigrees." << endl;
     //try to read every ibd pair
