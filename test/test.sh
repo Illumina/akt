@@ -24,7 +24,7 @@ time ../akt kin -M 2 -n 4 -R $reg $data > kinship2.txt
 time ../akt kin -n 4 -F $reg $data > kinship.txt
 
 # check for unrelated
-../akt unrelated kinship1.txt > unrelated.out
+../akt unrelated kinship1.txt | sort > unrelated.out
 diff unrelated.ids unrelated.out
 
 ##find relatives
