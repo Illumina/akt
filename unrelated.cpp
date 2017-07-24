@@ -102,30 +102,42 @@ int unrelated_main(int argc, char* argv[])
         }
     }
 
+//    for(size_t g=0; g<DF.size(); ++g)
+//    {
+//        vector<string> nm = DF[g].names();
+//        vector<string> unrelated;
+//        size_t ms = 0;
+//        //Find a random unrelated set a few times and save the biggest one
+//        //Do this for long enough, you'll find the best set...
+//        for(int i=0; i<uits; ++i)
+//        {
+//            vector<string> ur;
+//            DF[g].unrelated(ur);
+//            if( ur.size() > ms )
+//            {
+//                ms = ur.size();
+//                unrelated = ur;
+//            }
+//        }
+//
+//        for(size_t j=0; j<unrelated.size(); ++j)
+//        {
+//            cout << unrelated[j] << endl;
+//            ++uc;
+//        }
+//    }
+
     for(size_t g=0; g<DF.size(); ++g)
     {
-        vector<string> nm = DF[g].names();
         vector<string> unrelated;
-        size_t ms = 0;
-        //Find a random unrelated set a few times and save the biggest one
-        //Do this for long enough, you'll find the best set...
-        for(int i=0; i<uits; ++i)
-        {
-            vector<string> ur;
-            DF[g].unrelated(ur);
-            if( ur.size() > ms )
-            {
-                ms = ur.size();
-                unrelated = ur;
-            }
-        }
-
+        DF[g].unrelatedGreedy(unrelated);
         for(size_t j=0; j<unrelated.size(); ++j)
         {
             cout << unrelated[j] << endl;
             ++uc;
         }
     }
+
     cerr << uc << " nominally unrelated samples." << endl;
 
     return 0;

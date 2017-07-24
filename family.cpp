@@ -31,7 +31,8 @@ vertex* copy_vertex(vertex *in){
 
 //Gviz suitable graph output
 //dot -Tpng -O offile
-void graph::gviz_dot(ofstream& of){
+void graph::gviz_dot(ofstream& of)
+{
     of << "digraph G {" << endl;
     for(viter iter=vlist.begin(); iter != vlist.end(); ++iter){
         string tmp = (*iter).second->name;
@@ -224,7 +225,8 @@ int graph::link_type(string from_, string to_){
     return -1;
 }
 //is this sample in the graph?
-bool graph::hasvertex(string name){
+bool graph::hasvertex(string name)
+{
     return ( vlist.find(name) != vlist.end() );
 }
 //add links to G if they exist in this graph
@@ -265,29 +267,67 @@ bool graph::descendant(string from, string to){
     return false;
 }
 //remove relatives until only unrelated set remains
-void graph::unrelated(vector<string> &I){
-
+void graph::unrelated(vector<string> &I)
+{
     vector<string> ns = names();
     vertex* v= vlist[ ns[ rand() % ns.size() ] ];
     I.push_back(v->name);
 
-
-    while( !ns.empty() ){
-
+    while( !ns.empty() )
+    {
         ns.erase( remove( ns.begin(), ns.end(), v->name ), ns.end() );
-        for(size_t i=0; i<v->out.size(); ++i){
+        for(size_t i=0; i<v->out.size(); ++i)
+        {
             ns.erase( remove( ns.begin(), ns.end(), v->out[i].to_name ), ns.end() );
         }
-        for(size_t i=0; i<v->in.size(); ++i){
+        for(size_t i=0; i<v->in.size(); ++i)
+        {
             ns.erase( remove( ns.begin(), ns.end(), v->in[i].from_name ), ns.end() );
         }
 
-        if(ns.size() > 0){
+        if(ns.size() > 0)
+        {
             v = vlist[ ns[ rand() % ns.size() ] ];
             I.push_back(v->name);
         }
     }
 }
+
+//greedy algorithm: iteratively remove vertex with most edges until all vertices are unconnected
+void graph::unrelatedGreedy(vector<string> &I)
+{
+//    for(viter iter=vlist.begin(); iter != vlist.end(); ++iter)
+//    {
+//        cerr << iter->first << " " << iter->second->num_in + iter->second->num_out << endl;
+//    }
+
+    vector<string> ns = names();
+    while( !ns.empty() )
+    {
+        vertex* v= vlist[ ns[ 0 ] ];
+        for(size_t i=1; i<ns.size(); ++i)
+        {
+            if(vlist[ns[i]]->degree()<v->degree())
+            {
+                v = vlist[ns[i]];
+            }
+        }
+        I.push_back(v->name);
+
+        ns.erase( remove( ns.begin(), ns.end(), v->name ), ns.end() );
+        for(size_t i=0; i<v->out.size(); ++i)
+        {
+            ns.erase( remove( ns.begin(), ns.end(), v->out[i].to_name ), ns.end() );
+        }
+        for(size_t i=0; i<v->in.size(); ++i)
+        {
+            ns.erase( remove( ns.begin(), ns.end(), v->in[i].from_name ), ns.end() );
+        }
+    }
+
+}
+
+
 //number of components in graph
 int graph::num_disconnected(){
 

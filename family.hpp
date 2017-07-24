@@ -65,8 +65,10 @@ public:
 	vector<edge> out;	//outgoing edges
 
 	int dist;			//distance marker for graph traversal
+	int degree() {return(num_in + num_out);}
 
-	vertex(string name_, int id_){
+	vertex(string name_, int id_)
+	{
 			name = name_;
 			id = id_;
 			num_in = 0;
@@ -85,33 +87,40 @@ class graph
 {
 public:
 	//default
-	graph(){
+	graph()
+	{
 		nv=0;
 		ne=0;
 	}
 	//constructor
-	graph(string name_){
+	graph(string name_)
+	{
 		vertex *v = new vertex(name_, 0);
 		vlist[name_] = v;
 		nv = 1;
 		ne = 0;
 	}
 	//destruction of graph
-	void clear(){
-		for( viter iter= vlist.begin(); iter!=vlist.end(); iter++){
-			if((*iter).second){
+	void clear()
+	{
+		for( viter iter= vlist.begin(); iter!=vlist.end(); iter++)
+		{
+			if((*iter).second)
+			{
 				delete iter->second;
 			}
 		}
 		vlist.clear();
 	}
 	//copy constructor
-	graph( const graph& other ){
+	graph( const graph& other )
+	{
 		nv = other.nv;
 		ne = other.ne;
 
 		clear();
-		for( const_viter iter= other.vlist.begin(); iter!=other.vlist.end(); ++iter){
+		for( const_viter iter= other.vlist.begin(); iter!=other.vlist.end(); ++iter)
+		{
 			vertex* v = copy_vertex( (*iter).second );
 			vlist[v->name] = v;
 		}
@@ -127,7 +136,8 @@ public:
 		this->nv = second.nv;
 
 		clear();
-		for( const_viter iter= second.vlist.begin(); iter!=second.vlist.end(); ++iter){
+		for( const_viter iter= second.vlist.begin(); iter!=second.vlist.end(); ++iter)
+		{
 			this->vlist[ (*iter).second->name ] = copy_vertex( (*iter).second );
 		}
 
@@ -165,6 +175,7 @@ public:
 	bool descendant(string from, string to); //DFS
 	bool relatives(string from, string to); //BFS
 	void unrelated(vector<string> &I); //BFS
+	void unrelatedGreedy(vector<string> &I); //BFS
 
 	//data
 	map<string, vertex*> vlist; //data
