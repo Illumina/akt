@@ -198,38 +198,6 @@ int relatives_main(int argc, char *argv[]) {
         }
     }
 
-//    //FIND UNRELATED SET -- this has been moved to unrelated.cpp
-//    int uc = 0;
-//    //add singletons
-//    for (set<string>::iterator it = unames.begin(); it != unames.end(); ++it) {
-//        if (!F.hasvertex(*it)) {
-//            cout << "Unrel" << uc << "\t" << *it << endl;
-//            ++uc;
-//        }
-//    }
-//
-//    for (size_t g = 0; g < DF.size(); ++g) {
-//        vector<string> nm = DF[g].names();
-//        vector<string> unrelated;
-//
-//        size_t ms = 0;
-//        //Find a random unrelated set a few times and save the biggest one
-//        //Do this for long enough, you'll find the best set...
-//        for (int i = 0; i < uits; ++i) {
-//            vector<string> ur;
-//            DF[g].unrelated(ur);
-//            if (ur.size() > ms) {
-//                ms = ur.size();
-//                unrelated = ur;
-//            }
-//        }
-//
-//        for (size_t j = 0; j < unrelated.size(); ++j) {
-//            cout << "Unrel" << uc << "\t" << unrelated[j] << endl;
-//            ++uc;
-//        }
-//    }
-//    cerr << uc << " nominally unrelated samples." << endl;
 
     cerr << "Attempting to resolve pedigrees." << endl;
     //try to read every ibd pair
