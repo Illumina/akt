@@ -48,8 +48,12 @@ filter.o: filter.c filter.h
 version.o: version.c filter.h version.h
 	$(CC)  $(CFLAGS) $(IFLAGS) -c $<  
 ##akt code
+family.o: family.cpp family.hpp
+	$(CXX) $(CXXFLAGS)  -c family.cpp $(IFLAGS)
 relatives.o: relatives.cpp 
 	$(CXX) $(CXXFLAGS)  -c relatives.cpp $(IFLAGS)
+unrelated.o: unrelated.cpp 
+	$(CXX) $(CXXFLAGS)  -c unrelated.cpp $(IFLAGS)
 vcfpca.o: vcfpca.cpp RandomSVD.hpp
 	$(CXX) $(CXXFLAGS) -c vcfpca.cpp $(IFLAGS)
 cluster.o: cluster.cpp 
@@ -82,8 +86,8 @@ prune.o: prune.cpp  prune.hpp
 	$(CXX) $(CXXFLAGS) -c prune.cpp $(IFLAGS)
 tdt.o: tdt.cpp 
 	$(CXX) $(CXXFLAGS) -c tdt.cpp $(IFLAGS)
-akt: version.h akt.cpp tdt.o  admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o metafreq.o tag.o prune.o circularBuffer.o $(HTSLIB)
-	$(CXX) $(CXXFLAGS)   -o akt akt.cpp tdt.o metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o prune.o grm.o tag.o circularBuffer.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+akt: version.h akt.cpp tdt.o family.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o metafreq.o tag.o prune.o circularBuffer.o unrelated.o $(HTSLIB)
+	$(CXX) $(CXXFLAGS)   -o akt akt.cpp family.o tdt.o metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o prune.o grm.o tag.o circularBuffer.o unrelated.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h
 

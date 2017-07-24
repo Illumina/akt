@@ -56,18 +56,21 @@ class Cluster
 			eps = 1e-4;
 		}
 		//no data constructor
-		Cluster(int K_, float eps_=1e-4){
+		Cluster(int K_, float eps_=1e-4)
+		{
 			K = K_;
 			eps = eps_;
 		}
 		//init
-		void initP(const Ref<MatrixXf> P_){
+		void initP(const Ref<MatrixXf> P_)
+		{
 			P = P_;
 			d = P.cols();
 			N = P.rows();
 		}
 		//init
-		void initK(int K_){
+		void initK(int K_)
+		{
 			K = K_;
 
 			centres.resize(K, d);
@@ -84,7 +87,8 @@ class Cluster
 			silset = false;
 		}
 		//full constructor
-		Cluster(const Ref<MatrixXf> P_, int K_, float eps_=1e-4){
+		Cluster(const Ref<MatrixXf> P_, int K_, float eps_=1e-4)
+		{
 			eps = eps_;
 			initP(P_);
 			initK(K_);
@@ -135,7 +139,6 @@ class Cluster
 
 		//cluster QA
 		void silhouette();
-
 };
 
 #endif

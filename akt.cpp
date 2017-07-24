@@ -51,6 +51,7 @@ static void usage(){
     cerr << "\tpca                      principal component analysis" << endl;
     cerr << "\tkin                      detect average IBD sharing" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
+    cerr << "\tunrelated                generate a list of unrelated individuals" << endl;    
 //    cerr << "\tibd                      detect segments shared IBD" << endl;
     cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;
     cerr << "\tcluster                  perform cluster analyses" << endl;
@@ -94,7 +95,9 @@ int main(int argc, char **argv) {
     metafreq_main(argc, argv); 
   } else if(((string)argv[1]) == "prune") {
     prune_main(argc, argv); 
-  } 
+  } else if(((string)argv[1]) == "unrelated") {
+    unrelated_main(argc, argv); 
+  }   
   else if(((string)argv[1]) == "tag") {
     tag_main(argc, argv); 
   } else if(((string)argv[1]) == "tdt") {
