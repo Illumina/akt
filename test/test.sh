@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 #this is a basic set of tests for akt.
 curl -O https://s3-eu-west-1.amazonaws.com/agg-examples/bcftools
 chmod +x bcftools
@@ -21,6 +23,9 @@ time ../akt kin -M 1 -n 4 -R $reg $data > kinship1.txt
 time ../akt kin -M 2 -n 4 -R $reg $data > kinship2.txt
 time ../akt kin -n 4 -F $reg $data > kinship.txt
 
+# check for unrelated
+../akt unrelated kinship1.txt > unrelated.out
+diff unrelated.ids unrelated.out
 
 ##find relatives
 time ../akt relatives -p n433 kinship.txt > relatives.out
