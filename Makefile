@@ -8,7 +8,7 @@ CFLAGS = -O3  $(OMP)
 
 all: akt
 
-HTSDIR=htslib-1.3
+HTSDIR=htslib-1.5
 include $(HTSDIR)/htslib.mk
 HTSLIB = $(HTSDIR)/libhts.a
 IFLAGS = -I$(HTSDIR)  -I./
@@ -33,7 +33,7 @@ profile: all
 
 ##generates a version
 GIT_HASH := $(shell git describe --abbrev=4 --always )
-BCFTOOLS_VERSION=1.3
+BCFTOOLS_VERSION=1.5
 VERSION = 0.2.0
 ifneq "$(wildcard .git)" ""
 VERSION = $(shell git describe --always)
