@@ -74,6 +74,8 @@ int ldplot_main(int argc,char **argv);
 
 int admix_main(int argc,char **argv);
 
+int unrelated_main(int argc,char **argv);
+
 int metafreq_main(int argc,char **argv);
 int tag_main(int argc,char **argv);
 int tdt_main(int argc,char **argv);

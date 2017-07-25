@@ -11,7 +11,7 @@ Takes the output from `akt kin` and detects/reconstructs pedigrees from the info
 ./akt relatives allibd -g > allrelatives
 ```
 
-The output contains duplicates, families, relationship types and unrelated individuals
+The output contains duplicates, families and relationship types.
 
 ```
 grep ^Dup allrelatives
@@ -38,3 +38,12 @@ e.g. a sibling pair, is found the samples will appear in `out.fam` without paren
 can't be determined e.g. for parent/child duos a random sample is assigned to be the parent in `out.fam`. The final column
 in the `.fam` file specifies how many potential parents the sample had.
 
+Note that `relatives` is quite a aggressive in its pedigree search, and can make errors when founders 
+are missing (for example a mother and two children). We can remove false pedigrees via a simple Mendel consistency check:
+
+```
+akt kin --force -M 1 test.bcf > kinship.txt
+akt relatives kinship.txt
+akt mendel -p out.fam test.bcf > mendel.txt
+python ~/workspace/akt/scripts/check_pedigree.py -fam out.fam -m mendel.txt > corrected.fam
+``` 

@@ -20,8 +20,8 @@ public:
     bcf1_t *getLine(int i) {return( _line[(_offset+i)%_bufsize]) ; }
 
 //set stuff
-    int setFilter(int i) { _keep[(_offset+i)%_bufsize]=false; }
-    int setKeep(int i) { _keep[(_offset+i)%_bufsize]=true; }
+    int setFilter(int i) { _keep[(_offset+i)%_bufsize]=false; return(0);}
+    int setKeep(int i) { _keep[(_offset+i)%_bufsize]=true; return(0);}
     void setOutput(const string & fname, const string & mode);
 //check stuff
     bool isFull() { return( _nsnp==_bufsize); }

@@ -149,7 +149,7 @@ int mendel(args & a)
   bcf_hdr_t *out_hdr=NULL;
   if(a.outfile!=NULL) {
     out_hdr = bcf_hdr_subset(hdr,0,NULL,NULL); ///creates a new subsetted header (with 0 samples) from src_header
-    bcf_hdr_add_sample(out_hdr, NULL);      /// update internal structures		
+    bcf_hdr_add_sample(out_hdr, NULL);      /// update internal structures
     out_fh  = hts_open(a.outfile, "wz");
     bcf_hdr_append(out_hdr, "##INFO=<ID=DUO,Number=9,Type=Integer,Description=\"parent-child duo genotype counts\">");
     bcf_hdr_append(out_hdr, "##INFO=<ID=TRIO,Number=27,Type=Integer,Description=\"mother-father-child trio genotype counts\">");

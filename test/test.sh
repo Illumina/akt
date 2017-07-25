@@ -1,12 +1,14 @@
+#!/usr/bin/env bash
+
 #this is a basic set of tests for akt.
-wget https://s3-eu-west-1.amazonaws.com/agg-examples/bcftools
+curl -O https://s3-eu-west-1.amazonaws.com/agg-examples/bcftools
 chmod +x bcftools
 
 reg=../data/wgs.grch37.vcf.gz
 ##get data
 data=ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf
-wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
-wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.csi
+curl -O -C - https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}
+curl -O -C - https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/${data}.csi
 
 ##pca of data
 time ../akt pca -R $reg $data  > pca1.txt
@@ -21,6 +23,9 @@ time ../akt kin -M 1 -n 4 -R $reg $data > kinship1.txt
 time ../akt kin -M 2 -n 4 -R $reg $data > kinship2.txt
 time ../akt kin -n 4 -F $reg $data > kinship.txt
 
+# check for unrelated
+../akt unrelated kinship1.txt | sort > unrelated.out
+diff unrelated.ids unrelated.out
 
 ##find relatives
 time ../akt relatives -p n433 kinship.txt > relatives.out
@@ -48,10 +53,10 @@ time ../akt LDplot $data -r 20:0-200000 > LDplot.out
 time ../akt admix pca2.txt -c 2-6 -C ../data/1000G.pca_to_admix > admix.out
 
 ##simple metafreq test
-wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
-wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz.tbi
-wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHORT.chr20.20140722.sites.vcf.gz
-wget --continue https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHORT.chr20.20140722.sites.vcf.gz.tbi
+curl -O -C - https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz
+curl -O -C - https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz.tbi
+curl -O -C - https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHORT.chr20.20140722.sites.vcf.gz
+curl -O -C - https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/UK10K_COHORT.chr20.20140722.sites.vcf.gz.tbi
 
 time ../akt metafreq UK10K_COHORT.chr20.20140722.sites.vcf.gz ALL.chr20.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz -Oz -o uk10_1000g.frq.chr20.vcf.gz
 
