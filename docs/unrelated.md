@@ -15,9 +15,11 @@ The algorithm has two options:
 
 ### stochastic approach
 
+For each sub-graph:
+
 1. Randomly select individuals within each sub-graph and remove their relatives
 2. Repeat 1. until all individuals are unrelated
 
-If the stochastic approach yields are larger unconnected set then that is returned, else the greedy result is returned.
+Repeat this *i* times, storing the largest unconnected set found. If the stochastic approach yields a larger unconnected set than the greedy approach then that is returned, else the greedy result is returned.
 
 Note this [maximal independent set problem](https://en.wikipedia.org/wiki/Maximal_independent_set) is NP-hard.
