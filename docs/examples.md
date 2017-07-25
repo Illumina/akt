@@ -79,8 +79,10 @@ to (Euclidean distance) in (IBD0,IBD1) space. More complicated approaches may be
 distributions, but for now expect nuclear families to
 be well resolved but a network of cousins is probably going to be missed.
 
-##Profiling Mendelian inheritance
+## Profiling Mendelian inheritance
+
 The `relatives` analysis in the previous section provided us with a set of likely pedigrees:
+
 ```
 $ head test.fam 
 Fam0	NA18909	0	0	0	0
@@ -97,6 +99,7 @@ Fam3	HG00620	0	0	0	0
 We can profile Mendelian inheritance in these pedigrees via the `akt mendel` command. This allows us to double-check the discovered pedigrees are correct ie. they have very few Mendelian inconsistent genotypes. It also provides a useful quality-control metric, in that variants with high amounts of Mendel inconsistency are likely to be problematic.
 
 First we run the `mendel` subcommand using the `.fam` file and the genotype BCF as input:
+
 ```
 $ akt mendel -p test.fam ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf > mendel.out
 Read 405 individuals from n433.fam
