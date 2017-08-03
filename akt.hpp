@@ -23,7 +23,8 @@
 #include <list>
 #include <algorithm>
 #include <set>
-#include <stdexcept>     
+#include <stdexcept>
+#include <assert.h>
 #include "samples.hpp"
 
 #ifdef _OPENMP
@@ -80,6 +81,7 @@ int metafreq_main(int argc,char **argv);
 int tag_main(int argc,char **argv);
 int tdt_main(int argc,char **argv);
 
+int pedphase_main(int argc, char **argv);
 void die(const string& s);
 
 int grm(bcf_srs_t *sr);
