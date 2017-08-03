@@ -114,6 +114,7 @@ int pedphase(args &a)
 
                     //these loops enumerate the 2**3 possible phase configurations and check which ones are possible
                     //its search a binary tree with depth 2
+                    cerr << kid_gt[0] << "/" << kid_gt[1] << " " << dad_gt[0] << "/" << dad_gt[1] <<  " " << mum_gt[0] << "/" << mum_gt[1] <<endl;
                     vector<bool> phasetree(8,0);//indicator for the 8 possible phase configurations in a trio with two genotypes per sample.
                     for(int j=0;j<2;j++)
                     {
@@ -164,9 +165,9 @@ int pedphase(args &a)
                         gt_arr[mum*2+1] = bcf_gt_phased(mum_gt[0]);
                         gt_arr[mum*2+1] = bcf_gt_phased(mum_gt[1]);
                     }
-                    else
+                    else//inconsistent with mendelian inheritance.
                     {
-                        die("could not phase");
+                        bcf_update_info_flag(out_hdr,line,"MENDELCONFLICT",NULL,1);
                     }
                 }
                 else if (has_dad)
