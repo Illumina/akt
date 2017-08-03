@@ -88,8 +88,10 @@ tdt.o: tdt.cpp
 	$(CXX) $(CXXFLAGS) -c tdt.cpp $(IFLAGS)
 pedphase.o: pedphase.cpp pedphase.h
 	$(CXX) $(CXXFLAGS) -c $< $(IFLAGS)
-akt: version.h akt.cpp tdt.o pedphase.o family.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o metafreq.o tag.o prune.o circularBuffer.o unrelated.o $(HTSLIB)
-	$(CXX) $(CXXFLAGS)   -o akt akt.cpp  pedphase.o family.o tdt.o metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o prune.o grm.o tag.o circularBuffer.o unrelated.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+utils.o: utils.cpp utils.h
+	$(CXX) $(CXXFLAGS) -c $< $(IFLAGS)
+akt: version.h akt.cpp utils.o tdt.o pedphase.o family.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o grm.o metafreq.o tag.o prune.o circularBuffer.o unrelated.o $(HTSLIB)
+	$(CXX) $(CXXFLAGS)   -o akt akt.cpp  utils.o pedphase.o family.o tdt.o metafreq.o admix.o ldplot.o reader.o vcfpca.o relatives.o kin.o ibd.o cluster.o stats.o pedigree.o mendel.o filter.o version.o prune.o grm.o tag.o circularBuffer.o unrelated.o $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h
 

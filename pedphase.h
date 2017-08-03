@@ -7,6 +7,8 @@
 #include "akt.hpp"
 #include "pedigree.h"
 #include "mendel.h"
+#include "utils.h"
+#include <deque>
 #include <iomanip>
 #include <numeric>
 

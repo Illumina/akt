@@ -9,18 +9,6 @@ sampleInfo::sampleInfo(string fname)
     buildIndex();
 }
 
-int stringSplit(string & s,vector<string> & split)
-{
-    split.clear();
-    stringstream ss;
-    ss << s;
-    string tmp;
-    while(ss>>tmp)
-    {
-        split.push_back(tmp);
-    }
-    return(split.size());
-}
 
 sampleInfo::sampleInfo(string fname,bcf_hdr_t *hdr)
 {
@@ -43,7 +31,7 @@ sampleInfo::sampleInfo(string fname,bcf_hdr_t *hdr)
         {
             idx++;
         }
-        if(idx<N)//sample wasnt in original pedigree
+        if(idx<N)
         {
             new_fid[i] = fid[idx];
             new_dad[i] = dad[idx];
@@ -51,6 +39,7 @@ sampleInfo::sampleInfo(string fname,bcf_hdr_t *hdr)
             new_sex[i] = sex[idx];
             new_status[i] = status[idx];
         }
+        //else sample wasnt in original pedigree
     }
     sex=new_sex;
     status=new_status;
@@ -185,4 +174,40 @@ int sampleInfo::buildIndex()
     cerr << num_unaffected << " unaffected children"<<endl;
     return(0);
 }
+
+int sampleInfo::getMumIndex(int idx)
+{
+    if (mumidx[idx] != -1)
+    {
+        return(mumidx[idx]);
+    }
+    else
+    {
+        return(-1);
+    }
+}
+
+int sampleInfo::getDadIndex(int idx)
+{
+    if (dadidx[idx] != -1)
+    {
+        return(dadidx[idx]);
+    }
+    else
+    {
+        return(-1);
+    }
+}
+
+bool sampleInfo::isPhaseableTrio(int idx,int *gt_arr)
+{
+    int dad = getDadIndex(idx);
+    int mum = getDadIndex(idx);
+    bool kid_is_genotyped = is_genotyped(gt_arr, idx);
+    bool dad_is_genotyped = is_genotyped(gt_arr, dad);
+    bool mum_is_genotyped = is_genotyped(gt_arr, mum);
+    bool has_dad = dad > -1 && dad_is_genotyped;
+    bool has_mum = mum > -1 && mum_is_genotyped;
+    return(has_dad && has_mum && kid_is_genotyped);
+};
 
