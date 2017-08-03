@@ -7,6 +7,7 @@ typedef struct _args
 {
     bool regions_is_file;
     bool targets_is_file;
+    char output_type;
     char *pedigree, *inputfile, *include, *regions, *targets, *outfile;
 } args;
 
@@ -58,20 +59,20 @@ int pedphase(args &a)
     bcf_hdr_t *hdr = sr->readers[0].header;
     htsFile *out_fh = NULL;
     bcf_hdr_t *out_hdr = NULL;
-    if (a.outfile != NULL)
-    {
-        out_hdr = bcf_hdr_dup(hdr);
-        out_fh = hts_open(a.outfile, "wz");
-        bcf_hdr_append(out_hdr,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"this variant has at least one Mendelian inconsistency\">");
-        bcf_hdr_write(out_fh, out_hdr);
-    }
+    out_hdr = bcf_hdr_dup(hdr);
+    char output_type[] = "wv";
+    output_type[1] = a.output_type;
+    out_fh = hts_open(a.outfile, output_type);
+    bcf_hdr_append(out_hdr,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"this variant has at least one Mendelian inconsistency\">");
+    bcf_hdr_write(out_fh, out_hdr);
 
     sampleInfo ped(a.pedigree, out_hdr);
 
     bcf1_t *line = bcf_init1();
     int nsample = ped.N;
-    int ngt = 2 * nsample;
-    int *gt_arr = (int *) malloc(ngt * sizeof(int));
+    int ngt=0,nps=0;
+    int *gt_arr=NULL,*ps_arr=NULL;
+
     vector<int> gt(nsample);
 
     bool diploid_warn = false;
@@ -215,9 +216,11 @@ int pedphase_main(int argc, char **argv)
 {
     int c;
     args a;
+    a.output_type = 'v';
     if (argc < 3) usage();
     static struct option loptions[] = {
             {"out",      1, 0,                        'o'},
+            {"output-type",      1, 0,                'O'},
             {"pedigree", 1, 0,                        'p'},
             {"targets",      required_argument, NULL, 't'},
             {"targets-file", required_argument, NULL, 'T'},
@@ -229,12 +232,15 @@ int pedphase_main(int argc, char **argv)
     a.targets_is_file = false;
     a.targets = a.pedigree = a.inputfile = a.include = a.regions = a.outfile = NULL;
 
-    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:", loptions, NULL)) >= 0)
+    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:", loptions, NULL)) >= 0)
     {
         switch (c)
         {
             case 'o':
                 a.outfile = optarg;
+                break;
+            case 'O':
+                a.output_type = optarg[0];
                 break;
             case 'p':
                 a.pedigree = optarg;
@@ -259,8 +265,15 @@ int pedphase_main(int argc, char **argv)
     }
     optind++;
     a.inputfile = argv[optind];
-    if (a.inputfile == NULL) die("no input provided");
-    if (a.pedigree == NULL) die("the -p argument is required");
+    if (a.inputfile == NULL)
+    {
+        die("no input provided");
+    }
+    if (a.pedigree == NULL)
+    {
+        die("the -p argument is required");
+    }
+    cerr << "Output file: " << a.outfile<<endl;
     pedphase(a);
     return (0);
 }
