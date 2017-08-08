@@ -9,9 +9,8 @@ class sampleInfo
 public:
     //reads a pedigree froma  plink.fam file
     sampleInfo(string fname);
-
-    //note this function changes the samples the hdr will read
     sampleInfo(string fname, bcf_hdr_t *hdr);
+    sampleInfo(bcf_hdr_t *hdr);
 
     vector <string> fid, id, dad, mum;
     vector<int> dadidx, mumidx;
@@ -35,7 +34,7 @@ public:
     int getMumIndex(int idx);
 private:
     int readFromPlinkFam(string fname);
-
+    void alignWithVcf(bcf_hdr_t *hdr);
     int buildIndex();
 
 };

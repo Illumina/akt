@@ -264,7 +264,16 @@ PedPhaser::PedPhaser(args &a)
     {
         hts_set_threads(_out_fh,a.nthreads);
     }
-    _ped = new sampleInfo(a.pedigree, _out_hdr);
+
+    if (a.pedigree == NULL)
+    {
+        _ped = new sampleInfo(_out_hdr);
+    }
+    else
+    {
+        _ped = new sampleInfo(a.pedigree, _out_hdr);
+    }
+
 
     bcf1_t *line = bcf_init1();
     _nsample = bcf_hdr_nsamples(_out_hdr);
@@ -399,10 +408,7 @@ int pedphase_main(int argc, char **argv)
     {
         die("no input provided");
     }
-    if (a.pedigree == NULL)
-    {
-        die("the -p argument is required");
-    }
+
     cerr << "Output file: " << a.outfile<<endl;
     PedPhaser p(a);
     return (0);
