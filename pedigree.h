@@ -31,7 +31,6 @@ public:
         return &id[i];
     }
 
-    bool isPhaseableTrio(int idx, int *gt_arr);
     int getDadIndex(int idx);
     int getMumIndex(int idx);
 private:

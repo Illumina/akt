@@ -199,15 +199,3 @@ int sampleInfo::getDadIndex(int idx)
     }
 }
 
-bool sampleInfo::isPhaseableTrio(int idx,int *gt_arr)
-{
-    int dad = getDadIndex(idx);
-    int mum = getDadIndex(idx);
-    bool kid_is_genotyped = is_genotyped(gt_arr, idx);
-    bool dad_is_genotyped = is_genotyped(gt_arr, dad);
-    bool mum_is_genotyped = is_genotyped(gt_arr, mum);
-    bool has_dad = dad > -1 && dad_is_genotyped;
-    bool has_mum = mum > -1 && mum_is_genotyped;
-    return(has_dad && has_mum && kid_is_genotyped);
-};
-
