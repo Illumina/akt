@@ -15,6 +15,7 @@
 
 typedef struct _args
 {
+    int nthreads;
     bool regions_is_file;
     bool targets_is_file;
     char output_type;

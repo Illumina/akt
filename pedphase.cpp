@@ -130,6 +130,12 @@ int PedPhaser::flushBuffer()
         gt_arr_dup = (int *)realloc(gt_arr_dup,ngt*sizeof(int));
         memcpy(gt_arr_dup,gt_arr,ngt*sizeof(int));
 
+        //wipe any existing phase information.
+        for(int i=0;i<(2*_nsample);i++)
+        {
+            gt_arr_dup[i] = bcf_gt_unphased(bcf_gt_allele(gt_arr_dup[i]));
+        }
+
         for(int i=0;i<_nsample;i++)
         {
             int phase=phaseTrio(i,gt_arr_dup);
@@ -140,7 +146,7 @@ int PedPhaser::flushBuffer()
         {
             for(int i=0;i<_nsample;i++)
             {
-                if(ps_arr[i]!=bcf_int32_missing &&  bcf_gt_allele(gt_arr[2*i])!=bcf_gt_allele(gt_arr[2*i+1]) && gt_arr_dup[2*i]!= -1)
+                if(ps_arr[i]!=bcf_int32_missing && bcf_gt_allele(gt_arr[2*i])!=bcf_gt_allele(gt_arr[2*i+1]) && bcf_gt_is_phased(gt_arr_dup[2*i+1]))
                 {
                     if(!flip[i].count(ps_arr[i]))
                     {
@@ -251,9 +257,13 @@ PedPhaser::PedPhaser(args &a)
     char output_type[] = "wv";
     output_type[1] = a.output_type;
     _out_fh = hts_open(a.outfile, output_type);
+
     bcf_hdr_append(_out_hdr,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"this variant has at least one Mendelian inconsistency\">");
     bcf_hdr_write(_out_fh, _out_hdr);
-
+    if(a.nthreads>0)
+    {
+        hts_set_threads(_out_fh,a.nthreads);
+    }
     _ped = new sampleInfo(a.pedigree, _out_hdr);
 
     bcf1_t *line = bcf_init1();
@@ -283,7 +293,6 @@ PedPhaser::PedPhaser(args &a)
         {//no phase set. phase+flush the deque and perform standard  line-at-a-time phasing by mendelian inheritance.
             flushBuffer();
             int ret = bcf_get_genotypes(_hdr, line, &gt_arr, &ngt);
-            assert(ret==2*_nsample);
             bool diploid = ret == 2 * _nsample;
             if (diploid)
             {
@@ -294,8 +303,8 @@ PedPhaser::PedPhaser(args &a)
                      {
                          bcf_update_info_flag(_out_hdr, line, "MENDELCONFLICT", NULL, 1);
                      }
+//                    cerr << line->pos+1 <<" "<<phase<<endl;
                 }
-                nsnp++;
             }
             else
             {
@@ -307,7 +316,7 @@ PedPhaser::PedPhaser(args &a)
                     diploid_warn = true;
                 }
             }
-            bcf_update_genotypes(_out_hdr, line, gt_arr, ngt);
+            bcf_update_genotypes(_out_hdr, line, gt_arr, ret);
             bcf_write1(_out_fh, _out_hdr, line);
         }
     }
@@ -335,6 +344,7 @@ int pedphase_main(int argc, char **argv)
             {"out",      1, 0,                        'o'},
             {"output-type",      1, 0,                'O'},
             {"pedigree", 1, 0,                        'p'},
+            {"threads",      required_argument, NULL, '@'},
             {"targets",      required_argument, NULL, 't'},
             {"targets-file", required_argument, NULL, 'T'},
             {"regions-file", required_argument, NULL, 'R'},
@@ -345,8 +355,9 @@ int pedphase_main(int argc, char **argv)
     a.targets_is_file = false;
     a.targets = a.pedigree = a.inputfile = a.include = a.regions = NULL;
     a.outfile="-";
+    a.nthreads = 0;
 
-    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:", loptions, NULL)) >= 0)
+    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:@:", loptions, NULL)) >= 0)
     {
         switch (c)
         {
@@ -371,10 +382,15 @@ int pedphase_main(int argc, char **argv)
             case 'r':
                 a.regions = optarg;
                 break;
+            case '@':
+                a.nthreads = atoi(optarg);
+                break;
             case 'R':
                 a.regions = optarg;
                 a.regions_is_file = true;
                 break;
+            default:
+                die("unknown argument");
         }
     }
     optind++;
