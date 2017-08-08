@@ -41,7 +41,7 @@ sampleInfo::sampleInfo(bcf_hdr_t *hdr)
             string d = getPedigreeId(line, "Father=");
             string m = getPedigreeId(line, "Mother=");
 
-            if(d==""||m=="")
+            if(d==""&&m=="")
             {
                 die("Bad pedigree line: " + line);
             }
