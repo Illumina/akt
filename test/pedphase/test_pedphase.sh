@@ -42,4 +42,11 @@ diff test/pedphase/test7.out test/pedphase/test7.vcf
 diff test/pedphase/test7.out test/pedphase/test7.vcf
 echo "PASSED"
 
+echo "Test 8"
+./akt pedphase test/pedphase/test8.vcf.gz -p test/pedphase/pedigree.fam -o - 2> /dev/null | bcftools view -H > test/pedphase/test8.out
+diff test/pedphase/test8.out test/pedphase/test8.vcf
+./akt pedphase test/pedphase/test8.vcf.gz -o - 2> /dev/null | bcftools view -H > test/pedphase/test8.out
+diff test/pedphase/test8.out test/pedphase/test8.vcf
+echo "PASSED"
+
 echo "ALL TESTS PASSED!"

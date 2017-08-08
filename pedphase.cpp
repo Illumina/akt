@@ -1,7 +1,7 @@
 #include "pedphase.h"
 
 using namespace std;
-
+//#define DEBUG
 
 void usage()
 {
@@ -95,12 +95,41 @@ int PedPhaser::phaseTrio(int idx,int *gt_arr)
             swap(mum_gt[0], mum_gt[1]);
         }
 
-        gt_arr[idx * 2] = bcf_gt_phased(kid_gt[0]);
-        gt_arr[idx * 2 + 1] = bcf_gt_phased(kid_gt[1]);
-        gt_arr[dad * 2 ] = bcf_gt_phased(dad_gt[0]);
-        gt_arr[dad * 2 + 1] = bcf_gt_phased(dad_gt[1]);
-        gt_arr[mum * 2 ] = bcf_gt_phased(mum_gt[0]);
-        gt_arr[mum * 2 + 1] = bcf_gt_phased(mum_gt[1]);
+#ifdef DEBUG
+        cerr << kid_gt[0] << "|" << kid_gt[1] << " " << dad_gt[0] << "|" << dad_gt[1] << " " << mum_gt[0] << "|" << mum_gt[1] << " " << endl;
+#endif
+        if(kid_gt[0]!=bcf_gt_allele(bcf_int32_vector_end))
+        {
+            gt_arr[idx * 2] = bcf_gt_phased(kid_gt[0]);
+            gt_arr[idx * 2 + 1] = bcf_gt_phased(kid_gt[1]);
+        }
+        else
+        {
+            gt_arr[idx * 2 + 1] = bcf_int32_vector_end;
+            gt_arr[idx * 2] = bcf_gt_phased(kid_gt[1]);
+        }
+
+        if(dad_gt[0]!=bcf_gt_allele(bcf_int32_vector_end))
+        {
+            gt_arr[dad * 2 ] = bcf_gt_phased(dad_gt[0]);
+            gt_arr[dad * 2 + 1] = bcf_gt_phased(dad_gt[1]);
+        }
+        else
+        {
+            gt_arr[dad * 2 + 1] =  bcf_int32_vector_end;
+            gt_arr[dad * 2] = bcf_gt_phased(dad_gt[1]);
+        }
+
+        if(mum_gt[0]!=bcf_gt_allele(bcf_int32_vector_end))
+        {
+            gt_arr[mum * 2 ] = bcf_gt_phased(mum_gt[0]);
+            gt_arr[mum * 2 + 1] = bcf_gt_phased(mum_gt[1]);
+        }
+        else
+        {
+            gt_arr[mum * 2 + 1] =  bcf_int32_vector_end;
+            gt_arr[mum * 2 ] = bcf_gt_phased(mum_gt[1]);
+        }
 
         return(1);
     }
