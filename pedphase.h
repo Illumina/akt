@@ -19,7 +19,7 @@ typedef struct _args
     bool regions_is_file;
     bool targets_is_file;
     char output_type;
-    char *pedigree, *inputfile, *include, *regions, *targets, *outfile;
+    const char *pedigree, *inputfile, *include, *regions, *targets, *outfile;
 } args;
 
 
