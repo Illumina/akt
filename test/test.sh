@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 #this is a basic set of tests for akt.
+#pedigree phasing testing
+bash -e pedphase/test_pedphase.sh
+
+#get bcftools
 curl -O https://s3-eu-west-1.amazonaws.com/agg-examples/bcftools
 chmod +x bcftools
 
