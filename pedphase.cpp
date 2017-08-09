@@ -3,9 +3,17 @@
 using namespace std;
 //#define DEBUG
 
-void usage()
+static void usage()
 {
-    cerr << "usage"<<endl;
+    fprintf(stderr, "\n");
+    fprintf(stderr, "About:   akt pedphase - simple Mendel inheritance phasing of duos/trios\n");
+    fprintf(stderr, "Usage:   ./akt pedphase input.vcf.gz -p pedigree.fam\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "    -p, --pedigree              pedigree information in plink .fam format\n");
+    fprintf(stderr, "    -o, --out                   output a site only vcf.gz annotated with site specific error rates\n");
+    fprintf(stderr, "    -@, --threads               number of compression/decompression threads to use\n");
+    exit(1);
 }
 
 void swap(int & a, int & b)
@@ -292,13 +300,15 @@ PedPhaser::PedPhaser(args &a)
     char output_type[] = "wv";
     output_type[1] = a.output_type;
     _out_fh = hts_open(a.outfile, output_type);
+    if(a.nthreads>0)
+    {
+        bcf_sr_set_threads(_sr,a.nthreads);
+        hts_set_threads(_out_fh,a.nthreads);
+    }
+
 
     bcf_hdr_append(_out_hdr,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"this variant has at least one Mendelian inconsistency\">");
     bcf_hdr_write(_out_fh, _out_hdr);
-    if(a.nthreads>0)
-    {
-        hts_set_threads(_out_fh,a.nthreads);
-    }
 
     if (a.pedigree == NULL)
     {
