@@ -123,7 +123,7 @@ void sampleInfo::alignWithVcf(bcf_hdr_t *hdr)
     dad = new_dad;
     mum = new_mum;
     N = new_N;
-    cerr << "Found " << N << " in both the pedigree and bcf." << endl;
+    cerr << "Found " << N << " in both the pedigree and VCF" << endl;
     buildIndex();
 }
 

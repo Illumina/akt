@@ -15,18 +15,18 @@ void swap(int & a, int & b)
     b=tmp;
 }
 
-//performs simple trio phasing using mendelian inheritance.
+//performs simple duo/trio phasing using mendelian inheritance.
 //returns
 //-1: mendelian inconsistent
 //0:  unphaseable
 //1:  phased
 //int phase_trio(int kid_gt[],int dad_gt[],int mum_gt[])
-int PedPhaser::phaseTrio(int idx,int *gt_arr)
+int PedPhaser::mendelPhase(int idx,int *gt_arr)
 {
-
+    int pedigree_size = 3;//we might make this dynamic later
     int mum = _ped->getMumIndex(idx);
     int dad = _ped->getDadIndex(idx);
-    if(mum==-1 || dad==-1)
+    if(mum==-1 && dad==-1)
     {
         return(0);
     }
@@ -39,14 +39,14 @@ int PedPhaser::phaseTrio(int idx,int *gt_arr)
     bool kid_is_genotyped = is_genotyped(gt_arr, idx);
     bool dad_is_genotyped = is_genotyped(gt_arr, dad);
     bool mum_is_genotyped = is_genotyped(gt_arr, mum);
-    if(!kid_is_genotyped||!mum_is_genotyped||!dad_is_genotyped)
+    if(!kid_is_genotyped || (!mum_is_genotyped&&!dad_is_genotyped))//cant phase anything.
     {
         return(0);
     }
 
-    //these loops enumerate the 2**3 possible phase configurations and check which ones are possible
-    //ie. search a binary tree with depth 2
+    //these loops enumerate the 2**n possible phase configurations and check which ones are possible
 #ifdef DEBUG
+    cerr << dad_is_genotyped <<" "<<mum_is_genotyped<<endl;
     cerr << kid_gt[0] << "/" << kid_gt[1]
          << " " << dad_gt[0] << "/" << dad_gt[1] <<  " " << mum_gt[0] << "/" << mum_gt[1] <<endl;
 #endif
@@ -63,7 +63,7 @@ int PedPhaser::phaseTrio(int idx,int *gt_arr)
                     {
                         if (mum_gt[0] != mum_gt[1] || l < 1)
                         {
-                            if (kid_gt[j] == dad_gt[k] and kid_gt[(j + 1) % 2] == mum_gt[l])
+                            if ( (!dad_is_genotyped || kid_gt[j] == dad_gt[k]) && (!mum_is_genotyped || kid_gt[(j + 1) % 2] == mum_gt[l]) )
                             {
                                 phasetree[4 * j + 2 * k + l] = 1;
                             }
@@ -75,6 +75,7 @@ int PedPhaser::phaseTrio(int idx,int *gt_arr)
     }
 
     int sum = accumulate(phasetree.begin(), phasetree.end(), 0);
+    //cerr << "sum="<<sum<<endl;
     if (sum > 1)//multiple solutions - cannot phase
     {
         return(0);
@@ -109,26 +110,31 @@ int PedPhaser::phaseTrio(int idx,int *gt_arr)
             gt_arr[idx * 2] = bcf_gt_phased(kid_gt[1]);
         }
 
-        if(dad_gt[0]!=bcf_gt_allele(bcf_int32_vector_end))
+        if(dad_is_genotyped)
         {
-            gt_arr[dad * 2 ] = bcf_gt_phased(dad_gt[0]);
-            gt_arr[dad * 2 + 1] = bcf_gt_phased(dad_gt[1]);
+            if(dad_gt[0]!=bcf_gt_allele(bcf_int32_vector_end))
+            {
+                gt_arr[dad * 2 ] = bcf_gt_phased(dad_gt[0]);
+                gt_arr[dad * 2 + 1] = bcf_gt_phased(dad_gt[1]);
+            }
+            else
+            {
+                gt_arr[dad * 2 + 1] =  bcf_int32_vector_end;
+                gt_arr[dad * 2] = bcf_gt_phased(dad_gt[1]);
+            }
         }
-        else
+        if(mum_is_genotyped)
         {
-            gt_arr[dad * 2 + 1] =  bcf_int32_vector_end;
-            gt_arr[dad * 2] = bcf_gt_phased(dad_gt[1]);
-        }
-
-        if(mum_gt[0]!=bcf_gt_allele(bcf_int32_vector_end))
-        {
-            gt_arr[mum * 2 ] = bcf_gt_phased(mum_gt[0]);
-            gt_arr[mum * 2 + 1] = bcf_gt_phased(mum_gt[1]);
-        }
-        else
-        {
-            gt_arr[mum * 2 + 1] =  bcf_int32_vector_end;
-            gt_arr[mum * 2 ] = bcf_gt_phased(mum_gt[1]);
+            if(mum_gt[0]!=bcf_gt_allele(bcf_int32_vector_end))
+            {
+                gt_arr[mum * 2 ] = bcf_gt_phased(mum_gt[0]);
+                gt_arr[mum * 2 + 1] = bcf_gt_phased(mum_gt[1]);
+            }
+            else
+            {
+                gt_arr[mum * 2 + 1] =  bcf_int32_vector_end;
+                gt_arr[mum * 2 ] = bcf_gt_phased(mum_gt[1]);
+            }
         }
 
         return(1);
@@ -167,7 +173,7 @@ int PedPhaser::flushBuffer()
 
         for(int i=0;i<_nsample;i++)
         {
-            int phase=phaseTrio(i,gt_arr_dup);
+            int phase=mendelPhase(i,gt_arr_dup);
             count++;
         }
 
@@ -203,7 +209,7 @@ int PedPhaser::flushBuffer()
         vector<bool> flipped(_nsample,0);
         for (int i = 0; i < _nsample; i++)
         {
-            int phase = phaseTrio(i,gt_arr_dup);
+            int phase = mendelPhase(i,gt_arr_dup);
 
             if(phase == -1)
             {
@@ -331,12 +337,12 @@ PedPhaser::PedPhaser(args &a)
         {//no phase set. phase+flush the deque and perform standard  line-at-a-time phasing by mendelian inheritance.
             flushBuffer();
             int ret = bcf_get_genotypes(_hdr, line, &gt_arr, &ngt);
-            bool diploid = ret == 2 * _nsample;
+            bool diploid = ret > _nsample; //are there any non-haploid genotypes??
             if (diploid)
             {
                 for (int i = 0; i < _nsample; i++)
                 {
-                     int phase = phaseTrio(i,gt_arr);
+                     int phase = mendelPhase(i,gt_arr);
                      if(phase == -1)
                      {
                          bcf_update_info_flag(_out_hdr, line, "MENDELCONFLICT", NULL, 1);
@@ -348,9 +354,9 @@ PedPhaser::PedPhaser(args &a)
             {
                 if (!diploid_warn)
                 {
-                    cerr << "\tWARNING: found non-diploid site (" << bcf_hdr_id2name(_hdr, line->rid) << ":"
-                         << line->pos + 1 << ") was ignored. ";
-                    cerr << "You will only see this warning once." << endl;
+//                    cerr << "\tWARNING: found non-diploid site (" << bcf_hdr_id2name(_hdr, line->rid) << ":"
+//                         << line->pos + 1 << ") was ignored. ";
+//                    cerr << "You will only see this warning once." << endl;
                     diploid_warn = true;
                 }
             }

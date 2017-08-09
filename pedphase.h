@@ -28,7 +28,7 @@ class PedPhaser
 
 public:
     PedPhaser(args &a);
-    int phaseTrio(int idx,int *gt_arr);
+    int mendelPhase(int idx,int *gt_arr);
 
 private:
     int flushBuffer();
