@@ -86,7 +86,7 @@ prune.o: prune.cpp  prune.hpp
 	$(CXX) $(CXXFLAGS) -c prune.cpp $(IFLAGS)
 tdt.o: tdt.cpp 
 	$(CXX) $(CXXFLAGS) -c tdt.cpp $(IFLAGS)
-pedphase.o: pedphase.cpp pedphase.h
+pedphase.o: pedphase.cpp pedphase.h utils.h
 	$(CXX) $(CXXFLAGS) -c $< $(IFLAGS)
 utils.o: utils.cpp utils.h
 	$(CXX) $(CXXFLAGS) -c $< $(IFLAGS)
