@@ -320,7 +320,7 @@ PedPhaser::PedPhaser(args &a)
         bcf_unpack(line, BCF_UN_ALL);
 
         if(bcf_get_format_int32(_hdr, line, "PS",&ps_array,&nps)>0)
-        {// variant has samples with phase set (PS) set. we need to treat them special
+        {// variant has samples with phase set (PS) set. we need to buffer these.
             bcf1_t *new_line = bcf_dup(line);
             _line_buffer.push_back(new_line);
         }
@@ -338,16 +338,6 @@ PedPhaser::PedPhaser(args &a)
                      {
                          bcf_update_info_flag(_out_hdr, line, "MENDELCONFLICT", NULL, 1);
                      }
-                }
-            }
-            else
-            {
-                if (!diploid_warn)
-                {
-//                    cerr << "\tWARNING: found non-diploid site (" << bcf_hdr_id2name(_hdr, line->rid) << ":"
-//                         << line->pos + 1 << ") was ignored. ";
-//                    cerr << "You will only see this warning once." << endl;
-                    diploid_warn = true;
                 }
             }
             bcf_update_genotypes(_out_hdr, line, gt_array, ret);
