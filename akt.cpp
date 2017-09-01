@@ -79,7 +79,7 @@ static void usage()
 {
     cerr << "\nProgram:\takt (Ancestry and Kinship Tools)" << endl;
     cerr << "Version:\t" << VERSION << endl;
-    cerr << "Copyright (c) 2016, Illumina, Inc. All rights reserved. See LICENSE for further details.\n" << endl;
+    cerr << "Copyright (c) 2017, Illumina, Inc. All rights reserved. See LICENSE for further details.\n" << endl;
     cerr << "Usage:\takt <command> [options]\n" << endl;
     cerr << "\tpca                      principal component analysis" << endl;
     cerr << "\tkin                      detect average IBD sharing" << endl;

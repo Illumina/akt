@@ -14,6 +14,24 @@ bool is_genotyped(int *gt,int idx);
 
 int stringSplit(string & s,vector<string> & split);
 
-void getGenotype(int idx,int *gt_arr,int *ret);
+class Genotype
+{
+public:
+    Genotype(int g0,int g1);
+    Genotype(int idx,int *gt_arr); 
+    void setGenotype(int g0,int g1);   
+    bool isHet();
+    bool isMissing();
+    bool isHaploid();
+    int first();
+    int second();
+    int getGenotype(int idx);
+    int swap();
+    
+private:
+    int _g0,_g1;
+    bool _is_haploid;    
+};
+
 
 #endif //AKT_UTILS_H
