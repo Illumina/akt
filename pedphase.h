@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <numeric>
 #include <stdlib.h>
+#include <bitset>
+
 
 typedef struct _args
 {
@@ -28,7 +30,7 @@ class PedPhaser
 
 public:
     PedPhaser(args &a);
-    int mendelPhase(int idx,int *gt_arr);
+    int mendelPhase(int idx,int *gt_array);
 
 private:
     int flushBuffer();

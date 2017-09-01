@@ -4,7 +4,7 @@ CXX=g++
 OMP=-fopenmp
 
 CXXFLAGS = -O3  $(OMP) -mpopcnt
-CFLAGS = -O3  $(OMP) 
+CFLAGS = -O3  $(OMP)
 
 all: akt
 
@@ -12,9 +12,9 @@ HTSDIR=htslib-1.5
 include $(HTSDIR)/htslib.mk
 HTSLIB = $(HTSDIR)/libhts.a
 IFLAGS = -I$(HTSDIR)  -I./
-LFLAGS = -lz -lm
+LFLAGS = -lz -lm -static
 
-no_omp: CXXFLAGS = -O3  
+no_omp: CXXFLAGS = -O3 
 no_omp: CFLAGS = -O3 
 no_omp: LFLAGS = -lz -lm -lpthread
 no_omp: all
@@ -86,7 +86,7 @@ prune.o: prune.cpp  prune.hpp
 	$(CXX) $(CXXFLAGS) -c prune.cpp $(IFLAGS)
 tdt.o: tdt.cpp 
 	$(CXX) $(CXXFLAGS) -c tdt.cpp $(IFLAGS)
-pedphase.o: pedphase.cpp pedphase.h
+pedphase.o: pedphase.cpp pedphase.h utils.h
 	$(CXX) $(CXXFLAGS) -c $< $(IFLAGS)
 utils.o: utils.cpp utils.h
 	$(CXX) $(CXXFLAGS) -c $< $(IFLAGS)
