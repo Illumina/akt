@@ -16,27 +16,20 @@ static void usage()
     exit(1);
 }
 
-void swap(int & a, int & b)
-{
-    int tmp = a;
-    a=b;
-    b=tmp;
-}
-
 //performs simple duo/trio phasing using mendelian inheritance.
 //returns
 //-1: mendelian inconsistent
 //0:  unphaseable
 //1:  phased
-int PedPhaser::mendelPhase(int kid_idx,int *gt_array)
+int PedPhaser::mendelPhase(int kid_index,int *gt_array)
 {
     int pedigree_size = 3;//we might make this dynamic later
-    int dad_idx = _ped->getDadIndex(kid_idx);
-    int mum_idx = _ped->getMumIndex(kid_idx);
+    int dad_index = _ped->getDadIndex(kid_index);
+    int mum_index = _ped->getMumIndex(kid_index);
     
-    Genotype kid_gt(kid_idx,gt_array);
-    Genotype dad_gt(dad_idx,gt_array);
-    Genotype mum_gt(mum_idx,gt_array);
+    Genotype kid_gt(kid_index,gt_array);
+    Genotype dad_gt(dad_index,gt_array);
+    Genotype mum_gt(mum_index,gt_array);
     
     if( (dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing() )
     {
@@ -57,8 +50,8 @@ int PedPhaser::mendelPhase(int kid_idx,int *gt_array)
 
 	if( (kid_gt.isHaploid()||kid_gt.isHet()||!kid_branch) && (dad_gt.isHaploid()||dad_gt.isHet()||!dad_branch) && (mum_gt.isHaploid()||mum_gt.isHet()||!mum_branch) )
 	{
-	    bool is_inheritance_consistent = dad_gt.isMissing()||dad_gt.getGenotype(dad_branch)==kid_gt.getGenotype(kid_branch);
-	    is_inheritance_consistent &= mum_gt.isMissing()||mum_gt.getGenotype(mum_branch)==kid_gt.getGenotype((kid_branch+1)%2);
+	    bool is_inheritance_consistent = dad_gt.isMissing()||dad_gt.getGenotype(dad_branch)==kid_gt.getGenotype((kid_branch+1)%2);
+	    is_inheritance_consistent &= mum_gt.isMissing()||mum_gt.getGenotype(mum_branch)==kid_gt.getGenotype(kid_branch);
 	    if(is_inheritance_consistent)
 	    {
 		phasetree[i] = 1;
@@ -89,40 +82,40 @@ int PedPhaser::mendelPhase(int kid_idx,int *gt_array)
 
 	if(!kid_gt.isMissing())
 	{
-	    gt_array[kid_idx * 2] = bcf_gt_phased(kid_gt.first());
+	    gt_array[kid_index * 2] = bcf_gt_phased(kid_gt.first());
 	    if(kid_gt.isHaploid())
 	    {
-		gt_array[kid_idx * 2 + 1] = bcf_int32_vector_end;
+		gt_array[kid_index * 2 + 1] = bcf_int32_vector_end;
 	    }
 	    else
 	    {
-		gt_array[kid_idx * 2 + 1] = bcf_gt_phased(kid_gt.second());	    
+		gt_array[kid_index * 2 + 1] = bcf_gt_phased(kid_gt.second());	    
 	    }
 	}
 	
         if(!dad_gt.isMissing())
         {
-	    gt_array[dad_idx * 2 ] = bcf_gt_phased(dad_gt.first());	    
+	    gt_array[dad_index * 2 ] = bcf_gt_phased(dad_gt.first());	    
             if(dad_gt.isHaploid())
             {
-                gt_array[dad_idx * 2 + 1] =  bcf_int32_vector_end;				
+                gt_array[dad_index * 2 + 1] =  bcf_int32_vector_end;				
             }
             else
             {
-                gt_array[dad_idx * 2 + 1] = bcf_gt_phased(dad_gt.second());		
+                gt_array[dad_index * 2 + 1] = bcf_gt_phased(dad_gt.second());		
             }
         }
 	
         if(!mum_gt.isMissing())
         {
-	    gt_array[mum_idx * 2 ] = bcf_gt_phased(mum_gt.first());	    
+	    gt_array[mum_index * 2 ] = bcf_gt_phased(mum_gt.first());	    
             if(mum_gt.isHaploid())
             {
-                gt_array[mum_idx * 2 + 1] =  bcf_int32_vector_end;		
+                gt_array[mum_index * 2 + 1] =  bcf_int32_vector_end;		
             }
             else
             {
-                gt_array[mum_idx * 2 + 1] = bcf_gt_phased(mum_gt.second());		
+                gt_array[mum_index * 2 + 1] = bcf_gt_phased(mum_gt.second());		
             }
         }
 
@@ -211,22 +204,22 @@ int PedPhaser::flushBuffer()
                 vector<int> indices(1,i);
                 indices.push_back(dad);
                 indices.push_back(mum);
-                for(vector<int>::iterator idx=indices.begin();idx!=indices.end();idx++)
+                for(vector<int>::iterator index=indices.begin();index!=indices.end();index++)
                 {
-                    if ((*idx)!= -1 && has_ps>0 && ps_array[*idx] != bcf_int32_missing )
+                    if ((*index)!= -1 && has_ps>0 && ps_array[*index] != bcf_int32_missing )
                     {
-                        if (!flipped[*idx] && flip[*idx][ps_array[*idx]].first > flip[*idx][ps_array[*idx]].second / 2)
+                        if (!flipped[*index] && flip[*index][ps_array[*index]].first > flip[*index][ps_array[*index]].second / 2)
                         {
-                            int tmp = gt_array[2 * (*idx)];
-                            gt_array[2 * (*idx)] = bcf_gt_phased(bcf_gt_allele(gt_array[2 * (*idx) + 1]));
-                            gt_array[2 * (*idx) + 1] = bcf_gt_phased(bcf_gt_allele(tmp));
-                            flipped[*idx] = true;
+                            int tmp = gt_array[2 * (*index)];
+                            gt_array[2 * (*index)] = bcf_gt_phased(bcf_gt_allele(gt_array[2 * (*index) + 1]));
+                            gt_array[2 * (*index) + 1] = bcf_gt_phased(bcf_gt_allele(tmp));
+                            flipped[*index] = true;
                         }
                     }
-                    else if(phase==1 && (*idx)!=-1)
+                    else if(phase==1 && (*index)!=-1)
                     {
-                        gt_array[2*(*idx)]=gt_array_dup[2*(*idx)];
-                        gt_array[2*(*idx)+1]=gt_array_dup[2*(*idx)+1];
+                        gt_array[2*(*index)]=gt_array_dup[2*(*index)];
+                        gt_array[2*(*index)+1]=gt_array_dup[2*(*index)+1];
                     }
                 }
             }
