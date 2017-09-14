@@ -1,4 +1,4 @@
-##Correlation Matrix
+## Correlation Matrix
 We can visually identify linkage disequilibrium by plotting a correlation matrix.
 
 ```

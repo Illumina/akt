@@ -1,4 +1,4 @@
-##tag
+## tag
 
 Performs tag SNP selection . This is useful for choosing a subset of variants to use in analyses that do not require anywhere near the number of markers typically obtained from WGS (notably `pca`/`kin`) and assume linkage equilibrium between markers. Note this routine is rather different to PLINK's pruning method. We attempt to find the *K* (non-redundant) variants that tag as much variation as possible via a greedy algorithm. Whereas PLINK prunes away variants that can be predicted from other variants. In practice, for applications such as PCA/kinship calculations, it appears any set of reasonably common and sparse markers is appropriate.
 

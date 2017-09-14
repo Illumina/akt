@@ -1,4 +1,4 @@
-##Discovering Ancestry
+## Discovering Ancestry
 1000Genomes contained data from European, African, East Asian and American samples. The American samples
 are expected to be admixed with a lot of European ancestry. We therefore expect principle component analysis to give us
 3 clusters, corresponding to European, East Asian and African with the American samples either in or very close to the European 

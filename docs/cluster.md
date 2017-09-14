@@ -1,4 +1,4 @@
-##cluster
+## cluster
 
 Perform unsupervised clustering on some data, for example the output from `akt pca`.
 
@@ -35,7 +35,7 @@ to bad local minimum, individual is of mixed ancestry. You could filter out badl
 ```
 awk '{ if($4 > 0.5) print $0}' clustered > well_clustered
 ```
-###density clustering
+### density clustering
 This is a better clustering algorithm but requires some tuning by hand. First run
 ```
 ./akt cluster projections -c 2-4 -a 2 -d 1 --density-plot > dplot

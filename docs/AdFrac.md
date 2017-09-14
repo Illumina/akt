@@ -1,4 +1,4 @@
-##Calculating Admixture Fractions
+## Calculating Admixture Fractions
 It is possible to linearly transform principle components to a new basis in which the co-ordinates are the 
 admixture fractions of different ancestral populations: see 
 the paper of [Zheng and Weir](http://www.sciencedirect.com/science/article/pii/S0040580915000891). We provide a very

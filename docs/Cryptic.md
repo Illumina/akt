@@ -1,4 +1,4 @@
-##Discovering Cryptic Relations
+## Discovering Cryptic Relations
 First we attempt to identify cryptic relations. Run
 ```
 ./akt kin ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz -n 4 > test_kin

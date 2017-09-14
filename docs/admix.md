@@ -1,4 +1,4 @@
-##admix
+## admix
 
 The `admix` function attempts to use the output of `akt pca` to assign admixture fractions to data based on known populations.
 

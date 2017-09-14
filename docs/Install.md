@@ -1,4 +1,4 @@
-##Installation instructions
+## Installation instructions
 
 ```
 git clone https://github.com/Illumina/akt.git
@@ -11,4 +11,4 @@ you can try
 make no_omp
 ```
 Everything will be run on a single thread, so the `-n` option does nothing
-in `akt kin` and `akt ibd`.
+in `akt kin`.
