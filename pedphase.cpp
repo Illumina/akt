@@ -2,6 +2,7 @@
 
 using namespace std;
 //#define DEBUG
+#define NUM_LEAVES 8
 
 static void usage()
 {
@@ -16,20 +17,43 @@ static void usage()
     exit(1);
 }
 
+static int bcf_int32_count_missing(int32_t *array,int n)
+{
+    int num_missing=0;
+    for(int i=0;i<n;i++)
+    {
+	if(array[i]==bcf_int32_missing)
+	{
+	    num_missing++;
+	}
+    }
+    return(num_missing);
+}
+
+
+static void bcf_int32_set_missing(int32_t *array,int n)
+{
+    int num_missing=0;
+    for(int i=0;i<n;i++)
+    {
+	array[i]=bcf_int32_missing;
+    }
+}
+
 //performs simple duo/trio phasing using mendelian inheritance.
 //returns
 //-1: mendelian inconsistent
 //0:  unphaseable
 //1:  phased
-int PedPhaser::mendelPhase(int kid_index,int *gt_array)
+int PedPhaser::mendelPhase(int kid_index,int *_gt_array)
 {
     int pedigree_size = 3;//we might make this dynamic later
     int dad_index = _ped->getDadIndex(kid_index);
     int mum_index = _ped->getMumIndex(kid_index);
     
-    Genotype kid_gt(kid_index,gt_array);
-    Genotype dad_gt(dad_index,gt_array);
-    Genotype mum_gt(mum_index,gt_array);
+    Genotype kid_gt(kid_index,_gt_array);
+    Genotype dad_gt(dad_index,_gt_array);
+    Genotype mum_gt(mum_index,_gt_array);
     
     if( (dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing() )
     {
@@ -40,10 +64,11 @@ int PedPhaser::mendelPhase(int kid_index,int *gt_array)
     //the leaf of each tree is 0 if the genotype configuration is inconsistent with inheritance and 1 otherwise.
     //redundant leaves (eg. where a sample is homozygous) are also 0
     vector<bool> phasetree(pow(2,pedigree_size),0);
+    assert(phasetree.size()<=NUM_LEAVES);
     //this loop enumerates the 2**n possible phase configurations and checks which are compatible with inheritance
     for(size_t i=0;i<phasetree.size();i++)
     {
-	bitset<8> leaf((int)i);
+	bitset<NUM_LEAVES> leaf((int)i);
 	bool kid_branch = leaf[0];
 	bool dad_branch = leaf[1];
 	bool mum_branch = leaf[2];
@@ -80,44 +105,9 @@ int PedPhaser::mendelPhase(int kid_index,int *gt_array)
 	    mum_gt.swap();
         }
 
-	if(!kid_gt.isMissing())
-	{
-	    gt_array[kid_index * 2] = bcf_gt_phased(kid_gt.first());
-	    if(kid_gt.isHaploid())
-	    {
-		gt_array[kid_index * 2 + 1] = bcf_int32_vector_end;
-	    }
-	    else
-	    {
-		gt_array[kid_index * 2 + 1] = bcf_gt_phased(kid_gt.second());	    
-	    }
-	}
-	
-        if(!dad_gt.isMissing())
-        {
-	    gt_array[dad_index * 2 ] = bcf_gt_phased(dad_gt.first());	    
-            if(dad_gt.isHaploid())
-            {
-                gt_array[dad_index * 2 + 1] =  bcf_int32_vector_end;				
-            }
-            else
-            {
-                gt_array[dad_index * 2 + 1] = bcf_gt_phased(dad_gt.second());		
-            }
-        }
-	
-        if(!mum_gt.isMissing())
-        {
-	    gt_array[mum_index * 2 ] = bcf_gt_phased(mum_gt.first());	    
-            if(mum_gt.isHaploid())
-            {
-                gt_array[mum_index * 2 + 1] =  bcf_int32_vector_end;		
-            }
-            else
-            {
-                gt_array[mum_index * 2 + 1] = bcf_gt_phased(mum_gt.second());		
-            }
-        }
+	kid_gt.update_bcf_gt_array(_gt_array,kid_index);
+	dad_gt.update_bcf_gt_array(_gt_array,dad_index);
+	mum_gt.update_bcf_gt_array(_gt_array,mum_index);
 
         return(1);
     }
@@ -135,96 +125,125 @@ int PedPhaser::flushBuffer()
     }
 
     int ngt=0,nps=0;
-    int *gt_array=NULL,*ps_array=NULL,*gt_array_dup=NULL;
-
     int count=0;
-    vector< map< int,pair<int,int> > > flip(_nsample);
+    vector< map< int,pair<int,int> > > flip(_nsample); // the key stores PS and the pair stores <number of inconsistencies,number of phased variants>
     int kid_gt[2],dad_gt[2],mum_gt[2];
+
+    //this loops over the buffered vcf rows and performs mendel phasing
+    //the number of inconsistencies between the mendel phased genotypes and the PS phased genotypes is stored in flip
     for(deque<bcf1_t *>::iterator it1=_line_buffer.begin();it1!=_line_buffer.end();it1++)
     {
         bcf1_t *line = *it1;
-        assert(bcf_get_genotypes(_hdr, line, &gt_array, &ngt)==2*_nsample);
-        gt_array_dup = (int *)realloc(gt_array_dup,ngt*sizeof(int));
-        memcpy(gt_array_dup,gt_array,ngt*sizeof(int));
+        assert(bcf_get_genotypes(_out_hdr, line, &_gt_array, &ngt)==2*_nsample);
+        _gt_array_dup = (int *)realloc(_gt_array_dup,ngt*sizeof(int));
+        memcpy(_gt_array_dup,_gt_array,ngt*sizeof(int));
 
-        //wipe any existing phase information.
-        for(int i=0;i<(2*_nsample);i++)
+
+        for(int i=0;i<(2*_nsample);i++)//wipe any existing phase information.
         {
-            gt_array_dup[i] = bcf_gt_unphased(bcf_gt_allele(gt_array_dup[i]));
+            _gt_array_dup[i] = bcf_gt_unphased(bcf_gt_allele(_gt_array_dup[i]));
         }
 
-        for(int i=0;i<_nsample;i++)
+        for(int i=_nsample-1;i>=0;i--)//mendel phase each child
         {
-            int phase=mendelPhase(i,gt_array_dup);
+            int phase=mendelPhase(i,_gt_array_dup);
             count++;
         }
 
-        if(bcf_get_format_int32(_hdr, line, "PS", &ps_array, &nps)>0)
+        if(bcf_get_format_int32(_out_hdr, line, "PS", &_ps_array, &nps)>0)
         {
             for(int i=0;i<_nsample;i++)
             {
-                if(ps_array[i]!=bcf_int32_missing && bcf_gt_allele(gt_array[2*i])!=bcf_gt_allele(gt_array[2*i+1]) && bcf_gt_is_phased(gt_array_dup[2*i+1]))
+		//if:
+		//1. sample has a phase set
+		//2. sample is het
+		//3. sample is also mendel phased
+		//then count the consistency with the phase set
+                if(_ps_array[i]!=bcf_int32_missing && bcf_gt_allele(_gt_array[2*i])!=bcf_gt_allele(_gt_array[2*i+1]) && bcf_gt_is_phased(_gt_array_dup[2*i+1]))
                 {
-                    if(!flip[i].count(ps_array[i]))
+                    if(!flip[i].count(_ps_array[i]))
                     {
-                        flip[i][ps_array[i]] = pair<int, int>(0, 0);
+                        flip[i][_ps_array[i]] = pair<int, int>(0, 0);
                     }
-                    flip[i][ps_array[i]].second++;
-                    if(bcf_gt_allele(gt_array_dup[2*i])!=bcf_gt_allele(gt_array[2*i]))
+                    flip[i][_ps_array[i]].second++;
+                    if(bcf_gt_allele(_gt_array_dup[2*i])!=bcf_gt_allele(_gt_array[2*i]))
                     {
-                        flip[i][ps_array[i]].first++;
+                        flip[i][_ps_array[i]].first++;
                     }
                 }
             }
         }
     }
 
+    //now iterate through the buffer again and flip phase sets that are inconsistent with pedigrees
     for(deque<bcf1_t *>::iterator it1=_line_buffer.begin();it1!=_line_buffer.end();it1++)
     {
         bcf1_t *line = *it1;
+        assert(bcf_get_genotypes(_out_hdr, line, &_gt_array, &ngt)==2*_nsample);
+        _gt_array_dup = (int *)realloc(_gt_array_dup,ngt*sizeof(int));
+        memcpy(_gt_array_dup,_gt_array,ngt*sizeof(int));
+        bcf_int32_set_missing(_rps_array,_nsample);
+        int num_ps_values = bcf_get_format_int32(_out_hdr, line, "PS", &_ps_array, &nps);
+        vector<bool> sample_has_been_flipped(_nsample,0);
 
-        assert(bcf_get_genotypes(_hdr, line, &gt_array, &ngt)==2*_nsample);
-        gt_array_dup = (int *)realloc(gt_array_dup,ngt*sizeof(int));
-        memcpy(gt_array_dup,gt_array,ngt*sizeof(int));
-
-        int has_ps = bcf_get_format_int32(_hdr, line, "PS", &ps_array, &nps);
-        vector<bool> flipped(_nsample,0);
-        for (int i = 0; i < _nsample; i++)
+        for (int i=_nsample-1;i>=0;i--)
         {
-            int phase = mendelPhase(i,gt_array_dup);
-
+            int phase = mendelPhase(i,_gt_array_dup);
             if(phase == -1)
             {
-                bcf_update_info_flag(_hdr, line, "MENDELCONFLICT", NULL, 1);
+                bcf_update_info_flag(_out_hdr, line, "MENDELCONFLICT", NULL, 1);
             }
             else
             {
-                int mum = _ped->getMumIndex(i);
+		int mum = _ped->getMumIndex(i);
                 int dad = _ped->getDadIndex(i);
                 vector<int> indices(1,i);
                 indices.push_back(dad);
                 indices.push_back(mum);
                 for(vector<int>::iterator index=indices.begin();index!=indices.end();index++)
                 {
-                    if ((*index)!= -1 && has_ps>0 && ps_array[*index] != bcf_int32_missing )
-                    {
-                        if (!flipped[*index] && flip[*index][ps_array[*index]].first > flip[*index][ps_array[*index]].second / 2)
-                        {
-                            int tmp = gt_array[2 * (*index)];
-                            gt_array[2 * (*index)] = bcf_gt_phased(bcf_gt_allele(gt_array[2 * (*index) + 1]));
-                            gt_array[2 * (*index) + 1] = bcf_gt_phased(bcf_gt_allele(tmp));
-                            flipped[*index] = true;
-                        }
-                    }
-                    else if(phase==1 && (*index)!=-1)
-                    {
-                        gt_array[2*(*index)]=gt_array_dup[2*(*index)];
-                        gt_array[2*(*index)+1]=gt_array_dup[2*(*index)+1];
-                    }
+		    bool sample_not_missing = (*index)!= -1;
+ 		    bool sample_has_ps = sample_not_missing && num_ps_values>0 && _ps_array[*index] != bcf_int32_missing;
+		    if(sample_not_missing)
+		    {
+			if (sample_has_ps)
+			{
+			    int num_hets_in_ps=flip[*index][_ps_array[*index]].second;
+			    int num_inconsistencies_with_ps = flip[*index][_ps_array[*index]].first;
+			    bool phase_set_is_inconsistent_with_pedigree = num_inconsistencies_with_ps > num_hets_in_ps / 2;
+			    if (!sample_has_been_flipped[*index] && phase_set_is_inconsistent_with_pedigree)
+			    {
+				int tmp = _gt_array[2 * (*index)];
+				_gt_array[2 * (*index)    ] = bcf_gt_phased(bcf_gt_allele(_gt_array[2 * (*index) + 1]));
+				_gt_array[2 * (*index) + 1] = bcf_gt_phased(bcf_gt_allele(tmp));
+				sample_has_been_flipped[*index] = true;
+			    }
+			    if(num_hets_in_ps>0)//this phase set also had pedigree information
+			    {
+				if(num_inconsistencies_with_ps==0 || num_inconsistencies_with_ps==num_hets_in_ps)
+				{//we have a 100% agreement hence move PS -> RPS
+				    _rps_array[i] = _ps_array[i];
+				}
+			    }				
+			}
+			else if(phase==1) //was mendel phased and not-missing
+			{
+			    _gt_array[2*(*index)]=_gt_array_dup[2*(*index)];
+			    _gt_array[2*(*index)+1]=_gt_array_dup[2*(*index)+1];
+			}
+		    }		    
                 }
             }
         }
-        bcf_update_genotypes(_hdr, line, gt_array, ngt);
+        bcf_update_genotypes(_out_hdr, line, _gt_array, ngt);
+	if(bcf_int32_count_missing(_rps_array,_nsample)<_nsample)
+	{
+	    if(memcmp(_rps_array,_ps_array,_nsample)==0)
+	    {//REMOVE FORMAT/PS
+		bcf_update_format_int32(_out_hdr,line,"PS",NULL,0);
+	    }
+	    assert(bcf_update_format_int32(_out_hdr,line,"RPS",_rps_array,_nsample)==0);
+	}
     }
 
     while(!_line_buffer.empty())//flushes out the deque
@@ -235,14 +254,12 @@ int PedPhaser::flushBuffer()
         bcf_destroy(tmp_line);
     }
 
-    free(gt_array);
-    free(ps_array);
     return(0);
 }
 
-PedPhaser::PedPhaser(args &a)
+void PedPhaser::setup_io(args &a)
 {
-    //open a file.
+        //open a file.
     _sr = bcf_sr_init();
 
     if (a.targets != NULL)
@@ -280,7 +297,7 @@ PedPhaser::PedPhaser(args &a)
         hts_set_threads(_out_fh,a.nthreads);
     }
 
-
+    bcf_hdr_append(_out_hdr,"##FORMAT=<ID=RPS,Number=1,Type=Integer,Description=\"Read back phase set.\">");
     bcf_hdr_append(_out_hdr,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"this variant has at least one Mendelian inconsistency\">");
     bcf_hdr_write(_out_fh, _out_hdr);
 
@@ -292,12 +309,20 @@ PedPhaser::PedPhaser(args &a)
     {
         _ped = new sampleInfo(a.pedigree, _out_hdr);
     }
+}
 
-
-    bcf1_t *line = bcf_init1();
+PedPhaser::PedPhaser(args &a)
+{
+    setup_io(a);
+    
+    bcf1_t *line;
     _nsample = bcf_hdr_nsamples(_out_hdr);
     int ngt=0,nps=0;
-    int *gt_array=NULL,*ps_array=NULL;
+    _gt_array=NULL;
+    _ps_array=NULL;
+    _gt_array=NULL;
+    _gt_array_dup=NULL;        
+    _rps_array=(int32_t *)malloc(_nsample * sizeof(int32_t));
 
     vector<int> gt(_nsample);
 
@@ -312,7 +337,7 @@ PedPhaser::PedPhaser(args &a)
         line = bcf_sr_get_line(_sr, 0);
         bcf_unpack(line, BCF_UN_ALL);
 
-        if(bcf_get_format_int32(_hdr, line, "PS",&ps_array,&nps)>0)
+        if(bcf_get_format_int32(_hdr, line, "PS",&_ps_array,&nps)>0)
         {// variant has samples with phase set (PS) set. we need to buffer these.
             bcf1_t *new_line = bcf_dup(line);
             _line_buffer.push_back(new_line);
@@ -320,35 +345,36 @@ PedPhaser::PedPhaser(args &a)
         else
         {//no phase set. phase+flush the deque and perform standard  line-at-a-time phasing by mendelian inheritance.
             flushBuffer();
-            int ret = bcf_get_genotypes(_hdr, line, &gt_array, &ngt);
+            int ret = bcf_get_genotypes(_hdr, line, &_gt_array, &ngt);
             bool diploid = ret > _nsample; //are there any non-haploid genotypes??
             if (diploid)
             {
-                for (int i = 0; i < _nsample; i++)
+                for (int i=_nsample-1;i>=0;i--)
                 {
-                     int phase = mendelPhase(i,gt_array);
+                     int phase = mendelPhase(i,_gt_array);
                      if(phase == -1)
                      {
                          bcf_update_info_flag(_out_hdr, line, "MENDELCONFLICT", NULL, 1);
                      }
                 }
             }
-            bcf_update_genotypes(_out_hdr, line, gt_array, ret);
+            bcf_update_genotypes(_out_hdr, line, _gt_array, ret);
             bcf_write1(_out_fh, _out_hdr, line);
         }
     }
     flushBuffer();
+}
 
+PedPhaser::~PedPhaser()
+{
+    delete _ped;
     hts_close(_out_fh);
-    free(ps_array);
-    free(gt_array);
+    free(_ps_array);
+    free(_gt_array);
+    free(_gt_array_dup);    
+    free(_rps_array);    
     bcf_sr_destroy(_sr);
-
-    if (nsnp > 0)
-    {
-        cerr << nsnp << " variants" << endl;
-    }
-
+    bcf_hdr_destroy(_out_hdr);
 }
 
 int pedphase_main(int argc, char **argv)
