@@ -1,4 +1,4 @@
-##kin
+## kin
 
 Calculates kinship coefficients (and other related metrics) from multi-sample VCF/BCFs. Can be used to detect (closely) related or duplicated samples.
 
@@ -20,7 +20,7 @@ Run the kinship calculation by giving akt a multi-sample vcf/bcf file:
 ```
 $ akt kin multisample.bcf -R data/wgs.grch37.vcf.gz -n 32 > kin.txt
 ```
-###Choice of estimator
+### Choice of estimator
 
 
 The default algorithm (`-M 0`) used to calculate IBD is taken from [PLINK](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/) with some minor changes. It outputs the following seven column format:

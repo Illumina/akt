@@ -1,4 +1,4 @@
-##Checking Site Frequency Distributions
+## Checking Site Frequency Distributions
 Given two populations, or even the same population called using two different pipelines, we can
 ask if the observed allele frequencies are consistent with each other. For example: say in cohort 1
 at a particular site we observed 20 variants out of 200 possible alleles while in cohort 2 we observed 15 out of 100.

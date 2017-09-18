@@ -1,4 +1,4 @@
-#Using akt
+# Using akt
 
 akt uses the syntax
 ```
@@ -9,7 +9,8 @@ To see a list of available tools use
 replace_akt_run
 ```
 
-##common options 
+## common options 
+
 There are a number of options that are shared by multiple akt subcommands which we list here. We have tried to keep these consistent with [bcftools](http://samtools.github.io/bcftools/bcftools.html) where possible.
 
 **-R** *FILE* a file (tabixed VCF or bed) containing the markers to perform analysis on. **-R**/**-r** uses tabixes jumping for fast look up  

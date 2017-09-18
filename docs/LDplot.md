@@ -1,4 +1,4 @@
-##LDplot
+## LDplot
 
 This generates the correlation matrix of all included variants.
 

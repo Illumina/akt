@@ -1,4 +1,4 @@
-##Allele Frequency and Correlation
+## Allele Frequency and Correlation
 
 We can use the PCA analysis above to calculate population specific allele frequencies. We choose
 the isolated cluster 1 (East Asian). We can either subsample the input bcf or use the subsetting option `-S`. To

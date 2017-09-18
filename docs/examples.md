@@ -1,5 +1,5 @@
-#Example Workflow
-##Test Data
+# Example Workflow
+## Test Data
 
 First we need some data. To see some interesting behaviour we should have a lot of samples and some of them should be related. 
 We use publicly available [1000 Genomes Project](http://www.1000genomes.org/) data. We will work with a BCF containing 433 high-coverage samples with a mix of different ethnicities as well as 129 mother-father-child and 9 parent-child duos. See [this script](https://gist.github.com/jaredo/4206a09eedc7a0fed3f09ca756af0919) for a description of how the BCF was generated. 
@@ -10,7 +10,7 @@ wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.cgi_multi_sample.
 wget https://s3-eu-west-1.amazonaws.com/akt-examples/1000G/ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf.csi
 ```
 AKT only works with autosomal DNA i.e. not X and Y, so you should not use these chromosomes.
-##Discovering Cryptic Relations
+## Discovering Cryptic Relations
 First we attempt to identify cryptic relations. Run
 ```
 ./akt kin ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -R data/wgs.grch37.vcf.gz -n 4 > test_kin
@@ -133,7 +133,7 @@ Duo summary:
   RR   . 264510589  7248782    4355 0.001602495  2.66731
 ```
 Everything looks consistent here, there are low (<0.5%) rates of Mendel inconsistencies and the transmission rate of heterozygous variants is close to 50% where appropriate. This is not suprising since this data set is of high quality.
-##Discovering Ancestry
+## Discovering Ancestry
 1000Genomes contained data from European, African, East Asian and American samples. The American samples
 are expected to be admixed with a lot of European ancestry. We therefore expect principle component analysis to give us
 3 clusters, corresponding to European, East Asian and African with the American samples either in or very close to the European 
@@ -182,7 +182,7 @@ classifying all the data we can localise the clusters to where the data is dense
 ![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_cluster1.png)
 
 Cluster0 is the group of samples which were unclassified.
-##Allele Frequency and Correlation
+## Allele Frequency and Correlation
 
 We can use the PCA analysis above to calculate population specific allele frequencies. We choose
 the isolated cluster 1 (East Asian). We can either subsample the input bcf or use the subsetting option `-S`. To
@@ -198,7 +198,7 @@ try just a short chromosome for this test.
 ./akt stats ALL.cgi_multi_sample.20130725.snps_indels.high_coverage_cgi.normalized.uniq.genotypes.gtonly.cr90.ic10.bcf -a "EAS" -O b -o sites.EAS.bcf -S test.Cluster1 -r 20 -F 10000
 bcftools index sites.EAS.bcf
 ``` 
-##Correlation Matrix
+## Correlation Matrix
 We can visually identify linkage disequilibrium by plotting a correlation matrix.
 
 ```
@@ -216,7 +216,7 @@ A value near 1 indicates very strong positive correlation (variants always prese
 and a value near -1 indicates string negative correlation (variants never present together). 
 Looking at the plot above showing variants 800 to 1200 in the region 20:0-200000 and their correlation
 we see obvious LD blocks.
-##Calculating Admixture Fractions
+## Calculating Admixture Fractions
 It is possible to linearly transform principle components to a new basis in which the co-ordinates are the 
 admixture fractions of different ancestral populations: see 
 the paper of [Zheng and Weir](http://www.sciencedirect.com/science/article/pii/S0040580915000891). We provide a very
@@ -252,7 +252,7 @@ data/1000G.pca_to_admix works reasonably well for admixture in 1000G superpopula
 ![alt text](https://raw.githubusercontent.com/Illumina/akt/master/docs/test_alladmix.png)
 
 
-##Checking Site Frequency Distributions
+## Checking Site Frequency Distributions
 Given two populations, or even the same population called using two different pipelines, we can
 ask if the observed allele frequencies are consistent with each other. For example: say in cohort 1
 at a particular site we observed 20 variants out of 200 possible alleles while in cohort 2 we observed 15 out of 100.

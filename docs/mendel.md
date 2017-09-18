@@ -1,4 +1,4 @@
-##mendel
+## mendel
 
 Profiles Mendelian inheritance/inconsistency patterns in a sample. Useful for evaluating different sets of filters.
 

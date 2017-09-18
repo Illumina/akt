@@ -1,4 +1,4 @@
-##stats
+## stats
 
 This tool lets us calculate allele frequencies and correlation matrices from multisample vcfs.
 

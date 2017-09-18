@@ -1,4 +1,4 @@
-##relatives
+## relatives
 
 Takes the output from `akt kin` and detects/reconstructs pedigrees from the information. Can also flag duplicated samples and create lists of unrelated samples.
 
