@@ -161,3 +161,21 @@ int Genotype::swap()
     }
     return(0);
 }
+
+int Genotype::update_bcf_gt_array(int *gt_array,int index)
+{
+    if(!isMissing())
+    {
+	gt_array[index * 2] = bcf_gt_phased(first());
+	if(isHaploid())
+	{
+	    gt_array[index * 2 + 1] = bcf_int32_vector_end;
+	}
+	else
+	{
+	    gt_array[index * 2 + 1] = bcf_gt_phased(second());	    
+	}
+    }
+    
+    return(0);
+}

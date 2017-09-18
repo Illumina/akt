@@ -30,9 +30,11 @@ class PedPhaser
 
 public:
     PedPhaser(args &a);
+    ~PedPhaser();
     int mendelPhase(int idx,int *gt_array);
 
 private:
+    void setup_io(args &a);
     int flushBuffer();
     bcf_srs_t *_sr;
     bcf_hdr_t *_hdr;
@@ -41,7 +43,8 @@ private:
     sampleInfo *_ped;
     int _nsample;
     deque<bcf1_t *> _line_buffer;
-
+    int *_gt_array,*_gt_array_dup;
+    int32_t *_ps_array,*_rps_array;
 };
 
 
