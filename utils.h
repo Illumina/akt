@@ -26,7 +26,8 @@ public:
     int first();
     int second();
     int getGenotype(int idx);
-    int swap();
+    int swap(); 
+    int update_bcf_gt_array(int *gt_array,int index);
     
 private:
     int _g0,_g1;
