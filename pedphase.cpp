@@ -286,7 +286,8 @@ void PedPhaser::setup_io(args &a)
         exit(1);
     }
 
-    _out_header = bcf_hdr_dup(_bcf_reader->readers[0].header);
+    _in_header  = _bcf_reader->readers[0].header;
+    _out_header = bcf_hdr_dup(_in_header);
     char output_type[] = "wv";
     output_type[1] = a.output_type;
     _out_file = hts_open(a.outfile, output_type);
@@ -315,7 +316,7 @@ PedPhaser::PedPhaser(args &a)
     setup_io(a);
     
     bcf1_t *line;
-    _num_sample = bcf_hdr_num_samples(_out_header);
+    _num_sample = bcf_hdr_nsamples(_out_header);
     int num_gt=0,num_ps=0;
     _gt_array=NULL;
     _ps_array=NULL;
@@ -336,7 +337,7 @@ PedPhaser::PedPhaser(args &a)
         line = bcf_sr_get_line(_bcf_reader, 0);
         bcf_unpack(line, BCF_UN_ALL);
 
-        if(bcf_get_format_int32(_hdr, line, "PS",&_ps_array,&num_ps)>0)
+        if(bcf_get_format_int32(_in_header, line, "PS",&_ps_array,&num_ps)>0)
         {// variant has samples with phase set (PS) set. we need to buffer these.
             bcf1_t *new_line = bcf_dup(line);
             _line_buffer.push_back(new_line);
@@ -344,7 +345,7 @@ PedPhaser::PedPhaser(args &a)
         else
         {//no phase set. phase+flush the deque and perform standard  line-at-a-time phasing by mendelian inheritance.
             flushBuffer();
-            int ret = bcf_get_genotypes(_hdr, line, &_gt_array, &num_gt);
+            int ret = bcf_get_genotypes(_in_header, line, &_gt_array, &num_gt);
             bool diploid = ret > _num_sample; //are there any non-haploid genotypes??
             if (diploid)
             {

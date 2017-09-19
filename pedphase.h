@@ -38,7 +38,7 @@ private:
     int flushBuffer();
     bcf_srs_t *_bcf_reader;
     htsFile *_out_file;
-    bcf_hdr_t *_out_header;
+    bcf_hdr_t *_out_header,*_in_header;
     sampleInfo *_pedigree;
     int _num_sample;
     deque<bcf1_t *> _line_buffer;
