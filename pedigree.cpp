@@ -3,7 +3,7 @@
 
 //#define DEBUG_PEDIGREE
 
-string getPedigreeId(string &line, const string &member)
+string get_pedigree_id(string &line, const string &member)
 {
     string ret = "";
     if (line.find(member) < line.size())
@@ -29,17 +29,21 @@ sampleInfo::sampleInfo(bcf_hdr_t *hdr)
     {
         if (line.find("##PEDIGREE") < line.size())
         {
-            string k = getPedigreeId(line, "Proband=");
+            string k = get_pedigree_id(line, "Proband=");
             if (k == "")
             {
-                k = getPedigreeId(line, "Child=");
+                k = get_pedigree_id(line, "Child=");
+            }
+            if (k == "")
+            {
+                k = get_pedigree_id(line, "ID=");
             }
             if (k == "")
             {
                 die("Bad pedigree line: " + line);
             }
-            string d = getPedigreeId(line, "Father=");
-            string m = getPedigreeId(line, "Mother=");
+            string d = get_pedigree_id(line, "Father=");
+            string m = get_pedigree_id(line, "Mother=");
 
             if(d==""&&m=="")
             {
