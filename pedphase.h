@@ -36,12 +36,11 @@ public:
 private:
     void setup_io(args &a);
     int flushBuffer();
-    bcf_srs_t *_sr;
-    bcf_hdr_t *_hdr;
-    htsFile *_out_fh;
-    bcf_hdr_t *_out_hdr;
-    sampleInfo *_ped;
-    int _nsample;
+    bcf_srs_t *_bcf_reader;
+    htsFile *_out_file;
+    bcf_hdr_t *_out_header,*_in_header;
+    sampleInfo *_pedigree;
+    int _num_sample;
     deque<bcf1_t *> _line_buffer;
     int *_gt_array,*_gt_array_dup;
     int32_t *_ps_array,*_rps_array;

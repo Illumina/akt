@@ -1,5 +1,8 @@
 ## Changelog
 
+## 2017.08.19
+* added VCF4.3 pedigree parsing
+
 ## 2017.08.09
 * added unrelated command
 * relatives command no longer prints unrelated (see above)

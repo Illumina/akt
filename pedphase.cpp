@@ -380,8 +380,8 @@ PedPhaser::~PedPhaser()
 int pedphase_main(int argc, char **argv)
 {
     int c;
-    args a;
-    a.output_type = 'v';
+    args arguments;
+    arguments.output_type = 'v';
     if (argc < 3) usage();
     static struct option loptions[] = {
             {"out",      1, 0,                        'o'},
@@ -394,56 +394,57 @@ int pedphase_main(int argc, char **argv)
             {"regions",      required_argument, NULL, 'r'},
             {0,          0, 0,                        0}
     };
-    a.regions_is_file = false;
-    a.targets_is_file = false;
-    a.targets = a.pedigree = a.inputfile = a.include = a.regions = NULL;
-    a.outfile="-";
-    a.nthreads = 0;
+    arguments.regions_is_file = false;
+    arguments.targets_is_file = false;
+    arguments.targets = arguments.pedigree = arguments.inputfile = arguments.include = arguments.regions = NULL;
+    arguments.outfile="-";
+    arguments.nthreads = 0;
 
     while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:@:", loptions, NULL)) >= 0)
     {
         switch (c)
         {
             case 'o':
-                a.outfile = optarg;
+                arguments.outfile = optarg;
                 break;
             case 'O':
-                a.output_type = optarg[0];
+                arguments.output_type = optarg[0];
                 break;
             case 'p':
-                a.pedigree = optarg;
+                arguments.pedigree = optarg;
                 break;
             case 'i':
-                a.include = optarg;
+                arguments.include = optarg;
                 break;
             case 't':
-                a.targets = optarg;
+                arguments.targets = optarg;
                 break;
             case 'T':
-                a.targets = optarg;
+                arguments.targets = optarg;
                 break;
             case 'r':
-                a.regions = optarg;
+                arguments.regions = optarg;
                 break;
             case '@':
-                a.nthreads = atoi(optarg);
+                arguments.nthreads = atoi(optarg);
                 break;
             case 'R':
-                a.regions = optarg;
-                a.regions_is_file = true;
+                arguments.regions = optarg;
+                arguments.regions_is_file = true;
                 break;
             default:
                 die("unknown argument");
         }
     }
     optind++;
-    a.inputfile = argv[optind];
-    if (a.inputfile == NULL)
+    arguments.inputfile = argv[optind];
+    if (arguments.inputfile == NULL)
     {
         die("no input provided");
     }
 
-    cerr << "Output file: " << a.outfile<<endl;
-    PedPhaser p(a);
+    cerr << "Output file: " << arguments.outfile<<endl;
+    PedPhaser p(arguments);
     return (0);
 }
+
