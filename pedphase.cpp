@@ -47,15 +47,15 @@ static void bcf_int32_set_missing(int32_t *array,int n)
 //-1: mendelian inconsistent
 //0:  unphaseable
 //1:  phased
-int PedPhaser::mendelPhase(int kid_index,int *_gt_array)
+int PedPhaser::mendelPhase(int kid_index,int *gt_array,int *ps_array)
 {
     int pedigree_size = 3;//we might make this dynamic later
     int dad_index = _pedigree->getDadIndex(kid_index);
     int mum_index = _pedigree->getMumIndex(kid_index);
     
-    Genotype kid_gt(kid_index,_gt_array);
-    Genotype dad_gt(dad_index,_gt_array);
-    Genotype mum_gt(mum_index,_gt_array);
+    Genotype kid_gt(kid_index,gt_array,ps_array);
+    Genotype dad_gt(dad_index,gt_array,ps_array);
+    Genotype mum_gt(mum_index,gt_array,ps_array);
     
     if( (dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing() )
     {
@@ -75,7 +75,8 @@ int PedPhaser::mendelPhase(int kid_index,int *_gt_array)
 	bool dad_branch = leaf[1];
 	bool mum_branch = leaf[2];
 
-	if( (kid_gt.isHaploid()||kid_gt.isHet()||!kid_branch) && (dad_gt.isHaploid()||dad_gt.isHet()||!dad_branch) && (mum_gt.isHaploid()||mum_gt.isHet()||!mum_branch) )
+//	if( (kid_gt.isHaploid()||kid_gt.isHet()||!kid_branch) && (dad_gt.isHaploid()||dad_gt.isHet()||!dad_branch) && (mum_gt.isHaploid()||mum_gt.isHet()||!mum_branch) )
+	if( (!kid_gt.isPhased()||!kid_branch) && (!dad_gt.isPhased()||!dad_branch) && (!mum_gt.isPhased()||!mum_branch) )
 	{
 	    bool is_inheritance_consistent = dad_gt.isMissing()||dad_gt.getGenotype(dad_branch)==kid_gt.getGenotype((kid_branch+1)%2);
 	    is_inheritance_consistent &= mum_gt.isMissing()||mum_gt.getGenotype(mum_branch)==kid_gt.getGenotype(kid_branch);
@@ -107,9 +108,9 @@ int PedPhaser::mendelPhase(int kid_index,int *_gt_array)
 	    mum_gt.swap();
         }
 
-	kid_gt.update_bcf_gt_array(_gt_array,kid_index);
-	dad_gt.update_bcf_gt_array(_gt_array,dad_index);
-	mum_gt.update_bcf_gt_array(_gt_array,mum_index);
+	kid_gt.update_bcf_gt_array(gt_array,kid_index);
+	dad_gt.update_bcf_gt_array(gt_array,dad_index);
+	mum_gt.update_bcf_gt_array(gt_array,mum_index);
 
         return(1);
     }
@@ -237,6 +238,12 @@ int PedPhaser::flushBuffer()
                 }
             }
         }
+	//do a final pass of phase-by-transmission to propagate read-back phasing throughout the pedigree
+        for (int i=_num_sample-1;i>=0;i--)
+        {
+            int phase = mendelPhase(i,_gt_array,_rps_array);
+	}	
+
         bcf_update_genotypes(_out_header, line, _gt_array, ngt);
 	if(bcf_int32_count_missing(_rps_array,_num_sample)<_num_sample)
 	{
@@ -246,7 +253,7 @@ int PedPhaser::flushBuffer()
 	    }
 	    assert(bcf_update_format_int32(_out_header,line,"RPS",_rps_array,_num_sample)==0);
 	}
-    }
+    } //end for(deque<bcf1_t *>::iterator it1=_line_buffer.begin();it1!=_line_buffer.end();it1++)
 
     while(!_line_buffer.empty())//flushes out the deque
     {
@@ -345,7 +352,7 @@ PedPhaser::PedPhaser(args &a)
             _line_buffer.push_back(new_line);
         }
         else
-        {//no phase set. phase+flush the deque and perform standard  line-at-a-time phasing by mendelian inheritance.
+        {//no phase set. phase+flush the deque and then perform standard phase-by-transmission on the current line
             flushBuffer();
             int ret = bcf_get_genotypes(_in_header, line, &_gt_array, &ngt);
             bool diploid = ret > _num_sample; //are there any non-haploid genotypes??

@@ -34,7 +34,7 @@ int stringSplit(string & s,vector<string> & split)
     return(split.size());
 }
 
-pair<int,int> getGenotype(int idx,int *gt_arr)
+pair<int,int> getGenotype(int idx,int *gt_array)
 {
     pair<int,int> ret;
     if(idx<0)
@@ -43,8 +43,8 @@ pair<int,int> getGenotype(int idx,int *gt_arr)
     }
     else
     {
-        ret.first = bcf_gt_allele(gt_arr[idx * 2]);
-        ret.second = bcf_gt_allele(gt_arr[idx * 2 + 1]);
+        ret.first = bcf_gt_allele(gt_array[idx * 2]);
+        ret.second = bcf_gt_allele(gt_array[idx * 2 + 1]);
     }
     return(ret);
 }
@@ -82,8 +82,9 @@ void Genotype::setGenotype(int g0,int g1)
 
 }
 
-Genotype::Genotype(int idx,int *gt_arr)
+Genotype::Genotype(int idx,int *gt_array,int *ps_array)
 {
+    _is_phased = ps_array && ps_array[idx]!=bcf_int32_missing;
     if(idx<0)
     {
 	_g0=-1;
@@ -92,8 +93,13 @@ Genotype::Genotype(int idx,int *gt_arr)
     }
     else
     {
-	setGenotype(gt_arr[2*idx],gt_arr[2*idx+1]);
+	setGenotype(gt_array[2*idx],gt_array[2*idx+1]);
     }
+}
+
+bool Genotype::isPhased()
+{
+    return( _is_phased || !(isHet() || isHaploid()) );
 }
 
 bool Genotype::isHet()

@@ -31,7 +31,7 @@ class PedPhaser
 public:
     PedPhaser(args &a);
     ~PedPhaser();
-    int mendelPhase(int idx,int *gt_array);
+    int mendelPhase(int idx,int *gt_array,int *ps_array=NULL);
 
 private:
     void setup_io(args &a);

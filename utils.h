@@ -18,11 +18,12 @@ class Genotype
 {
 public:
     Genotype(int g0,int g1);
-    Genotype(int idx,int *gt_arr); 
+    Genotype(int idx,int *gt_array,int *ps_array=NULL); 
     void setGenotype(int g0,int g1);   
     bool isHet();
     bool isMissing();
     bool isHaploid();
+    bool isPhased();
     int first();
     int second();
     int getGenotype(int idx);
@@ -31,8 +32,7 @@ public:
     
 private:
     int _g0,_g1;
-    bool _is_haploid;    
+    bool _is_haploid,_is_phased;
 };
-
 
 #endif //AKT_UTILS_H
