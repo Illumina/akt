@@ -1,5 +1,10 @@
 ## Changelog
 
+## 2017.08.28
+* pedphase now handles the PS tag correctly
+* better error handling when reading the pedigree
+* more informative help for pedphase
+
 ## 2017.08.19
 * added VCF4.3 pedigree parsing
 
