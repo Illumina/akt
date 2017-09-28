@@ -85,7 +85,7 @@ static void usage()
     cerr << "\tkin                      detect average IBD sharing" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
     cerr << "\tunrelated                generate a list of unrelated individuals" << endl;
-//    cerr << "\tibd                      detect segments shared IBD" << endl;
+    cerr << "\tpedphase                 transmission based phasing based on Mendelian inheritance" << endl;
     cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;
     cerr << "\tcluster                  perform cluster analyses" << endl;
     cerr << "\tLDplot                   output correlation matrix" << endl;

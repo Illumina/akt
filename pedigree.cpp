@@ -93,6 +93,11 @@ sampleInfo::sampleInfo(string fname, bcf_hdr_t *hdr)
 
 void sampleInfo::alignWithVcf(bcf_hdr_t *hdr)
 {
+    if(N<=0)
+    {
+	return;
+    }
+
     string sample_list = id[0];
     for (vector<string>::iterator it = id.begin() + 1; it != id.end(); it++)
     {

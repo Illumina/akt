@@ -28,8 +28,8 @@ release: CFLAGS = -O2  $(OMP)
 release: LFLAGS = -lz -lm -static
 release: all
 
-debug: CXXFLAGS = -g -O1
-debug: CFLAGS =  -g -O1
+debug: CXXFLAGS = -g -O1 -lz -lm -lpthread
+debug: CFLAGS =  -g -O1  -lz -lm -lpthread
 debug: all
 
 profile: CXXFLAGS = -pg -O2 $(OMP)
