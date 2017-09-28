@@ -318,6 +318,10 @@ void PedPhaser::setup_io(args &a)
     {
         _pedigree = new sampleInfo(a.pedigree, _out_header);
     }
+    if(_pedigree->N<=0)
+    {
+	die("no pedigree detected");
+    }
 }
 
 PedPhaser::PedPhaser(args &a)
