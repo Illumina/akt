@@ -85,6 +85,7 @@ static void usage()
     cerr << "\tkin                      detect average IBD sharing" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
     cerr << "\tunrelated                generate a list of unrelated individuals" << endl;
+    cerr << "\tpedphase                 Mendelian transmission phasing for duos/trios" << endl;    
     cerr << endl;
     exit(1);
 }
