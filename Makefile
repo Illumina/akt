@@ -44,7 +44,7 @@ ifneq "$(wildcard .git)" ""
 VERSION = $(shell git describe --always)
 endif
 version.h:
-	echo '#define VERSION "$(VERSION)"' > $@
+	echo '#define AKT_VERSION "$(VERSION)"' > $@
 	echo '#define BCFTOOLS_VERSION "$(BCFTOOLS_VERSION)"' >> $@
 
 ##bcftools code

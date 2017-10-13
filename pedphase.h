@@ -8,6 +8,7 @@
 #include "pedigree.h"
 #include "mendel.h"
 #include "utils.h"
+#include "version.h"
 #include <deque>
 #include <iomanip>
 #include <numeric>
