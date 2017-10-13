@@ -78,6 +78,5 @@ akt: akt.cpp version.h $(OBJS) $(HTSLIB)
 	$(CXX) $(CXXFLAGS)   -o akt akt.cpp $(OBJS) $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
 	rm *.o akt version.h
-
 test: akt
 	cd test/;bash -e test.sh
