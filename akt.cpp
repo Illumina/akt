@@ -85,15 +85,7 @@ static void usage()
     cerr << "\tkin                      detect average IBD sharing" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
     cerr << "\tunrelated                generate a list of unrelated individuals" << endl;
-    cerr << "\tpedphase                 transmission based phasing based on Mendelian inheritance" << endl;
-    cerr << "\tmendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees" << endl;
-    cerr << "\tcluster                  perform cluster analyses" << endl;
-    cerr << "\tLDplot                   output correlation matrix" << endl;
-    cerr << "\tstats                    calculate AF and LD metrics" << endl;
-    cerr << "\tprune                    perorms LD pruning of variants" << endl;
-    cerr << "\ttag                      selects a set of K tagging variants" << endl;
-    cerr << "\tmetafreq                 examine two files for AF differences" << endl;
-    cerr << "\ttdt                      basic parent-child transmission counting for use in TDT" << endl;
+    cerr << "\tpedphase                 Mendelian transmission phasing for duos/trios" << endl;    
     cerr << endl;
     exit(1);
 }
@@ -121,34 +113,41 @@ int main(int argc, char **argv)
         relatives_main(argc, argv);
     } else if (((string) argv[1]) == "cluster")
     {
-        cluster_main(argc, argv);
+	die("cluster is deprecated");
+//        cluster_main(argc, argv);
     } else if (((string) argv[1]) == "stats")
     {
-        stats_main(argc, argv);
-    } else if (((string) argv[1]) == "mendel")
+	die("stats is deprecated");
+//        stats_main(argc, argv);
+    }
+    else if (((string) argv[1]) == "mendel")
     {
-        mendel_main(argc, argv);
+	die("mendel command is deprecated. See pedphase for equivalent functionality.");
+        //mendel_main(argc, argv);
     } else if (((string) argv[1]) == "LDplot")
     {
-        ldplot_main(argc, argv);
+	die("ldplot is deprecated");
+//        ldplot_main(argc, argv);
     } else if (((string) argv[1]) == "admix")
     {
-        admix_main(argc, argv);
+	die("admix is deprecated");
+	//      admix_main(argc, argv);
+	
     } else if (((string) argv[1]) == "metafreq")
     {
-        metafreq_main(argc, argv);
+	die("metafreq is deprecated");
+//        metafreq_main(argc, argv);
     } else if (((string) argv[1]) == "prune")
     {
-        prune_main(argc, argv);
+	die("prune is deprecated");
+//        prune_main(argc, argv);
     } else if (((string) argv[1]) == "unrelated")
     {
         unrelated_main(argc, argv);
     } else if (((string) argv[1]) == "tag")
     {
-        tag_main(argc, argv);
-    } else if (((string) argv[1]) == "tdt")
-    {
-        tdt_main(argc, argv);
+	die("tag is deprecated");
+//        tag_main(argc, argv);
     }
     else if (((string) argv[1]) == "pedphase")
     {

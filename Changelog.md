@@ -1,5 +1,10 @@
 ## Changelog
 
+## 2017.10.13
+* removed infrequently used subcommands (admix,cluster,mendel,prune,tag,etc)
+* version is now added to the header
+* readback phased sites now propagate throughout the pedigree for higher phase yield
+
 ## 2017.08.28
 * pedphase now handles the PS tag correctly
 * better error handling when reading the pedigree
