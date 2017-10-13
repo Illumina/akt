@@ -6,7 +6,6 @@
 #define AKT_PEDPHASE_H
 #include "akt.hpp"
 #include "pedigree.h"
-#include "mendel.h"
 #include "utils.h"
 #include "version.h"
 #include <deque>

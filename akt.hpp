@@ -43,7 +43,6 @@ static void inline omp_set_num_threads(int nthreads) {}
 
 extern "C" {
 #include "htslib/synced_bcf_reader.h"
-#include "filter.h"
 }
 
 template <typename T> string to_string( T x ){ 
@@ -53,7 +52,6 @@ template <typename T> string to_string( T x ){
         
 using namespace std;
 
-int grm_main(int argc, char** argv);
 
 void umessage(const char type);
 
@@ -63,23 +61,7 @@ int kin_main(int argc,char **argv);
 
 int relatives_main(int argc,char **argv);
 
-int ibd_main(int argc,char **argv);
-
-int cluster_main(int argc,char **argv);
-
-int stats_main(int argc,char **argv);
-
-int mendel_main(int argc,char **argv);
-
-int ldplot_main(int argc,char **argv);
-
-int admix_main(int argc,char **argv);
-
 int unrelated_main(int argc,char **argv);
-
-int metafreq_main(int argc,char **argv);
-int tag_main(int argc,char **argv);
-int tdt_main(int argc,char **argv);
 
 int pedphase_main(int argc, char **argv);
 void die(const string& s);

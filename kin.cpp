@@ -425,7 +425,8 @@ int kin_main(int argc, char* argv[])
 
     if(method==2) //jump out to GRM routine.
     {
-	return(grm(sr));
+	die("method 2 (GRM) is deprecated. Try plink or GCTA.");
+//	return(grm(sr));
     }
  
     int N = bcf_hdr_nsamples(hdr);	///number of samples
