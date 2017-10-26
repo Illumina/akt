@@ -63,6 +63,7 @@ int relatives_main(int argc,char **argv);
 
 int unrelated_main(int argc,char **argv);
 
+int r2_main(int argc, char **argv);
 int pedphase_main(int argc, char **argv);
 void die(const string& s);
 

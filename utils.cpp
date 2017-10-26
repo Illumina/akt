@@ -34,6 +34,22 @@ int stringSplit(string & s,vector<string> & split)
     return(split.size());
 }
 
+
+int stringSplit(const string &input, const char split, vector<string> &out)
+{
+    istringstream ss(input);
+    out.clear();
+    string tmp;
+    int count = 0;
+    while (std::getline(ss, tmp, split))
+    {
+        out.push_back(tmp);
+        count++;
+    }
+    return (count);
+}
+
+
 pair<int,int> getGenotype(int idx,int *gt_array)
 {
     pair<int,int> ret;
