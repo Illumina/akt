@@ -17,33 +17,36 @@
 
 typedef struct _args
 {
-    int nthreads;
-    bool regions_is_file;
-    bool targets_is_file;
-    char output_type;
-    const char *pedigree, *inputfile, *include, *regions, *targets, *outfile;
+  int nthreads;
+  bool regions_is_file;
+  bool targets_is_file;
+  char output_type;
+  string exclude_chromosomes;
+  const char *pedigree, *inputfile, *include, *regions, *targets, *outfile;
 } args;
 
 
 class PedPhaser
 {
 
-public:
-    PedPhaser(args &a);
-    ~PedPhaser();
-    int mendelPhase(int idx,int *gt_array,int *ps_array=NULL);
+ public:
+  PedPhaser(args &a);
+  ~PedPhaser();
+  int mendelPhase(int idx,int *gt_array,int *ps_array=NULL);
 
-private:
-    void setup_io(args &a);
-    int flushBuffer();
-    bcf_srs_t *_bcf_reader;
-    htsFile *_out_file;
-    bcf_hdr_t *_out_header,*_in_header;
-    sampleInfo *_pedigree;
-    int _num_sample;
-    deque<bcf1_t *> _line_buffer;
-    int *_gt_array,*_gt_array_dup;
-    int32_t *_ps_array,*_rps_array;
+ private:
+  void setup_io(args &a);
+  int flushBuffer();
+  bool chromosome_is_in_ignore_list(bcf1_t *record);
+  bcf_srs_t *_bcf_reader;
+  htsFile *_out_file;
+  bcf_hdr_t *_out_header,*_in_header;
+  sampleInfo *_pedigree;
+  int _num_sample;
+  deque<bcf1_t *> _line_buffer;
+  int *_gt_array,*_gt_array_dup;
+  int32_t *_ps_array,*_rps_array;
+  vector<int> _chromosomes_to_ignore;//dont phase these chromosomes
 };
 
 

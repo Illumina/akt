@@ -12,7 +12,12 @@
 
 bool is_genotyped(int *gt,int idx);
 
+
+//splits s by any whitespace
 int stringSplit(string & s,vector<string> & split);
+
+//splits input by char split
+int stringSplit(const string &input, const char split, vector<string> &out);
 
 class Genotype
 {

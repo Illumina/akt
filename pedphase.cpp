@@ -15,6 +15,7 @@ static void usage()
     fprintf(stderr, "    -o, --output-file <file>       output file name [stdout]\n");
     fprintf(stderr, "    -O, --output-type <b|u|z|v>    b: compressed BCF, u: uncompressed BCF, z: compressed VCF, v: uncompressed VCF [v]\n");
     fprintf(stderr, "    -@, --threads                  number of compression/decompression threads to use\n");
+    fprintf(stderr, "    -x, --exclude-chromosome       leave these chromosomes unphased (unphased lines will still be in in output)  eg. -x chrM,chrY\n");
     exit(1);
 }
 
@@ -118,6 +119,18 @@ int PedPhaser::mendelPhase(int kid_index,int *gt_array,int *ps_array)
     {
         return(-1);
     }
+}
+
+bool PedPhaser::chromosome_is_in_ignore_list(bcf1_t *record)
+{
+    for(vector<int>::iterator rid = _chromosomes_to_ignore.begin();rid!=_chromosomes_to_ignore.end();rid++)
+    { 
+	if(*rid==record->rid)
+	{
+	    return true;
+	}
+    }
+    return false;
 }
 
 int PedPhaser::flushBuffer()
@@ -338,6 +351,31 @@ PedPhaser::PedPhaser(args &a)
     _gt_array_dup=NULL;        
     _rps_array=(int32_t *)malloc(_num_sample * sizeof(int32_t));
 
+    
+    if(!a.exclude_chromosomes.empty())
+    {
+	cerr << "Will not phase chromosomes: "<<a.exclude_chromosomes<<" (--exclude-chromosomes)"<<endl;
+	vector<string> chromosomes;
+	stringSplit(a.exclude_chromosomes,',',chromosomes);
+	if(chromosomes.empty())
+	{
+	    die("Problem parsing --exclude-chromosomes: "+a.exclude_chromosomes);
+	}
+	for(vector<string>::iterator chromosome = chromosomes.begin();chromosome!=chromosomes.end();chromosome++)
+	{
+	    int rid = bcf_hdr_id2int(_in_header,BCF_DT_CTG,chromosome->c_str());
+	    if(rid==-1)
+	    {
+		cerr << "WARNING: chromosome " << *chromosome<<" was not in header"<<endl;
+	    }
+	    else
+	    {
+		_chromosomes_to_ignore.push_back(rid);
+	    }
+	}
+    }
+    
+	
     vector<int> gt(_num_sample);
 
     bool diploid_warn = false;
@@ -349,32 +387,39 @@ PedPhaser::PedPhaser(args &a)
     while (bcf_sr_next_line(_bcf_reader))
     {
         line = bcf_sr_get_line(_bcf_reader, 0);
-        bcf_unpack(line, BCF_UN_ALL);
-
-        if(bcf_get_format_int32(_in_header, line, "PS",&_ps_array,&nps)>0)
-        {// variant has samples with phase set (PS) set. we need to buffer these.
-            bcf1_t *new_line = bcf_dup(line);
-            _line_buffer.push_back(new_line);
-        }
-        else
-        {//no phase set. phase+flush the deque and then perform standard phase-by-transmission on the current line
-            flushBuffer();
-            int ret = bcf_get_genotypes(_in_header, line, &_gt_array, &ngt);
-            bool diploid = ret > _num_sample; //are there any non-haploid genotypes??
-            if (diploid)
-            {
-                for (int i=_num_sample-1;i>=0;i--)
-                {
-                     int phase = mendelPhase(i,_gt_array);
-                     if(phase == -1)
-                     {
-                         bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", NULL, 1);
-                     }
-                }
-            }
-            bcf_update_genotypes(_out_header, line, _gt_array, ret);
-            bcf_write1(_out_file, _out_header, line);
-        }
+	if(chromosome_is_in_ignore_list(line))
+	{
+	    flushBuffer();//just in case something was sitting in buffer from previous chromosome
+	    bcf_write1(_out_file, _out_header, line);
+	}
+	else	    
+	{
+	    bcf_unpack(line, BCF_UN_ALL);
+	    if(bcf_get_format_int32(_in_header, line, "PS",&_ps_array,&nps)>0)
+	    {// variant has samples with phase set (PS) set. we need to buffer these.
+		bcf1_t *new_line = bcf_dup(line);
+		_line_buffer.push_back(new_line);
+	    }
+	    else
+	    {//no phase set. phase+flush the deque and then perform standard phase-by-transmission on the current line
+		flushBuffer();
+		int ret = bcf_get_genotypes(_in_header, line, &_gt_array, &ngt);
+		bool diploid = ret > _num_sample; //are there any non-haploid genotypes??
+		if (diploid)
+		{
+		    for (int i=_num_sample-1;i>=0;i--)
+		    {
+			int phase = mendelPhase(i,_gt_array);
+			if(phase == -1)
+			{
+			    bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", NULL, 1);
+			}
+		    }
+		}
+		bcf_update_genotypes(_out_header, line, _gt_array, ret);
+		bcf_write1(_out_file, _out_header, line);
+	    }
+	}
     }
     flushBuffer();
 }
@@ -406,6 +451,7 @@ int pedphase_main(int argc, char **argv)
             {"targets-file", required_argument, NULL, 'T'},
             {"regions-file", required_argument, NULL, 'R'},
             {"regions",      required_argument, NULL, 'r'},
+            {"exclude-chromosome",      required_argument, NULL, 'x'},
             {0,          0, 0,                        0}
     };
     arguments.regions_is_file = false;
@@ -413,8 +459,9 @@ int pedphase_main(int argc, char **argv)
     arguments.targets = arguments.pedigree = arguments.inputfile = arguments.include = arguments.regions = NULL;
     arguments.outfile="-";
     arguments.nthreads = 0;
-
-    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:@:", loptions, NULL)) >= 0)
+    arguments.exclude_chromosomes="";
+    
+    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:@:x:", loptions, NULL)) >= 0)
     {
         switch (c)
         {
@@ -438,6 +485,9 @@ int pedphase_main(int argc, char **argv)
                 break;
             case 'r':
                 arguments.regions = optarg;
+                break;
+            case 'x':
+                arguments.exclude_chromosomes = optarg;
                 break;
             case '@':
                 arguments.nthreads = atoi(optarg);
