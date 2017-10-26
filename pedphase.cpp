@@ -308,7 +308,7 @@ void PedPhaser::setup_io(args &a)
 
     bcf_hdr_append(_out_header,"##FORMAT=<ID=RPS,Number=1,Type=Integer,Description=\"Read back phase set.\">");
     bcf_hdr_append(_out_header,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"this variant has at least one Mendelian inconsistency\">");
-    bcf_hdr_append(_out_header,("##akt_version="+(string)AKT_VERSION).c_str());
+    bcf_hdr_append(_out_header,("##akt_pedphase_version="+(string)AKT_VERSION).c_str());
     bcf_hdr_write(_out_file, _out_header);
 
     if (a.pedigree == NULL)
