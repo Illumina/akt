@@ -82,7 +82,7 @@ static void usage()
     cerr << "Copyright (c) 2017, Illumina, Inc. All rights reserved. See LICENSE for further details.\n" << endl;
     cerr << "Usage:\takt <command> [options]\n" << endl;
     cerr << "\tpca                      principal component analysis" << endl;
-    cerr << "\tkin                      detect average IBD sharing" << endl;
+    cerr << "\tkin                      calculate kinship coefficients" << endl;
     cerr << "\trelatives                discover pedigrees" << endl;
     cerr << "\tunrelated                generate a list of unrelated individuals" << endl;
     cerr << "\tpedphase                 Mendelian transmission phasing for duos/trios" << endl;    
