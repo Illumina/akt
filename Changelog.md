@@ -1,5 +1,8 @@
 ## Changelog
 
+## 2017.10.26
+* added the `-x` flag to `pedphase` to exclude certain chromosomes from phasing
+
 ## 2017.10.13
 * removed infrequently used subcommands (admix,cluster,mendel,prune,tag,etc)
 * version is now added to the header
