@@ -322,7 +322,7 @@ void PedPhaser::setup_io(args &a)
     bcf_hdr_remove(_out_header,BCF_HL_FMT,"PS"); //remove the old PS descripion
     bcf_hdr_append(_out_header,"##FORMAT=<ID=PS,Number=1,Type=Integer,Description=\"Read-backed phase set. If missing from a phased genotype then it indicates the genotype was pedigree-phased such that children are phased as 'maternal allele | paternal allele' and parents are phased as 'allele transmitted to first child | untransmitted allele'\">");    
     bcf_hdr_append(_out_header,"##FORMAT=<ID=RPS,Number=1,Type=Integer,Description=\"Read-backed phase set. The phase set (PS) value before this phased genotype was incorporated into the pedigree phase set\">");
-    bcf_hdr_append(_out_header,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"this variant has at least one duo/trio with genotypes that are inconsistent with Mendelian inheritance\">");
+    bcf_hdr_append(_out_header,"##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"This variant has at least one duo/trio with genotypes that are inconsistent with Mendelian inheritance\">");
     bcf_hdr_append(_out_header,("##akt_pedphase_version="+(string)AKT_VERSION).c_str());
     bcf_hdr_write(_out_file, _out_header);
 
