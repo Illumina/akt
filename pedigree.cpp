@@ -38,17 +38,9 @@ sampleInfo::sampleInfo(bcf_hdr_t *hdr)
             {
                 k = get_pedigree_id(line, "ID=");
             }
-            if (k == "")
-            {
-                std::cerr << "WARNING: could not interpret this pedigree line (ignored):\n" + line << std::endl;
-            }
             string d = get_pedigree_id(line, "Father=");
             string m = get_pedigree_id(line, "Mother=");
 
-            if(d==""&&m=="")
-            {
-                std::cerr << "WARNING: could not interpret this pedigree line (ignored):\n" + line << std::endl;
-            }
             bool pedigree_is_okay = k!="";
             pedigree_is_okay &= d!="" || m!="";
             if(pedigree_is_okay)
@@ -74,6 +66,10 @@ sampleInfo::sampleInfo(bcf_hdr_t *hdr)
                 sex.push_back(1);
                 status.push_back(-9);
                 N++;
+            }
+            else
+            {
+                 std::cerr << "WARNING: could not interpret this pedigree line (ignored):\n" + line << std::endl;
             }
         }
         count++;
