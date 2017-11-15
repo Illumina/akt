@@ -38,39 +38,39 @@ sampleInfo::sampleInfo(bcf_hdr_t *hdr)
             {
                 k = get_pedigree_id(line, "ID=");
             }
-            if (k == "")
-            {
-                die("Bad pedigree line: " + line);
-            }
             string d = get_pedigree_id(line, "Father=");
             string m = get_pedigree_id(line, "Mother=");
 
-            if(d==""&&m=="")
+            bool pedigree_is_okay = k!="";
+            pedigree_is_okay &= d!="" || m!="";
+            if(pedigree_is_okay)
             {
-                die("Bad pedigree line: " + line);
+                fid.push_back("");
+                id.push_back(k);
+                dad.push_back(d);
+                mum.push_back(m);
+                sex.push_back(2);
+                status.push_back(-9);
+                N++;
+                fid.push_back("");
+                id.push_back(d);
+                dad.push_back("");
+                mum.push_back("");
+                sex.push_back(0);
+                status.push_back(-9);
+                N++;
+                fid.push_back("");
+                id.push_back(m);
+                dad.push_back("");
+                mum.push_back("");
+                sex.push_back(1);
+                status.push_back(-9);
+                N++;
             }
-            //cerr << kid <<","<<dad<<","<<mum<<endl;
-            fid.push_back("");
-            id.push_back(k);
-            dad.push_back(d);
-            mum.push_back(m);
-            sex.push_back(2);
-            status.push_back(-9);
-            N++;
-            fid.push_back("");
-            id.push_back(d);
-            dad.push_back("");
-            mum.push_back("");
-            sex.push_back(0);
-            status.push_back(-9);
-            N++;
-            fid.push_back("");
-            id.push_back(m);
-            dad.push_back("");
-            mum.push_back("");
-            sex.push_back(1);
-            status.push_back(-9);
-            N++;
+            else
+            {
+                 std::cerr << "WARNING: could not interpret this pedigree line (ignored):\n" + line << std::endl;
+            }
         }
         count++;
     }
