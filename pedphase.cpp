@@ -209,47 +209,46 @@ int PedPhaser::flushBuffer()
             {
                 bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", NULL, 1);
             }
-            else
-            {
-		int mum = _pedigree->getMumIndex(i);
-                int dad = _pedigree->getDadIndex(i);
-                vector<int> indices(1,i);
-                indices.push_back(dad);
-                indices.push_back(mum);
-                for(vector<int>::iterator index=indices.begin();index!=indices.end();index++)
-                {
-		    bool sample_not_missing = (*index)!= -1;
- 		    bool sample_has_ps = sample_not_missing && num_ps_values>0 && _ps_array[*index] != bcf_int32_missing;
-		    if(sample_not_missing)
+
+	    int mum = _pedigree->getMumIndex(i);
+	    int dad = _pedigree->getDadIndex(i);
+	    vector<int> indices(1,i);
+	    indices.push_back(dad);
+	    indices.push_back(mum);
+	    for(vector<int>::iterator index=indices.begin();index!=indices.end();index++)
+	    {
+		bool sample_not_missing = (*index)!= -1;
+		bool sample_has_ps = sample_not_missing && num_ps_values>0 && _ps_array[*index] != bcf_int32_missing;
+		if(sample_not_missing)
+		{
+		    if (sample_has_ps)
 		    {
-			if (sample_has_ps)
+			int num_hets_in_ps=flip[*index][_ps_array[*index]].second;
+			int num_inconsistencies_with_ps = flip[*index][_ps_array[*index]].first;
+			bool phase_set_is_inconsistent_with_pedigree = num_inconsistencies_with_ps > num_hets_in_ps / 2;
+			if (!sample_has_been_flipped[*index] && phase_set_is_inconsistent_with_pedigree)
 			{
-			    int num_hets_in_ps=flip[*index][_ps_array[*index]].second;
-			    int num_inconsistencies_with_ps = flip[*index][_ps_array[*index]].first;
-			    bool phase_set_is_inconsistent_with_pedigree = num_inconsistencies_with_ps > num_hets_in_ps / 2;
-			    if (!sample_has_been_flipped[*index] && phase_set_is_inconsistent_with_pedigree)
-			    {
-				int tmp = _gt_array[2 * (*index)];
-				_gt_array[2 * (*index)    ] = bcf_gt_phased(bcf_gt_allele(_gt_array[2 * (*index) + 1]));
-				_gt_array[2 * (*index) + 1] = bcf_gt_phased(bcf_gt_allele(tmp));
-				sample_has_been_flipped[*index] = true;
+			    int tmp = _gt_array[2 * (*index)];
+			    _gt_array[2 * (*index)    ] = bcf_gt_phased(bcf_gt_allele(_gt_array[2 * (*index) + 1]));
+			    _gt_array[2 * (*index) + 1] = bcf_gt_phased(bcf_gt_allele(tmp));
+			    sample_has_been_flipped[*index] = true;
+			}
+			if(num_hets_in_ps>0)//this phase set also had pedigree information
+			{
+			    if(num_inconsistencies_with_ps==0 || num_inconsistencies_with_ps==num_hets_in_ps)
+			    {//we have a 100% agreement hence move PS -> RPS
+				_rps_array[i] = _ps_array[i];
 			    }
-			    if(num_hets_in_ps>0)//this phase set also had pedigree information
-			    {
-				if(num_inconsistencies_with_ps==0 || num_inconsistencies_with_ps==num_hets_in_ps)
-				{//we have a 100% agreement hence move PS -> RPS
-				    _rps_array[i] = _ps_array[i];
-				}
-			    }				
-			}
-			else if(phase==1) //was mendel phased and not-missing
-			{
-			    _gt_array[2*(*index)]=_gt_array_dup[2*(*index)];
-			    _gt_array[2*(*index)+1]=_gt_array_dup[2*(*index)+1];
-			}
-		    }		    
-                }
-            }
+			}				
+		    }
+		    else if(phase==1) //was mendel phased and not-missing
+		    {
+			_gt_array[2*(*index)]=_gt_array_dup[2*(*index)];
+			_gt_array[2*(*index)+1]=_gt_array_dup[2*(*index)+1];
+		    }
+		}		    
+	    }
+
         }
 	//do a final pass of phase-by-transmission to propagate read-back phasing throughout the pedigree
         for (int i=_num_sample-1;i>=0;i--)
