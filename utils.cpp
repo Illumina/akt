@@ -100,15 +100,16 @@ void Genotype::setGenotype(int g0,int g1)
 
 Genotype::Genotype(int idx,int *gt_array,int *ps_array)
 {
-    _is_phased = ps_array && ps_array[idx]!=bcf_int32_missing;
     if(idx<0)
     {
 	_g0=-1;
 	_g1=-1;
 	_is_haploid=false;
+	_is_phased=false;
     }
     else
     {
+	_is_phased = ps_array && ps_array[idx]!=bcf_int32_missing;    
 	setGenotype(gt_array[2*idx],gt_array[2*idx+1]);
     }
 }

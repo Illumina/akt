@@ -47,6 +47,7 @@ class PedPhaser
   int *_gt_array,*_gt_array_dup;
   int32_t *_ps_array,*_rps_array;
   vector<int> _chromosomes_to_ignore;//dont phase these chromosomes
+  vector<bool> _sample_has_been_phased;
 };
 
 
