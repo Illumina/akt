@@ -42,20 +42,16 @@ static void bcf_int32_set_missing(int32_t *array, int n)
     }
 }
 
-
 PedPhaser::PedPhaser(args &a)
 {
     setup_io(a);
-
-    bcf1_t *line;
+    cerr << "Reading input from " << a.inputfile << endl;    
     _num_sample = bcf_hdr_nsamples(_out_header);
-    int ngt = 0, nps = 0;
     _gt_array = NULL;
     _ps_array = NULL;
     _gt_array = NULL;
     _gt_array_dup = NULL;
     _rps_array = (int32_t *)malloc(_num_sample * sizeof(int32_t));
-
     if (!a.exclude_chromosomes.empty())
     {
         cerr << "Will not phase chromosomes: " << a.exclude_chromosomes << " (--exclude-chromosomes)" << endl;
@@ -78,14 +74,18 @@ PedPhaser::PedPhaser(args &a)
             }
         }
     }
+    main();
+}
 
+void PedPhaser::main()
+{
+    int ngt = 0,nps=0;
+    bcf1_t *line;
     vector<int> gt(_num_sample);
-
     bool diploid_warn = false;
     int nsnp = 0;
     vector<int32_t> phase_set(_num_sample, bcf_int32_missing); //stores the current phase set for each sample
     int prev_rid = -1;
-    cerr << "Reading input from " << a.inputfile << endl;
     int kid_gt[2], dad_gt[2], mum_gt[2];
     while (bcf_sr_next_line(_bcf_reader))
     {
@@ -145,10 +145,7 @@ int PedPhaser::mendelPhase(int kid_index, int *gt_array, int *ps_array)
     Genotype dad_gt(dad_index, gt_array, ps_array);
     Genotype mum_gt(mum_index, gt_array, ps_array);
 
-    if ((dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing())
-    {
-        return (0);
-    }
+    if ((dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing())  return (0); //unphaseable due to missingness
 
     //phasetree is perfect binary tree (stored as array) that enumerates every genotype configuration in the pedigree
     //the leaf of each tree is 0 if the genotype configuration is inconsistent with inheritance and 1 otherwise.
@@ -172,9 +169,7 @@ int PedPhaser::mendelPhase(int kid_index, int *gt_array, int *ps_array)
             }
         }
     }
-
-
-
+    
     _sample_has_been_phased[kid_index]=true;
     bool update_dad=false,update_mum=false;
     if(mum_index>=0)
@@ -188,34 +183,18 @@ int PedPhaser::mendelPhase(int kid_index, int *gt_array, int *ps_array)
 	_sample_has_been_phased[dad_index]=true;
     }
     int sum = accumulate(phasetree.begin(), phasetree.end(), 0);
-    if (sum > 1) //multiple solutions - cannot phase
+    if (sum > 1)
     {
-        return (0);
+        return (0);  //multiple solutions - cannot phase
     }
     else if (sum == 1) //found a unique solution for phasing. update the genotype array.
     {
         int leaf = find(phasetree.begin(), phasetree.end(), 1) - phasetree.begin();
-        if ((leaf >> 0) % 2)
-        {
-            kid_gt.swap();
-        }
-        if ((leaf >> 1) % 2)
-        {
-            dad_gt.swap();
-        }
-        if (leaf >> 2)
-        {
-            mum_gt.swap();
-        }
-        if(update_dad)
-        {
-            dad_gt.update_bcf_gt_array(gt_array, dad_index);
-        }
-        if(update_mum)
-        {
-            mum_gt.update_bcf_gt_array(gt_array, mum_index);
-        }
-
+        if ((leaf >> 0) % 2)   kid_gt.swap();
+        if ((leaf >> 1) % 2)   dad_gt.swap();
+        if (leaf >> 2)         mum_gt.swap();
+        if(update_dad)         dad_gt.update_bcf_gt_array(gt_array, dad_index);
+        if(update_mum)         mum_gt.update_bcf_gt_array(gt_array, mum_index);
         kid_gt.update_bcf_gt_array(gt_array, kid_index);	
         return (1);
     }
