@@ -403,7 +403,6 @@ void PedPhaser::setup_io(args &a)
         if (bcf_sr_set_regions(_bcf_reader, a.regions, a.regions_is_file) < 0)
         {
             cerr << "ERROR: Failed to read the regions: " << a.regions << endl;
-            ;
             exit(1);
         }
     }
@@ -415,6 +414,24 @@ void PedPhaser::setup_io(args &a)
     }
 
     _in_header = _bcf_reader->readers[0].header;
+
+    if (a.pedigree == NULL)
+    {
+        _pedigree = new sampleInfo(_in_header);
+    }
+    else
+    {
+        _pedigree = new sampleInfo(a.pedigree, _in_header);
+    }
+    if (_pedigree->N <= 0)
+    {
+        die("no pedigree detected");
+    }
+    setup_output(a);
+}
+
+void PedPhaser::setup_output(args &a)
+{
     _out_header = bcf_hdr_dup(_in_header);
     char output_type[] = "wv";
     output_type[1] = a.output_type;
@@ -431,19 +448,6 @@ void PedPhaser::setup_io(args &a)
     bcf_hdr_append(_out_header, "##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"This variant has at least one duo/trio with genotypes that are inconsistent with Mendelian inheritance\">");
     bcf_hdr_append(_out_header, ("##akt_pedphase_version=" + (string)AKT_VERSION).c_str());
     bcf_hdr_write(_out_file, _out_header);
-
-    if (a.pedigree == NULL)
-    {
-        _pedigree = new sampleInfo(_out_header);
-    }
-    else
-    {
-        _pedigree = new sampleInfo(a.pedigree, _out_header);
-    }
-    if (_pedigree->N <= 0)
-    {
-        die("no pedigree detected");
-    }
 }
 
 PedPhaser::~PedPhaser()

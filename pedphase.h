@@ -32,10 +32,11 @@ class PedPhaser
  public:
   PedPhaser(args &a);
   ~PedPhaser();
-  int mendelPhase(int idx,int *gt_array,int *ps_array=NULL);
 
  private:
+  int mendelPhase(int idx,int *gt_array,int *ps_array=NULL);  
   void setup_io(args &a);
+  void setup_output(args &a);  
   int flushBuffer();
   bool chromosome_is_in_ignore_list(bcf1_t *record);
   bcf_srs_t *_bcf_reader;
