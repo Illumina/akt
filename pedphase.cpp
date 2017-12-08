@@ -162,8 +162,6 @@ int PedPhaser::mendelPhase(int kid_index, int *gt_array, int *ps_array)
         bool kid_branch = leaf[0];
         bool dad_branch = leaf[1];
         bool mum_branch = leaf[2];
-
-        //	if( (kid_gt.isHaploid()||kid_gt.isHet()||!kid_branch) && (dad_gt.isHaploid()||dad_gt.isHet()||!dad_branch) && (mum_gt.isHaploid()||mum_gt.isHet()||!mum_branch) )
         if ((!kid_gt.isPhased() || !kid_branch) && (!dad_gt.isPhased() || !dad_branch) && (!mum_gt.isPhased() || !mum_branch))
         {
             bool is_inheritance_consistent = dad_gt.isMissing() || dad_gt.getGenotype(dad_branch) == kid_gt.getGenotype((kid_branch + 1) % 2);
