@@ -1,9 +1,6 @@
 #include "pedphase.h"
 
 using namespace std;
-//#define DEBUG
-#define NUM_LEAVES 8
-//#define DEBUG
 
 static void usage()
 {
@@ -138,6 +135,7 @@ void PedPhaser::main()
 //1:  phased
 int phase_by_transmission(Genotype & kid_gt,Genotype & dad_gt,Genotype & mum_gt)
 {
+    int NUM_LEAVES 8;//maximum number of leaves on the binary tree(we are only doing duos/trios so it never gets this big)    
     int pedigree_size = 3; //we might make this dynamic later
     if ((dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing())  return (0); //unphaseable due to missingness
 
