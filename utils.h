@@ -29,6 +29,7 @@ public:
     bool isMissing();
     bool isHaploid();
     bool isPhased();
+    void setPhase(bool phased);
     int first();
     int second();
     int getGenotype(int idx);
