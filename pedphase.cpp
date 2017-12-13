@@ -112,11 +112,8 @@ void PedPhaser::main()
 		    _sample_has_been_phased.assign(_num_sample,false);		    
                     for (int i = 0; i <_num_sample ; i++)
                     {
-                        int phase = mendelPhase(i, _gt_array);
-                        if (phase == -1)
-                        {
-                            bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", NULL, 1);
-                        }
+			if (mendelPhase(i, _gt_array)==-1)
+			    bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", NULL, 1);
                     }
                 }
                 bcf_update_genotypes(_out_header, line, _gt_array, ret);
@@ -213,7 +210,7 @@ int PedPhaser::mendelPhase(int kid_index, int *gt_array, int *ps_array)
     Genotype dad_gt(dad_index, gt_array, ps_array);
     Genotype mum_gt(mum_index, gt_array, ps_array);    
     
-    _sample_has_been_phased[kid_index]=true;
+    if(mum_index>=0 || dad_index>=0) _sample_has_been_phased[kid_index]=true;
     bool update_dad=false,update_mum=false;
     if(mum_index>=0)
     {
