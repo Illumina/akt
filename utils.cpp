@@ -191,13 +191,9 @@ int Genotype::update_bcf_gt_array(int *gt_array,int index)
     {
 	gt_array[index * 2] = _is_phased ? bcf_gt_phased(first()) : bcf_gt_unphased(first());
 	if(isHaploid())
-	{
 	    gt_array[index * 2 + 1] = bcf_int32_vector_end;
-	}
 	else
-	{
 	    gt_array[index * 2 + 1] = _is_phased ? bcf_gt_phased(second()) : bcf_gt_unphased(second()); 
-	}
     }
     return(0);
 }

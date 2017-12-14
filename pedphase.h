@@ -58,7 +58,7 @@ class PedPhaser
   int32_t *_ps_array;
   vector<int> _chromosomes_to_ignore;//dont phase these chromosomes
   vector<bool> _sample_has_been_phased;
-  bool is_mendel_inconsistent(int kid_index, int *gt_array);
+  vector< pair<int,int> > _parental_genotypes;// this stores the temporary location of parental genotypes (redundant copies when there are multiple children)
   void main();
 };
 

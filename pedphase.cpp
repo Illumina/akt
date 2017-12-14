@@ -44,6 +44,7 @@ PedPhaser::PedPhaser(args &a)
     setup_io(a);
     cerr << "Reading input from " << a.inputfile << endl;    
     _num_sample = bcf_hdr_nsamples(_out_header);
+    _parental_genotypes.assign(2*_num_sample,pair<int,int>(bcf_gt_missing,bcf_gt_missing));
     _gt_array = NULL;
     _ps_array = NULL;
     _gt_array = NULL;
@@ -181,24 +182,18 @@ int phase_by_transmission(Genotype & kid_gt,Genotype & dad_gt,Genotype & mum_gt)
     }
 }
 
-bool PedPhaser::is_mendel_inconsistent(int kid_index, int *gt_array)
+bool is_mendel_inconsistent(pair<int,int> kid,pair<int,int> dad,pair<int,int> mum)
 {
-    int dad_index = _pedigree->getDadIndex(kid_index);
-    int mum_index = _pedigree->getMumIndex(kid_index);
-    if(dad_index==-1 && mum_index==-1) return(false);
-    if(!bcf_gt_is_phased(gt_array[2*kid_index+1])) return(false);
-
-    int k0 = bcf_gt_allele(gt_array[2*kid_index]);
-    int k1 = bcf_gt_allele(gt_array[2*kid_index+1]);
-
-    int m_transmitted=k0;
-    if(mum_index>=0 && bcf_gt_is_phased(gt_array[2*mum_index+1]))
-	m_transmitted = bcf_gt_allele(gt_array[mum_index*2]);
-
-    int d_transmitted=k1;
-    if(dad_index>=0 && bcf_gt_is_phased(gt_array[2*dad_index+1]))
-	d_transmitted = bcf_gt_allele(gt_array[dad_index*2]);
-    
+    if(bcf_gt_is_missing(kid.first) || bcf_gt_is_missing(kid.second))
+	return false;
+    int k0=kid.first;
+    int k1=kid.second;
+    int m_transmitted = k0;
+    int d_transmitted = k1;
+    if(!bcf_gt_is_missing(dad.first)&&!bcf_gt_is_missing(dad.second))
+	d_transmitted=dad.first;
+    if(!bcf_gt_is_missing(mum.first)&&!bcf_gt_is_missing(mum.second))
+	m_transmitted=mum.first;    
     return(k0!=m_transmitted || k1!=d_transmitted);
 }
 
@@ -208,8 +203,7 @@ int PedPhaser::mendelPhase(int kid_index, int *gt_array, int *ps_array)
     int mum_index = _pedigree->getMumIndex(kid_index);
     Genotype kid_gt(kid_index, gt_array, ps_array);
     Genotype dad_gt(dad_index, gt_array, ps_array);
-    Genotype mum_gt(mum_index, gt_array, ps_array);    
-    
+    Genotype mum_gt(mum_index, gt_array, ps_array);        
     if(mum_index>=0 || dad_index>=0) _sample_has_been_phased[kid_index]=true;
     bool update_dad=false,update_mum=false;
     if(mum_index>=0)
@@ -225,6 +219,8 @@ int PedPhaser::mendelPhase(int kid_index, int *gt_array, int *ps_array)
     int ret = phase_by_transmission(kid_gt,dad_gt,mum_gt);
     if(ret)
     {
+	if(dad_index>=0) _parental_genotypes[kid_index*2]   = pair<int,int>(dad_gt.first(),dad_gt.second());
+	if(mum_index>=0) _parental_genotypes[kid_index*2+1] = pair<int,int>(mum_gt.first(),mum_gt.second());	
 	if(update_dad) dad_gt.update_bcf_gt_array(gt_array, dad_index);
 	if(update_mum) mum_gt.update_bcf_gt_array(gt_array, mum_index);
 	kid_gt.update_bcf_gt_array(gt_array, kid_index);
@@ -338,11 +334,12 @@ int PedPhaser::flushBuffer()
                     }
                 }
             }
-	    num_discordant += is_mendel_inconsistent(i,_gt_array);
+	    num_discordant += is_mendel_inconsistent(pair<int,int>(bcf_gt_allele(_gt_array[2*i]),bcf_gt_allele(_gt_array[2*i+1])),_parental_genotypes[2*i],_parental_genotypes[2*i+1]);
         }
         bcf_update_genotypes(_out_header, line, _gt_array, ngt);
     } //end for(deque<bcf1_t *>::iterator it1=_line_buffer.begin();it1!=_line_buffer.end();it1++)
 
+    std::cerr<<"num_discordant="<<num_discordant<<std::endl;//debug
 //PASS 3. If the phase sets in this window are fully concordant with the pedigree, move FORMAT/PS to FORMAT/RPS
 // and perform further transmission phasing by exploiting the read-back phase sets.
     if(num_discordant==0)
