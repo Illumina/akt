@@ -26,6 +26,26 @@ typedef struct _args
 } args;
 
 
+//Buffers haplotypes over a small number of lines.
+//Stores haplotype vector for child/dad/mum (with possibly redundant copies for parents in the case of multiple trios/duos).
+class HaplotypeBuffer
+{
+public:
+    HaplotypeBuffer(size_t num_samples,sampleInfo *pedigree);
+    void push_back(int32_t *gt_array, int32_t *ps_array=nullptr);
+    void clear();
+    void phase();
+    void align(HaplotypeBuffer & haps_to_align);
+    Genotype get_genotype(size_t variant_index,size_t sample_index);
+    int get_num_variants() {return _num_variants;};
+private:
+    size_t _num_samples,_num_variants;
+    vector< vector< Genotype > > _kid,_dad,_mum;
+    sampleInfo *_pedigree;
+    vector<int> _index_of_first_child;
+};
+
+bool is_mendel_inconsistent(Genotype kid,Genotype dad,Genotype mum);
 class PedPhaser
 {
 
@@ -34,7 +54,7 @@ class PedPhaser
   ~PedPhaser();
 
  private:
-  int mendelPhase(int idx,int *gt_array,int *ps_array=NULL);  
+  int mendel_phase(int idx,int *gt_array,int *ps_array=NULL);  
   void setup_io(args &a);
   void setup_output(args &a);
 
@@ -44,7 +64,7 @@ class PedPhaser
   //3. If the count in step 2 equals <50% of pedigree resolved hets, flip all read-back phased alleles in the sample.
   //4. Calculate the concordance of the flipped alleles with pedigree inheritance.
   //5. If the value from 4 is 100%, move FORMAT/PS to FORMAT/RPS to indicate this phase set is fully in agreement with the pedigree.
-  int flushBuffer();
+  int flush_buffer();
 
   //Simply checks if this chromosome should be ignored and piped to output as is (eg. chrMT or chrY).
   bool chromosome_is_in_ignore_list(bcf1_t *record);
@@ -58,7 +78,7 @@ class PedPhaser
   int32_t *_ps_array;
   vector<int> _chromosomes_to_ignore;//dont phase these chromosomes
   vector<bool> _sample_has_been_phased;
-  vector< pair<int,int> > _parental_genotypes;// this stores the temporary location of parental genotypes (redundant copies when there are multiple children)
+  vector< pair<int,int> >  _parental_genotypes;
   void main();
 };
 

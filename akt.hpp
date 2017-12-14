@@ -48,12 +48,8 @@ extern "C" {
 template <typename T> string to_string( T x ){ 
 	return static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str(); 
 }
-
         
 using namespace std;
-
-
-void umessage(const char type);
 
 int pca_main(int argc,char **argv);
 
@@ -65,9 +61,9 @@ int unrelated_main(int argc,char **argv);
 
 int r2_main(int argc, char **argv);
 int pedphase_main(int argc, char **argv);
-void die(const string& s);
 
 int grm(bcf_srs_t *sr);
 int prune_main(int argc,char **argv);
 
-#endif
+
+#endif  //AKT_H

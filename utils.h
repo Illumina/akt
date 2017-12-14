@@ -40,5 +40,7 @@ private:
     int _g0,_g1;
     bool _is_haploid,_is_phased;
 };
-
+void die(const string &s);
+void umessage(const char type);
 #endif //AKT_UTILS_H
+

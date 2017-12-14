@@ -10,65 +10,6 @@
 using namespace std;
 
 /**
- * @name    umessage
- * @brief   common command options
- *
- * Enforcing consistency on input option description
- *
- */
-void umessage(const char type)
-{
-    switch (type)
-    {
-        case 'r':
-            cerr << "\t -r --regions:			chromosome region" << endl;
-            break;
-        case 'R':
-            cerr << "\t -R --regions-file:		restrict to regions listed in a file" << endl;
-            break;
-        case 'T':
-            cerr << "\t -T --targets-file:		similar to -R but streams rather than index-jumps" << endl;
-            break;
-        case 't':
-            cerr << "\t -t --targets:		        similar to -r but streams rather than index-jumps" << endl;
-            break;
-        case 's':
-            cerr << "\t -s --samples:			list of samples" << endl;
-            break;
-        case 'S':
-            cerr << "\t -S --samples-file:		list of samples, file" << endl;
-            break;
-        case 'n':
-            cerr << "\t -n --nthreads: 		num threads" << endl;
-            break;
-        case 'a':
-            cerr << "\t -a --aftag:			allele frequency tag (default AF)" << endl;
-            break;
-        case 'c':
-            cerr << "\t -c --cols:			column range to read" << endl;
-            break;
-        case 'o':
-            cerr << "\t -o --output:			output vcf" << endl;
-            break;
-        case 'O':
-            cerr << "\t -O --outputfmt:		output vcf format" << endl;
-            break;
-        case 'f':
-            cerr << "\t -f --pairfile:			file containing sample pairs to perform calculations on" << endl;
-            break;
-        case 'h':
-            cerr << "\t -h --thin:			keep every h variants" << endl;
-            break;
-        case 'm':
-            cerr << "\t -m --maf:			minimum MAF" << endl;
-            break;
-        default:
-            cerr << "No default message exists for " << type << endl;
-            break;
-    }
-}
-
-/**
  * @name    usage
  * @brief   print out options
  *
@@ -162,18 +103,4 @@ int main(int argc, char **argv)
         cerr << "Invalid command: " << argv[1] << endl;
         usage();
     }
-}
-
-/**
- * @name    die
- * @brief   exit with error message
- *
- * Exit "gracefully"
- *
- * @param [in] s Error string.
- */
-void die(const string &s)
-{
-    cerr << "ERROR: " << s << "\nExiting..." << endl;
-    exit(1);
 }
