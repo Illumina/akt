@@ -25,7 +25,8 @@ USER_DIR = ./googletest/samples/
 CPPFLAGS += -isystem $(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -O2 -pthread -lz -lm -mpopcnt
+#CXXFLAGS += -std=c++11 -O2 -pthread -lz -lm -mpopcnt
+CXXFLAGS += -std=c++11 -g -Wall -pthread -lz -lm -mpopcnt
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.

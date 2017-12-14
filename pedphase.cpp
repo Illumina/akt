@@ -32,7 +32,6 @@ static int bcf_int32_count_missing(int32_t *array, int n)
 
 static void bcf_int32_set_missing(int32_t *array, int n)
 {
-    int num_missing = 0;
     for (int i = 0; i < n; i++)
     {
         array[i] = bcf_int32_missing;
@@ -45,10 +44,13 @@ PedPhaser::PedPhaser(args &a)
     cerr << "Reading input from " << a.inputfile << endl;    
     _num_sample = bcf_hdr_nsamples(_out_header);
     _parental_genotypes.assign(2*_num_sample,pair<int,int>(bcf_gt_missing,bcf_gt_missing));
-    _gt_array = NULL;
-    _ps_array = NULL;
-    _gt_array = NULL;
-    _gt_array_dup = NULL;
+    _gt_array = nullptr;
+    _ps_array = nullptr;
+    _rps_array = nullptr;
+    _gt_array = nullptr;
+    _gt_array_dup = nullptr;
+    _num_gt=0;
+    _num_ps=0;
     if (!a.exclude_chromosomes.empty())
     {
         cerr << "Will not phase chromosomes: " << a.exclude_chromosomes << " (--exclude-chromosomes)" << endl;
@@ -76,14 +78,9 @@ PedPhaser::PedPhaser(args &a)
 
 void PedPhaser::main()
 {
-    int ngt = 0,nps=0;
     bcf1_t *line;
     vector<int> gt(_num_sample);
-    bool diploid_warn = false;
-    int nsnp = 0;
     vector<int32_t> phase_set(_num_sample, bcf_int32_missing); //stores the current phase set for each sample
-    int prev_rid = -1;
-    int kid_gt[2], dad_gt[2], mum_gt[2];
     while (bcf_sr_next_line(_bcf_reader))
     {
         line = bcf_sr_get_line(_bcf_reader, 0);
@@ -95,7 +92,7 @@ void PedPhaser::main()
         else
         {
             bcf_unpack(line, BCF_UN_ALL);
-            if (bcf_get_format_int32(_in_header, line, "PS", &_ps_array, &nps) > 0)
+            if (bcf_get_format_int32(_in_header, line, "PS", &_ps_array, &_num_ps) > 0)
             { // This variant has samples with phase set (PS) set. We need to buffer these.
                 bcf1_t *new_line = bcf_dup(line);
                 _line_buffer.push_back(new_line);
@@ -106,7 +103,7 @@ void PedPhaser::main()
 		cerr << line->pos+1<<endl;
 #endif		
                 flush_buffer();
-                int ret = bcf_get_genotypes(_in_header, line, &_gt_array, &ngt);
+                int ret = bcf_get_genotypes(_in_header, line, &_gt_array, &_num_gt);
                 bool diploid = ret > _num_sample; //are there any non-haploid genotypes?
                 if (diploid)
                 {
@@ -114,7 +111,7 @@ void PedPhaser::main()
                     for (int i = 0; i <_num_sample ; i++)
                     {
 			if (mendel_phase(i, _gt_array)==-1)
-			    bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", NULL, 1);
+			    bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", nullptr, 1);
                     }
                 }
                 bcf_update_genotypes(_out_header, line, _gt_array, ret);
@@ -184,7 +181,7 @@ int phase_by_transmission(Genotype & kid_gt,Genotype & dad_gt,Genotype & mum_gt)
 
 bool is_mendel_inconsistent(Genotype  kid,Genotype  dad,Genotype  mum)
 {
-    if(kid.isMissing()) return false;
+    if(kid.isMissing() || !kid.isPhased()) return false;
     int k0=kid.first();
     int k1=kid.second();
     int m_transmitted = k0;
@@ -251,168 +248,59 @@ bool PedPhaser::chromosome_is_in_ignore_list(bcf1_t *record)
     return false;
 }
 
-// int PedPhaser::flush_buffer1()
-// {
-//     if (_line_buffer.empty()) return(0); 
-
-//     HaplotypeBuffer hap_transmission(_num_samples,_line_buffer.size());//stores the transmission phased haplotypes
-//     HaplotypeBuffer hap_phaseset(_num_samples,_line_buffer.size());//stores the phase-set phased haplotypes
-//     for (deque<bcf1_t *>::iterator it1 = _line_buffer.begin(); it1 != _line_buffer.end(); it1++)
-//     {
-// 	hap_transmission.push_back(_pedigree,*it1);
-// 	hap_phaseset.push_back(_pedigree,*it1,true);	
-//     }
-//     hap_transmission.phase_by_transmission();
-//     hap_transmission.align(hap_phaseset);
-    
-//     int count=0;
-//     for (deque<bcf1_t *>::iterator it1 = _line_buffer.begin(); it1 != _line_buffer.end(); it1++)
-//     {
-// 	bcf1_t *line = *it1;
-// 	for(int i=0;i<_num_sample;i++)
-// 	{
-// 	    hap_transmission.get_genotype(count,i).update_bcf_gt_array(gt_array, i);
-// 	}
-// 	count++;
-//     }
-// }
-
 int PedPhaser::flush_buffer()
 {
-    if (_line_buffer.empty()) return(0);
-
-    int ngt = 0, nps = 0;
-    vector<map<int, pair<int, int> > > flip(_num_sample); // the key stores PS and the pair stores <number of inconsistencies,number of phased variants>
-
-    //PASS 1: Loops over the buffered vcf rows and performs mendel phasing.
-    //The number of inconsistencies between the mendel phased genotypes and the PS phased genotypes is stored in flip
+    if (_line_buffer.empty()) return(0); 
+    int _num_gt=0,_num_ps=0;
+    HaplotypeBuffer hap_transmission(_num_sample,_pedigree);//stores the transmission phased haplotypes
+    HaplotypeBuffer hap_phaseset(_num_sample,_pedigree);//stores the phase-set phased haplotypes
     for (deque<bcf1_t *>::iterator it1 = _line_buffer.begin(); it1 != _line_buffer.end(); it1++)
     {
-        bcf1_t *line = *it1;	
-        _sample_has_been_phased.assign(_num_sample,false);
-        assert(bcf_get_genotypes(_out_header, line, &_gt_array, &ngt) == 2 * _num_sample);
-        _gt_array_dup = (int *)realloc(_gt_array_dup, ngt * sizeof(int));
-        memcpy(_gt_array_dup, _gt_array, ngt * sizeof(int));
-
-	//Temporarily wipe the existing read-back phase information.
-        for (int i = 0; i < (2 * _num_sample); i++)  _gt_array_dup[i] = bcf_gt_unphased(bcf_gt_allele(_gt_array_dup[i]));
-	
-	_sample_has_been_phased.assign(_num_sample,false);
-        for (int i =0;i<_num_sample; i++) mendel_phase(i, _gt_array_dup);	//Mendel phase each child.
-
-        if (bcf_get_format_int32(_out_header, line, "PS", &_ps_array, &nps) > 0)
-        {
-            for (int i = 0; i < _num_sample; i++)
-            {
-                //if:
-                //1. sample has a phase set
-                //2. sample is het
-                //3. sample is also mendel phased
-                //then count the consistency with the phase set
-                if (_ps_array[i] != bcf_int32_missing && bcf_gt_allele(_gt_array[2 * i]) != bcf_gt_allele(_gt_array[2 * i + 1]) && bcf_gt_is_phased(_gt_array_dup[2 * i + 1]))
-                {
-                    if (!flip[i].count(_ps_array[i]))
-                        flip[i][_ps_array[i]] = pair<int, int>(0, 0);
-                    flip[i][_ps_array[i]].second++;
-		    
-                    if (bcf_gt_allele(_gt_array_dup[2 * i]) != bcf_gt_allele(_gt_array[2 * i]))
-                        flip[i][_ps_array[i]].first++;
-                }
-            }
-        }
+	bcf1_t *line = *it1;	
+	assert(bcf_get_genotypes(_out_header, line, &_gt_array, &_num_gt) == 2 * _num_sample);
+	hap_transmission.push_back(_gt_array);
+	int status = bcf_get_format_int32(_in_header, line,"PS", &_ps_array, &_num_ps);
+	if(status==_num_sample)
+	    hap_phaseset.push_back(_gt_array,_ps_array);
+	else if(_num_sample<=0)
+	    hap_phaseset.push_back(_gt_array,nullptr);
+	else
+	    die(("Invalid PS length: "+std::to_string(status)).c_str());
     }
+    hap_transmission.phase();
+    hap_transmission.align(hap_phaseset);
     
-    int num_discordant=0;
-    //PASS 2: We now iterate through the buffer again and flip phase sets that are inconsistent with pedigrees.
-    for (deque<bcf1_t *>::iterator it1 = _line_buffer.begin(); it1 != _line_buffer.end(); it1++)
-    {
-        _sample_has_been_phased.assign(_num_sample,false);
-        bcf1_t *line = *it1;
-        assert(bcf_get_genotypes(_out_header, line, &_gt_array, &ngt) == 2 * _num_sample);
-        _gt_array_dup = (int *)realloc(_gt_array_dup, ngt * sizeof(int));
-        memcpy(_gt_array_dup, _gt_array, ngt * sizeof(int));
-        int num_ps_values = bcf_get_format_int32(_out_header, line, "PS", &_ps_array, &nps);
-        vector<bool> sample_has_been_flipped(_num_sample, 0);
-        for (int i =0;i<_num_sample; i++)
-        {
-            int phase = mendel_phase(i, _gt_array_dup);
-            if (phase == -1) bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", NULL, 1);
-	    
-            vector<int> indices(1, i);
-	    int mum_index = _pedigree->getMumIndex(i);
-	    int dad_index = _pedigree->getDadIndex(i);
-	    indices.push_back(mum_index);
-	    indices.push_back(dad_index);
-	    
-            for (vector<int>::iterator index = indices.begin(); index != indices.end(); index++)
-            {
-                bool sample_not_missing = (*index) != -1;
-                bool sample_has_ps = sample_not_missing && num_ps_values > 0 && _ps_array[*index] != bcf_int32_missing;
-                if (sample_not_missing)
-                {
-                    if (sample_has_ps)
-                    {
-                        int num_hets_in_ps = flip[*index][_ps_array[*index]].second;
-                        int num_inconsistencies_with_ps = flip[*index][_ps_array[*index]].first;
-                        bool phase_set_is_inconsistent_with_pedigree = num_inconsistencies_with_ps > num_hets_in_ps / 2;
-                        if (!sample_has_been_flipped[*index] && phase_set_is_inconsistent_with_pedigree)
-                        {
-                            int tmp = _gt_array[2 * (*index)];
-                            _gt_array[2 * (*index)] = bcf_gt_phased(bcf_gt_allele(_gt_array[2 * (*index) + 1]));
-                            _gt_array[2 * (*index) + 1] = bcf_gt_phased(bcf_gt_allele(tmp));
-                            sample_has_been_flipped[*index] = true;
-                        }
-                    }
-                    else if (phase == 1) //was mendel phased and not-missing
-                    {
-                        _gt_array[2 * (*index)] = _gt_array_dup[2 * (*index)];
-                        _gt_array[2 * (*index) + 1] = _gt_array_dup[2 * (*index) + 1];
-                    }
-                }
-            }
-	    num_discordant += is_mendel_inconsistent(pair<int,int>(bcf_gt_allele(_gt_array[2*i]),bcf_gt_allele(_gt_array[2*i+1])),_parental_genotypes[2*i],_parental_genotypes[2*i+1]);
-        }
-        bcf_update_genotypes(_out_header, line, _gt_array, ngt);
-    } //end for(deque<bcf1_t *>::iterator it1=_line_buffer.begin();it1!=_line_buffer.end();it1++)
-
-    std::cerr<<"num_discordant="<<num_discordant<<std::endl;//debug
-//PASS 3. If the phase sets in this window are fully concordant with the pedigree, move FORMAT/PS to FORMAT/RPS
-// and perform further transmission phasing by exploiting the read-back phase sets.
-    if(num_discordant==0)
-    {
-	for(deque<bcf1_t *>::iterator it1=_line_buffer.begin();it1!=_line_buffer.end();it1++)
-	{
-	    bcf1_t *line = *it1;
-	    if(bcf_get_format_int32(_out_header, line, "PS", &_ps_array, &nps)>0)
-	    {
-		assert(bcf_get_genotypes(_out_header, line, &_gt_array, &ngt) == 2 * _num_sample);		
-		bcf_update_format_int32(_out_header, line, "PS", NULL, 0);
-		bcf_update_format_int32(_out_header, line, "RPS", _ps_array, _num_sample);
-		_sample_has_been_phased.assign(_num_sample,false);	
-		for (int i =0;i<_num_sample; i++) mendel_phase(i, _gt_array, _ps_array);
-		bcf_update_genotypes(_out_header, line, _gt_array, ngt);		
-	    }
-	}
-    }
-
+    int count=0;
+    _rps_array = (int32_t *)realloc(_rps_array,_num_sample*sizeof(int32_t));
     //Finally, flush the buffer to the output file.
     while (!_line_buffer.empty()) 
     {
-        bcf1_t *tmp_line = _line_buffer.front();
+        bcf1_t *line = _line_buffer.front();
         _line_buffer.pop_front();
-        bcf_write(_out_file, _out_header, tmp_line);
-        bcf_destroy(tmp_line);
+	hap_transmission.update_bcf1_genotypes(count,_gt_array,_ps_array,_rps_array);
+	bcf_update_genotypes(_out_header, line, _gt_array, _num_gt);
+	if(bcf_int32_count_missing(_ps_array,_num_sample)==_num_sample)
+	    bcf_update_format_int32(_out_header, line, "PS", nullptr,0);
+	else
+	    bcf_update_format_int32(_out_header, line, "PS", _ps_array, _num_sample);
+	if(bcf_int32_count_missing(_rps_array,_num_sample)==_num_sample)	
+	    bcf_update_format_int32(_out_header, line, "RPS", nullptr,0);
+	else
+	    bcf_update_format_int32(_out_header, line, "RPS", _rps_array, _num_sample);
+	bcf_write(_out_file, _out_header, line);	
+        bcf_destroy(line);
+	count++;
     }
-
     return (0);
 }
+
 
 void PedPhaser::setup_io(args &a)
 {
     //open a file.
     _bcf_reader = bcf_sr_init();
 
-    if (a.targets != NULL)
+    if (a.targets != nullptr)
     {
         if (bcf_sr_set_targets(_bcf_reader, a.targets, a.targets_is_file, 0) < 0)
         {
@@ -421,7 +309,7 @@ void PedPhaser::setup_io(args &a)
         }
     }
 
-    if (a.regions != NULL)
+    if (a.regions != nullptr)
     {
         if (bcf_sr_set_regions(_bcf_reader, a.regions, a.regions_is_file) < 0)
         {
@@ -438,7 +326,7 @@ void PedPhaser::setup_io(args &a)
 
     _in_header = _bcf_reader->readers[0].header;
 
-    if (a.pedigree == NULL)
+    if (a.pedigree == nullptr)
     {
         _pedigree = new sampleInfo(_in_header);
     }
@@ -495,21 +383,21 @@ int pedphase_main(int argc, char **argv)
         {"out", 1, 0, 'o'},
         {"output-type", 1, 0, 'O'},
         {"pedigree", 1, 0, 'p'},
-        {"threads", required_argument, NULL, '@'},
-        {"targets", required_argument, NULL, 't'},
-        {"targets-file", required_argument, NULL, 'T'},
-        {"regions-file", required_argument, NULL, 'R'},
-        {"regions", required_argument, NULL, 'r'},
-        {"exclude-chromosome", required_argument, NULL, 'x'},
+        {"threads", required_argument, nullptr, '@'},
+        {"targets", required_argument, nullptr, 't'},
+        {"targets-file", required_argument, nullptr, 'T'},
+        {"regions-file", required_argument, nullptr, 'R'},
+        {"regions", required_argument, nullptr, 'r'},
+        {"exclude-chromosome", required_argument, nullptr, 'x'},
         {0, 0, 0, 0}};
     arguments.regions_is_file = false;
     arguments.targets_is_file = false;
-    arguments.targets = arguments.pedigree = arguments.inputfile = arguments.include = arguments.regions = NULL;
+    arguments.targets = arguments.pedigree = arguments.inputfile = arguments.include = arguments.regions = nullptr;
     arguments.outfile = "-";
     arguments.nthreads = 0;
     arguments.exclude_chromosomes = "";
 
-    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:@:x:", loptions, NULL)) >= 0)
+    while ((c = getopt_long(argc, argv, "o:p:t:T:r:R:O:@:x:", loptions, nullptr)) >= 0)
     {
         switch (c)
         {
@@ -550,7 +438,7 @@ int pedphase_main(int argc, char **argv)
     }
     optind++;
     arguments.inputfile = argv[optind];
-    if (arguments.inputfile == NULL)
+    if (arguments.inputfile == nullptr)
     {
         die("no input provided");
     }
@@ -561,11 +449,11 @@ int pedphase_main(int argc, char **argv)
 }
 
 
-HaplotypeBuffer::HaplotypeBuffer(size_t num_samples,sampleInfo *pedigree) :
-    _num_samples(num_samples),_pedigree(pedigree)
+HaplotypeBuffer::HaplotypeBuffer(size_t num_sample,sampleInfo *pedigree) :
+    _num_sample(num_sample),_pedigree(pedigree)
 {
-    _num_variants=0;
-    _index_of_first_child.assign(_num_samples,-1);
+    _num_variant=0;
+    _index_of_first_child.assign(_num_sample,-1);
 }
 
 void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
@@ -573,7 +461,7 @@ void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
     _kid.push_back(vector<Genotype>());
     _dad.push_back(vector<Genotype>());
     _mum.push_back(vector<Genotype>());
-    for(int kid_index=0;kid_index<_num_samples;kid_index++)
+    for(int kid_index=0;kid_index<_num_sample;kid_index++)
     {
 	int dad_index = _pedigree->getDadIndex(kid_index);
 	int mum_index = _pedigree->getMumIndex(kid_index);
@@ -581,26 +469,35 @@ void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
 	_dad.back().emplace_back(dad_index, gt_array, ps_array);
 	_mum.back().emplace_back(mum_index, gt_array, ps_array);
 
-	if(_index_of_first_child[dad_index]==-1) _index_of_first_child[dad_index] = kid_index;
-	if(_index_of_first_child[mum_index]==-1) _index_of_first_child[mum_index] = kid_index;	
-	_num_variants++;
-	
-    }    
+	if(dad_index!=-1)
+	    if(_index_of_first_child[dad_index]==-1)
+		_index_of_first_child[dad_index] = kid_index;
+	if(mum_index!=-1)
+	    if(_index_of_first_child[mum_index]==-1)
+		_index_of_first_child[mum_index] = kid_index;	
+    }
+    _num_variant++;
+    assert(_kid.size()==_num_variant);
+    assert(_mum.size()==_num_variant);
+    assert(_dad.size()==_num_variant);
 }
 
 Genotype HaplotypeBuffer::get_genotype(size_t variant_index,size_t sample_index)
 {
+    assert(variant_index<_num_variant);
+    assert(sample_index<_num_sample);
     return(_kid[variant_index][sample_index]);
 }
 
 void HaplotypeBuffer::phase()
 {
-    vector<bool> sample_has_been_phased(_num_samples,false);
-    for(int variant_index=0;variant_index<_num_variants;variant_index++)
+    for(int variant_index=0;variant_index<_num_variant;variant_index++)
     {
-	for(int sample_index=0;sample_index<_num_samples;sample_index++)
+	for(int sample_index=0;sample_index<_num_sample;sample_index++)
+	{
 	    phase_by_transmission(_kid[variant_index][sample_index],_dad[variant_index][sample_index],_mum[variant_index][sample_index]);
-	for(int sample_index=0;sample_index<_num_samples;sample_index++)
+	}
+	for(int sample_index=0;sample_index<_num_sample;sample_index++)
 	{
 	    int dad_index = _pedigree->getDadIndex(sample_index);
 	    int mum_index = _pedigree->getMumIndex(sample_index);
@@ -618,3 +515,68 @@ void HaplotypeBuffer::phase()
     }
 }
 
+void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
+{
+    assert(haps_to_align.get_num_sample() == get_num_sample());
+    assert(haps_to_align.get_num_variant() == get_num_variant());
+    for(int sample_index=0;sample_index<_num_sample;sample_index++)
+    {
+	for(int variant_index=0;variant_index<_num_variant;variant_index++)
+	{
+	    Genotype g = haps_to_align.get_genotype(variant_index,sample_index);
+	    if(g.isPhased() && g.isHet() && get_genotype(variant_index,sample_index).isPhased())
+	    {
+		assert(g.ps()!=bcf_int32_missing);
+		pair<int,int> key(sample_index,g.ps());
+		if(!_phase_set_vote.count(key))
+		    _phase_set_vote[key] = pair<int,int>(0,0);
+		_phase_set_vote[key].second++;
+		if(g.first() != get_genotype(variant_index,sample_index).first())	
+		    _phase_set_vote[key].first++;
+	    }
+	}
+	
+	for(int variant_index=0;variant_index<_num_variant;variant_index++)
+	{
+	    Genotype g=haps_to_align.get_genotype(variant_index,sample_index);	
+	    pair<int,int> key(sample_index,g.ps());
+//	    if(_phase_set_vote[key].second>0)
+	    if(true)
+	    {
+		bool flip=_phase_set_vote[key].first > _phase_set_vote[key].second/2;
+		if(g.isPhased())
+		{
+		    if(flip)
+		    {
+			g.swap();
+			g.setPhase(true);
+		    }
+		    _kid[variant_index][sample_index] = g;
+		}
+	    }
+	}
+    }
+}
+
+void HaplotypeBuffer::update_bcf1_genotypes(int linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array)
+{
+    assert(linenum>=0 && linenum<_num_variant);
+    for(int i=0;i<_num_sample;i++)
+    {
+	ps_array[i]=rps_array[i]=bcf_int32_missing;
+	if(_kid[linenum][i].ps()!=bcf_int32_missing)
+	{
+	    pair<int,int> key(i,_kid[linenum][i].ps());
+	    bool is_aligned_with_pedigree =  _phase_set_vote[key].second>0;
+	    is_aligned_with_pedigree &= _phase_set_vote[key].first==_phase_set_vote[key].second || _phase_set_vote[key].first==0;
+	    if(is_aligned_with_pedigree)
+		_kid[linenum][i].update_bcf_gt_array(gt_array,i,rps_array);
+	    else
+		_kid[linenum][i].update_bcf_gt_array(gt_array,i,ps_array);
+	}
+	else
+	{
+	    _kid[linenum][i].update_bcf_gt_array(gt_array,i,nullptr);	    
+	}
+    }
+}

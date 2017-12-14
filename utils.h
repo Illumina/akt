@@ -12,7 +12,6 @@
 
 bool is_genotyped(int *gt,int idx);
 
-
 //splits s by any whitespace
 int stringSplit(string & s,vector<string> & split);
 
@@ -34,13 +33,14 @@ public:
     int second();
     int getGenotype(int idx);
     int swap(); 
-    int update_bcf_gt_array(int *gt_array,int index);
+    int update_bcf_gt_array(int *gt_array,int index,int *ps_array=nullptr);
+    string print();
+    int ps();
     
 private:
-    int _g0,_g1;
+    int _g0,_g1,_ps;
     bool _is_haploid,_is_phased;
 };
 void die(const string &s);
 void umessage(const char type);
 #endif //AKT_UTILS_H
-

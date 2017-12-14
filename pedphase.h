@@ -31,18 +31,22 @@ typedef struct _args
 class HaplotypeBuffer
 {
 public:
-    HaplotypeBuffer(size_t num_samples,sampleInfo *pedigree);
+    HaplotypeBuffer(size_t num_sample,sampleInfo *pedigree);
     void push_back(int32_t *gt_array, int32_t *ps_array=nullptr);
     void clear();
     void phase();
     void align(HaplotypeBuffer & haps_to_align);
     Genotype get_genotype(size_t variant_index,size_t sample_index);
-    int get_num_variants() {return _num_variants;};
+    int get_num_variant() {return _num_variant;};
+    int get_num_sample() {return _num_sample;};    
+    void update_bcf1_genotypes(int linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array);
 private:
-    size_t _num_samples,_num_variants;
+    size_t _num_sample,_num_variant;
     vector< vector< Genotype > > _kid,_dad,_mum;
     sampleInfo *_pedigree;
     vector<int> _index_of_first_child;
+    map< pair<int,int>,pair<int,int> > _phase_set_vote;
+    vector< vector<bool> >_sample_was_mendel_phased;
 };
 
 bool is_mendel_inconsistent(Genotype kid,Genotype dad,Genotype mum);
@@ -74,13 +78,13 @@ class PedPhaser
   sampleInfo *_pedigree;
   int _num_sample;
   deque<bcf1_t *> _line_buffer;
+  int _num_gt,_num_ps;//stores length of ps/gt
   int *_gt_array,*_gt_array_dup;
-  int32_t *_ps_array;
+  int32_t *_ps_array,*_rps_array;
   vector<int> _chromosomes_to_ignore;//dont phase these chromosomes
   vector<bool> _sample_has_been_phased;
   vector< pair<int,int> >  _parental_genotypes;
   void main();
 };
-
 
 #endif //AKT_PEDPHASE_H

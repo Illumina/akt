@@ -16,8 +16,6 @@ bool is_genotyped(int *gt,int idx)
     {
         return(0);
     }
-  //  return( !bcf_gt_is_missing(gt[2*idx]) && gt[2*idx]!=bcf_int32_vector_end && !bcf_gt_is_missing(gt[2*idx+1]) && gt[2*idx+1]!=bcf_int32_vector_end );
-
 }
 
 
@@ -109,9 +107,15 @@ Genotype::Genotype(int idx,int *gt_array,int *ps_array)
     }
     else
     {
-	_is_phased = ps_array && ps_array[idx]!=bcf_int32_missing;    
+	_is_phased = ps_array && ps_array[idx]!=bcf_int32_missing;
+	_ps = ps_array ? ps_array[idx] : bcf_int32_missing;
 	setGenotype(gt_array[2*idx],gt_array[2*idx+1]);
     }
+}
+
+int Genotype::ps()
+{
+    return _ps;
 }
 
 bool Genotype::isPhased()
@@ -185,7 +189,7 @@ int Genotype::swap()
     return(0);
 }
 
-int Genotype::update_bcf_gt_array(int *gt_array,int index)
+int Genotype::update_bcf_gt_array(int *gt_array,int index,int32_t *ps_array)
 {
     if(!isMissing())
     {
@@ -195,6 +199,8 @@ int Genotype::update_bcf_gt_array(int *gt_array,int index)
 	else
 	    gt_array[index * 2 + 1] = _is_phased ? bcf_gt_phased(second()) : bcf_gt_unphased(second()); 
     }
+    if(ps_array)
+	ps_array[index]=_ps;
     return(0);
 }
 
@@ -203,6 +209,23 @@ void Genotype::setPhase(bool phased)
     _is_phased=phased;
 }
 
+string Genotype::print()
+{
+    if(isMissing()) return "./.";
+    std::stringstream ss;
+    ss<<first();
+    if(isHaploid())
+	return ss.str();
+    
+    if(_is_phased)
+	ss<<"|";
+    else
+	ss<<"/";
+    ss<<second();
+    if(_ps!=bcf_int32_missing)
+	ss<<":"<<_ps;
+    return ss.str();
+}
 
 /**
  * @name    umessage

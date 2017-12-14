@@ -3,8 +3,7 @@ CXX=g++
 
 OMP=-fopenmp
 
-CXXFLAGS = -O2  $(OMP) -mpopcnt
-CFLAGS = -O2  $(OMP)
+CXXFLAGS =  -std=c++11
 
 all: akt
 
@@ -12,24 +11,23 @@ HTSDIR=htslib-1.6
 include $(HTSDIR)/htslib.mk
 HTSLIB = $(HTSDIR)/libhts.a
 IFLAGS = -I$(HTSDIR)  -I./
-LFLAGS = -lz -lm
+LFLAGS = -lz -lm  -lpthread
 
-no_omp: CXXFLAGS = -O2 
+no_omp: CXXFLAGS += -O2 
 no_omp: CFLAGS = -O2 
-no_omp: LFLAGS = -lz -lm -lpthread
 no_omp: all
 
-default: CXXFLAGS = -O2  $(OMP)
-default: CFLAGS = -O2  $(OMP)
+default: CXXFLAGS += -O2  $(OMP) -mpopcnt
+default: CFLAGS = -O2  $(OMP) -mpopcnt
 default: all
 
-release: CXXFLAGS = -O2  $(OMP)
-release: CFLAGS = -O2  $(OMP)
-release: LFLAGS = -lz -lm -static
+release: CXXFLAGS += -O2  $(OMP) -mpopcnt
+release: CFLAGS = -O2  $(OMP) -mpopcnt
+release: LFLAGS +=  -static
 release: all
 
-debug: CXXFLAGS = -g -O1 -lz -lm -lpthread
-debug: CFLAGS =  -g -O1  -lz -lm -lpthread
+debug: CXXFLAGS += -g -O1 -Wall
+debug: CFLAGS = -g -O1  -lz -lm -lpthread
 debug: all
 
 profile: CXXFLAGS = -pg -O2 $(OMP)

@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <assert.h>
 #include "samples.hpp"
+#include "utils.h"
 
 #ifdef _OPENMP
    #include <omp.h>
