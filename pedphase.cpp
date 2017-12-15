@@ -87,7 +87,7 @@ void PedPhaser::main()
         if (chromosome_is_in_ignore_list(line))
         {
             flush_buffer(); //just in case something was sitting in buffer from previous chromosome
-            bcf_write1(_out_file, _out_header, line);
+            bcf_write(_out_file, _out_header, line);
         }
         else
         {
@@ -115,7 +115,7 @@ void PedPhaser::main()
                     }
                 }
                 bcf_update_genotypes(_out_header, line, _gt_array, ret);
-                bcf_write1(_out_file, _out_header, line);
+                bcf_write(_out_file, _out_header, line);
             }
         }
     }
@@ -287,6 +287,9 @@ int PedPhaser::flush_buffer()
 	    bcf_update_format_int32(_out_header, line, "RPS", nullptr,0);
 	else
 	    bcf_update_format_int32(_out_header, line, "RPS", _rps_array, _num_sample);
+
+	if(!hap_transmission.is_mendel_consistent(count))
+	    bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", nullptr, 1);
 	bcf_write(_out_file, _out_header, line);	
         bcf_destroy(line);
 	count++;
@@ -461,6 +464,7 @@ void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
     _kid.push_back(vector<Genotype>());
     _dad.push_back(vector<Genotype>());
     _mum.push_back(vector<Genotype>());
+
     for(int kid_index=0;kid_index<_num_sample;kid_index++)
     {
 	int dad_index = _pedigree->getDadIndex(kid_index);
@@ -489,13 +493,21 @@ Genotype HaplotypeBuffer::get_genotype(size_t variant_index,size_t sample_index)
     return(_kid[variant_index][sample_index]);
 }
 
+bool HaplotypeBuffer::is_mendel_consistent(int linenum)
+{
+    assert(linenum>=0 && linenum<_num_variant);
+    return _line_is_mendel_consistent[linenum];
+}
+
 void HaplotypeBuffer::phase()
 {
+    _line_is_mendel_consistent.assign(_num_variant,true);
     for(int variant_index=0;variant_index<_num_variant;variant_index++)
     {
 	for(int sample_index=0;sample_index<_num_sample;sample_index++)
 	{
-	    phase_by_transmission(_kid[variant_index][sample_index],_dad[variant_index][sample_index],_mum[variant_index][sample_index]);
+	    int status = phase_by_transmission(_kid[variant_index][sample_index],_dad[variant_index][sample_index],_mum[variant_index][sample_index]);
+	    if(status==-1) _line_is_mendel_consistent[variant_index]=false;
 	}
 	for(int sample_index=0;sample_index<_num_sample;sample_index++)
 	{
@@ -539,20 +551,19 @@ void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
 	for(int variant_index=0;variant_index<_num_variant;variant_index++)
 	{
 	    Genotype g=haps_to_align.get_genotype(variant_index,sample_index);	
-	    pair<int,int> key(sample_index,g.ps());
-//	    if(_phase_set_vote[key].second>0)
-	    if(true)
+	    if(g.ps()!=bcf_int32_missing)
 	    {
+		pair<int,int> key(sample_index,g.ps());		
 		bool flip=_phase_set_vote[key].first > _phase_set_vote[key].second/2;
-		if(g.isPhased())
+		if(_phase_set_vote[key].second>0)
 		{
 		    if(flip)
 		    {
 			g.swap();
 			g.setPhase(true);
 		    }
-		    _kid[variant_index][sample_index] = g;
 		}
+		_kid[variant_index][sample_index] = g;		
 	    }
 	}
     }

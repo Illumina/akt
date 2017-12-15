@@ -26,8 +26,13 @@ typedef struct _args
 } args;
 
 
-//Buffers haplotypes over a small number of lines.
-//Stores haplotype vector for child/dad/mum (with possibly redundant copies for parents in the case of multiple trios/duos).
+
+//This algorithm to harmonise read-back phased variants with pedigree transmission.
+//1. Perform phase-by-transmission, temporarily ignoring all read-back-phasing information.
+//2. Count the number of times a read-back phased variant agrees with the pedigree phasing (per sample).
+//3. If the count in step 2 equals <50% of pedigree resolved hets, flip all read-back phased alleles in the sample.
+//4. Calculate the concordance of the flipped alleles with pedigree inheritance.
+//5. If the value from 4 is 100%, move FORMAT/PS to FORMAT/RPS to indicate this phase set is fully in agreement with the pedigree.
 class HaplotypeBuffer
 {
 public:
@@ -40,6 +45,7 @@ public:
     int get_num_variant() {return _num_variant;};
     int get_num_sample() {return _num_sample;};    
     void update_bcf1_genotypes(int linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array);
+    bool is_mendel_consistent(int linenum);
 private:
     size_t _num_sample,_num_variant;
     vector< vector< Genotype > > _kid,_dad,_mum;
@@ -47,6 +53,7 @@ private:
     vector<int> _index_of_first_child;
     map< pair<int,int>,pair<int,int> > _phase_set_vote;
     vector< vector<bool> >_sample_was_mendel_phased;
+    vector<bool> _line_is_mendel_consistent;
 };
 
 bool is_mendel_inconsistent(Genotype kid,Genotype dad,Genotype mum);
@@ -62,12 +69,6 @@ class PedPhaser
   void setup_io(args &a);
   void setup_output(args &a);
 
-  //This algorithm to harmonise read-back phased variants with pedigree transmission.
-  //1. Perform phase-by-transmission, temporarily ignoring all read-back-phasing information.
-  //2. Count the number of times a read-back phased variant agrees with the pedigree phasing (per sample).
-  //3. If the count in step 2 equals <50% of pedigree resolved hets, flip all read-back phased alleles in the sample.
-  //4. Calculate the concordance of the flipped alleles with pedigree inheritance.
-  //5. If the value from 4 is 100%, move FORMAT/PS to FORMAT/RPS to indicate this phase set is fully in agreement with the pedigree.
   int flush_buffer();
 
   //Simply checks if this chromosome should be ignored and piped to output as is (eg. chrMT or chrY).
