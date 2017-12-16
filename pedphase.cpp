@@ -527,43 +527,53 @@ void HaplotypeBuffer::phase()
     }
 }
 
+void HaplotypeBuffer::swap(int variant,int sample) { _kid[variant][sample].swap(); } 
+
+void HaplotypeBuffer::setPhase(int variant,int sample,bool phase) { _kid[variant][sample].setPhase(phase);}
+
 void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
 {
     assert(haps_to_align.get_num_sample() == get_num_sample());
     assert(haps_to_align.get_num_variant() == get_num_variant());
-    for(int sample_index=0;sample_index<_num_sample;sample_index++)
+    bool stable=false;
+    while(!stable)
     {
-	for(int variant_index=0;variant_index<_num_variant;variant_index++)
+	stable=true;
+	_phase_set_vote.clear();
+	for(int sample_index=0;sample_index<_num_sample;sample_index++)
 	{
-	    Genotype g = haps_to_align.get_genotype(variant_index,sample_index);
-	    if(g.isPhased() && g.isHet() && get_genotype(variant_index,sample_index).isPhased())
+	    for(int variant_index=0;variant_index<_num_variant;variant_index++)
 	    {
-		assert(g.ps()!=bcf_int32_missing);
-		pair<int,int> key(sample_index,g.ps());
-		if(!_phase_set_vote.count(key))
-		    _phase_set_vote[key] = pair<int,int>(0,0);
-		_phase_set_vote[key].second++;
-		if(g.first() != get_genotype(variant_index,sample_index).first())	
-		    _phase_set_vote[key].first++;
-	    }
-	}
-	
-	for(int variant_index=0;variant_index<_num_variant;variant_index++)
-	{
-	    Genotype g=haps_to_align.get_genotype(variant_index,sample_index);	
-	    if(g.ps()!=bcf_int32_missing)
-	    {
-		pair<int,int> key(sample_index,g.ps());		
-		bool flip=_phase_set_vote[key].first > _phase_set_vote[key].second/2;
-		if(_phase_set_vote[key].second>0)
+		Genotype g = haps_to_align.get_genotype(variant_index,sample_index);
+		if(g.isPhased() && g.isHet() && _kid[variant_index][sample_index].isPhased())
 		{
-		    if(flip)
-		    {
-			g.swap();
-			g.setPhase(true);
-		    }
+		    assert(g.ps()!=bcf_int32_missing);
+		    pair<int,int> key(sample_index,g.ps());
+		    if(!_phase_set_vote.count(key))
+			_phase_set_vote[key] = pair<int,int>(0,0);
+		    _phase_set_vote[key].second++;
+		    if(g.first() != _kid[variant_index][sample_index].first())	
+			_phase_set_vote[key].first++;
 		}
-		_kid[variant_index][sample_index] = g;		
+	    }	
+	    for(int variant_index=0;variant_index<_num_variant;variant_index++)
+	    {
+		int ps = haps_to_align.get_genotype(variant_index,sample_index).ps();
+		if(ps!=bcf_int32_missing)
+		{
+		    pair<int,int> key(sample_index,ps);
+		    bool flip=_phase_set_vote[key].first > _phase_set_vote[key].second/2;
+		    if(_phase_set_vote[key].second>0)
+		    {
+			if(flip)
+			{
+			    haps_to_align.swap(variant_index,sample_index);
+			    haps_to_align.setPhase(variant_index,sample_index,true);
+			    stable=false;
+			}
+		    }
+		    _kid[variant_index][sample_index] = haps_to_align.get_genotype(variant_index,sample_index);
+		}
 	    }
 	}
     }

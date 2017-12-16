@@ -46,6 +46,8 @@ public:
     int get_num_sample() {return _num_sample;};    
     void update_bcf1_genotypes(int linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array);
     bool is_mendel_consistent(int linenum);
+    void swap(int variant,int sample);
+    void setPhase(int variant,int sample,bool phase);
 private:
     size_t _num_sample,_num_variant;
     vector< vector< Genotype > > _kid,_dad,_mum;
