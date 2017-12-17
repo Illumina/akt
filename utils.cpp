@@ -19,12 +19,12 @@ bool is_genotyped(int *gt,int idx)
 }
 
 
-int stringSplit(string & s,vector<string> & split)
+int stringSplit(std::string & s,std::vector<std::string> & split)
 {
     split.clear();
-    stringstream ss;
+    std::stringstream ss;
     ss << s;
-    string tmp;
+    std::string tmp;
     while(ss>>tmp)
     {
         split.push_back(tmp);
@@ -33,11 +33,11 @@ int stringSplit(string & s,vector<string> & split)
 }
 
 
-int stringSplit(const string &input, const char split, vector<string> &out)
+int stringSplit(const std::string &input, const char split, std::vector<std::string> &out)
 {
     istringstream ss(input);
     out.clear();
-    string tmp;
+    std::string tmp;
     int count = 0;
     while (std::getline(ss, tmp, split))
     {
@@ -76,49 +76,49 @@ void umessage(const char type)
     switch (type)
     {
         case 'r':
-            cerr << "\t -r --regions:			chromosome region" << endl;
+            std::cerr << "\t -r --regions:			chromosome region" << endl;
             break;
         case 'R':
-            cerr << "\t -R --regions-file:		restrict to regions listed in a file" << endl;
+            std::cerr << "\t -R --regions-file:		restrict to regions listed in a file" << endl;
             break;
         case 'T':
-            cerr << "\t -T --targets-file:		similar to -R but streams rather than index-jumps" << endl;
+            std::cerr << "\t -T --targets-file:		similar to -R but streams rather than index-jumps" << endl;
             break;
         case 't':
-            cerr << "\t -t --targets:		        similar to -r but streams rather than index-jumps" << endl;
+            std::cerr << "\t -t --targets:		        similar to -r but streams rather than index-jumps" << endl;
             break;
         case 's':
-            cerr << "\t -s --samples:			list of samples" << endl;
+            std::cerr << "\t -s --samples:			list of samples" << endl;
             break;
         case 'S':
-            cerr << "\t -S --samples-file:		list of samples, file" << endl;
+            std::cerr << "\t -S --samples-file:		list of samples, file" << endl;
             break;
         case 'n':
-            cerr << "\t -n --nthreads: 		num threads" << endl;
+            std::cerr << "\t -n --nthreads: 		num threads" << endl;
             break;
         case 'a':
-            cerr << "\t -a --aftag:			allele frequency tag (default AF)" << endl;
+            std::cerr << "\t -a --aftag:			allele frequency tag (default AF)" << endl;
             break;
         case 'c':
-            cerr << "\t -c --cols:			column range to read" << endl;
+            std::cerr << "\t -c --cols:			column range to read" << endl;
             break;
         case 'o':
-            cerr << "\t -o --output:			output vcf" << endl;
+            std::cerr << "\t -o --output:			output vcf" << endl;
             break;
         case 'O':
-            cerr << "\t -O --outputfmt:		output vcf format" << endl;
+            std::cerr << "\t -O --outputfmt:		output vcf format" << endl;
             break;
         case 'f':
-            cerr << "\t -f --pairfile:			file containing sample pairs to perform calculations on" << endl;
+            std::cerr << "\t -f --pairfile:			file containing sample pairs to perform calculations on" << endl;
             break;
         case 'h':
-            cerr << "\t -h --thin:			keep every h variants" << endl;
+            std::cerr << "\t -h --thin:			keep every h variants" << endl;
             break;
         case 'm':
-            cerr << "\t -m --maf:			minimum MAF" << endl;
+            std::cerr << "\t -m --maf:			minimum MAF" << endl;
             break;
         default:
-            cerr << "No default message exists for " << type << endl;
+            std::cerr << "No default message exists for " << type << endl;
             break;
     }
 }
@@ -132,8 +132,8 @@ void umessage(const char type)
  *
  * @param [in] s Error string.
  */
-void die(const string &s)
+void die(const std::string &s)
 {
-    cerr << "ERROR: " << s << "\nExiting..." << endl;
+    std::cerr << "ERROR: " << s << "\nExiting..." << endl;
     exit(1);
 }

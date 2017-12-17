@@ -5,19 +5,24 @@
 #ifndef AKT_UTILS_H
 #define AKT_UTILS_H
 
-#include "akt.hh"
+#include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
 
+
+extern "C" {
+#include "htslib/vcf.h"
+}
+
 bool is_genotyped(int *gt,int idx);
 
 //splits s by any whitespace
-int stringSplit(string & s,vector<string> & split);
+int stringSplit(std::string & s,std::vector<std::string> & split);
 
 //splits input by char split
-int stringSplit(const string &input, const char split, vector<string> &out);
+int stringSplit(const std::string &input, const char split, std::vector<std::string> &out);
 
-void die(const string &s);
+void die(const std::string &s);
 void umessage(const char type);
 #endif //AKT_UTILS_H
