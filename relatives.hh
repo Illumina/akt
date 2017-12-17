@@ -1,6 +1,6 @@
-#include "akt.hpp" 
-#include "family.hpp"
-#include "cluster.hpp"
+#include "akt.hh" 
+#include "family.hh"
+#include "cluster.hh"
 
 using namespace std;
 

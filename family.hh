@@ -23,7 +23,7 @@
 #include <queue>
 #include <stack>
 #include <math.h>
-#include "logs.hpp"
+#include "logs.hh"
 
 //(from_name, from_id) ----type----> (to_name, to_id)
 class edge{

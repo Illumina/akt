@@ -1,4 +1,4 @@
-#include "pedphase.h"
+#include "pedphase.hh"
 
 using namespace std;
 

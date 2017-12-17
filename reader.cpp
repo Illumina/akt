@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 #include <iterator>
-#include "reader.hpp"
+#include "reader.hh"
 
 using namespace std;
 

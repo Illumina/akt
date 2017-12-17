@@ -7,7 +7,7 @@
  * Calculate allele frequencies from data or from input file.
  */
 
-#include "kin.hpp" 
+#include "kin.hh" 
 
 using namespace std;
 

@@ -1,9 +1,9 @@
 #ifndef IBD_H
 #define IBD_H
 
-#include "akt.hpp"
-#include "logs.hpp"
-#include "reader.hpp"
+#include "akt.hh"
+#include "logs.hh"
+#include "reader.hh"
 #include <bitset>
 #include <iomanip>
 #include <iostream>

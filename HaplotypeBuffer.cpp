@@ -1,4 +1,4 @@
-#include "HaplotypeBuffer.h"
+#include "HaplotypeBuffer.hh"
 
 HaplotypeBuffer::HaplotypeBuffer(size_t num_sample,sampleInfo *pedigree) :
     _num_sample(num_sample),_pedigree(pedigree)

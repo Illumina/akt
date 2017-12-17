@@ -5,7 +5,7 @@
  * parse command options and call correct functions
  */
 
-#include "akt.hpp"
+#include "akt.hh"
 
 using namespace std;
 

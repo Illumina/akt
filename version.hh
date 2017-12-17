@@ -1,2 +1,2 @@
-#define AKT_VERSION "v0.3.9-23-g70340ba"
+#define AKT_VERSION "v0.3.9-24-ge086777"
 #define BCFTOOLS_VERSION "1.6"

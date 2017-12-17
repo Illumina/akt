@@ -1,8 +1,8 @@
 #define __STDC_LIMIT_MACROS
-#include "akt.hpp"
-#include "family.hpp"
-#include "cluster.hpp"
-#include "relatives.hpp"
+#include "akt.hh"
+#include "family.hh"
+#include "cluster.hh"
+#include "relatives.hh"
 
 using namespace std;
 using namespace Eigen;

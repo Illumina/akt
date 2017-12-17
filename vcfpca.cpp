@@ -12,10 +12,10 @@
 //because the one big multiplication it isn't worth the set up
 #define EIGEN_DONT_PARALLELIZE
  
-#include "akt.hpp"
+#include "akt.hh"
 #include "Eigen/Dense"
-#include "RandomSVD.hpp"
-#include "reader.hpp"
+#include "RandomSVD.hh"
+#include "reader.hh"
 
 using namespace Eigen;
 

@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "akt.hpp"
+#include "akt.hh"
 #include "pedigree.h"
 #include "pedphase.h"
 

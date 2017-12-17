@@ -4,16 +4,17 @@
 
 #ifndef AKT_PEDPHASE_H
 #define AKT_PEDPHASE_H
-#include "akt.hpp"
-#include "pedigree.h"
-#include "utils.h"
-#include "version.h"
 #include <deque>
 #include <iomanip>
 #include <numeric>
 #include <stdlib.h>
 #include <bitset>
-#include "HaplotypeBuffer.h"
+
+#include "akt.hh"
+#include "pedigree.hh"
+#include "utils.hh"
+#include "version.hh"
+#include "HaplotypeBuffer.hh"
 
 typedef struct _args
 {

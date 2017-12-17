@@ -5,7 +5,7 @@
 #ifndef AKT_UTILS_H
 #define AKT_UTILS_H
 
-#include "akt.hpp"
+#include "akt.hh"
 #include <string>
 #include <vector>
 #include <sstream>

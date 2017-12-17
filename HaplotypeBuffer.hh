@@ -1,9 +1,9 @@
 #ifndef AKT_HAPLOTYPEBUFFER_H
 #define AKT_HAPLOTYPEBUFFER_H
 
-#include "akt.hpp"
-#include "pedigree.h"
-#include "pedphase.h"
+#include "akt.hh"
+#include "pedigree.hh"
+#include "pedphase.hh"
 
 //This algorithm to harmonise read-back phased variants with pedigree transmission.
 //1. Perform phase-by-transmission, temporarily ignoring all read-back-phasing information.

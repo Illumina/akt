@@ -1,7 +1,7 @@
 #pragma once
 
-#include "akt.hpp"
-#include "utils.h"
+#include "akt.hh"
+#include "utils.hh"
 
 //data structure for pedigree analysis.
 class sampleInfo

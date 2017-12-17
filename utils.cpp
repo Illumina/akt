@@ -2,7 +2,7 @@
 // Created by O'Connell, Jared on 8/3/17.
 //
 
-#include "utils.h"
+#include "utils.hh"
 
 using namespace std;
 

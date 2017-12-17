@@ -3,7 +3,7 @@
 
 #define __STDC_LIMIT_MACROS
 
-#include "version.h"
+#include "version.hh"
 #include <stdint.h>
 
 #include "htslib/hts.h"
@@ -25,8 +25,8 @@
 #include <set>
 #include <stdexcept>
 #include <assert.h>
-#include "samples.hpp"
-#include "utils.h"
+#include "samples.hh"
+#include "utils.hh"
 
 #ifdef _OPENMP
    #include <omp.h>
