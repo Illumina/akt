@@ -41,7 +41,7 @@ VERSION = x.x.x
 ifneq "$(wildcard .git)" ""
 VERSION = $(shell git describe --always)
 endif
-version.h:
+version.hh:
 	echo '#define AKT_VERSION "$(VERSION)"' > $@
 	echo '#define BCFTOOLS_VERSION "$(BCFTOOLS_VERSION)"' >> $@
 
@@ -52,20 +52,20 @@ OBJS= utils.o pedphase.o family.o reader.o vcfpca.o relatives.o kin.o pedigree.o
 	$(CC) $(CXXFLAGS) -c -o $@ $<
 
 ##akt code
-cluster.o: cluster.cpp cluster.hpp
-family.o: family.cpp family.hpp
+cluster.o: cluster.cpp cluster.hh
+family.o: family.cpp family.hh
 relatives.o: relatives.cpp 
 unrelated.o: unrelated.cpp 
-vcfpca.o: vcfpca.cpp RandomSVD.hpp
+vcfpca.o: vcfpca.cpp RandomSVD.hh
 kin.o: kin.cpp 
-pedigree.o: pedigree.cpp pedigree.h
+pedigree.o: pedigree.cpp pedigree.hh
 reader.o: reader.cpp 
-pedphase.o: pedphase.cpp pedphase.h utils.h HaplotypeBuffer.o
-utils.o: utils.cpp utils.h
-HaplotypeBuffer.o: HaplotypeBuffer.cpp HaplotypeBuffer.h
-akt: akt.cpp version.h $(OBJS) $(HTSLIB)
+pedphase.o: pedphase.cpp pedphase.hh utils.hh HaplotypeBuffer.o
+utils.o: utils.cpp utils.hh
+HaplotypeBuffer.o: HaplotypeBuffer.cpp HaplotypeBuffer.hh
+akt: akt.cpp version.hh $(OBJS) $(HTSLIB)
 	$(CXX) $(CXXFLAGS)   -o akt akt.cpp $(OBJS) $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
-	rm *.o akt version.h
+	rm *.o akt version.hh
 test: akt
 	cd test/;bash -e test.sh
