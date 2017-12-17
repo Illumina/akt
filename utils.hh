@@ -6,6 +6,7 @@
 #define AKT_UTILS_H
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <sstream>
