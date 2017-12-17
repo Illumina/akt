@@ -193,13 +193,15 @@ int Genotype::swap()
 int Genotype::update_bcf_gt_array(int *gt_array,int index,int32_t *ps_array)
 {
     if(!isMissing())
-    {
 	gt_array[index * 2] = _is_phased ? bcf_gt_phased(first()) : bcf_gt_unphased(first());
-	if(isHaploid())
-	    gt_array[index * 2 + 1] = bcf_int32_vector_end;
-	else
-	    gt_array[index * 2 + 1] = _is_phased ? bcf_gt_phased(second()) : bcf_gt_unphased(second()); 
-    }
+    else
+	gt_array[index * 2] = bcf_gt_missing;
+    
+    if(isHaploid())
+	gt_array[index * 2 + 1] = bcf_int32_vector_end;
+    else
+	gt_array[index * 2 + 1] = _is_phased ? bcf_gt_phased(second()) : bcf_gt_unphased(second()); 
+    
     if(ps_array)
 	ps_array[index]=_ps;
     return(0);
