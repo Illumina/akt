@@ -18,29 +18,6 @@ int stringSplit(string & s,vector<string> & split);
 //splits input by char split
 int stringSplit(const string &input, const char split, vector<string> &out);
 
-class Genotype
-{
-public:
-    Genotype(int g0,int g1);
-    Genotype(int idx,int *gt_array,int *ps_array=NULL); 
-    void setGenotype(int g0,int g1);   
-    bool isHet();
-    bool isMissing();
-    bool isHaploid();
-    bool is_phased();
-    void setPhase(bool phased);
-    int first();
-    int second();
-    int getGenotype(int idx);
-    int swap(); 
-    int update_bcf_gt_array(int *gt_array,int index,int *ps_array=nullptr);
-    string print();
-    int ps();
-    
-private:
-    int _g0,_g1,_ps;
-    bool _is_haploid,_is_phased;
-};
 void die(const string &s);
 void umessage(const char type);
 #endif //AKT_UTILS_H

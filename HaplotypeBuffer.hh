@@ -4,6 +4,7 @@
 #include "akt.hh"
 #include "pedigree.hh"
 #include "pedphase.hh"
+#include "Genotype.hh"
 
 //This algorithm to harmonise read-back phased variants with pedigree transmission.
 //1. Perform phase-by-transmission, temporarily ignoring all read-back-phasing information.

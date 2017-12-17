@@ -45,7 +45,7 @@ version.hh:
 	echo '#define AKT_VERSION "$(VERSION)"' > $@
 	echo '#define BCFTOOLS_VERSION "$(BCFTOOLS_VERSION)"' >> $@
 
-OBJS= utils.o pedphase.o family.o reader.o vcfpca.o relatives.o kin.o pedigree.o unrelated.o cluster.o HaplotypeBuffer.o
+OBJS= utils.o pedphase.o family.o reader.o vcfpca.o relatives.o kin.o pedigree.o unrelated.o cluster.o HaplotypeBuffer.o Genotype.o
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(IFLAGS) -c -o $@ $<
 .c.o:

@@ -15,6 +15,7 @@
 #include "utils.hh"
 #include "version.hh"
 #include "HaplotypeBuffer.hh"
+#include "Genotype.hh"
 
 typedef struct _args
 {
