@@ -118,7 +118,7 @@ int Genotype::ps()
     return _ps;
 }
 
-bool Genotype::isPhased()
+bool Genotype::is_phased()
 {
     return( _is_phased || !(isHet() || isHaploid()) );
 }

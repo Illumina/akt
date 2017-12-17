@@ -27,7 +27,7 @@ public:
     bool isHet();
     bool isMissing();
     bool isHaploid();
-    bool isPhased();
+    bool is_phased();
     void setPhase(bool phased);
     int first();
     int second();

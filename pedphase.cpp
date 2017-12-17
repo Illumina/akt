@@ -145,7 +145,7 @@ int phase_by_transmission(Genotype & kid_gt,Genotype & dad_gt,Genotype & mum_gt)
         bool kid_branch = leaf[0];
         bool dad_branch = leaf[1];
         bool mum_branch = leaf[2];
-        if ((!kid_gt.isPhased() || !kid_branch) && (!dad_gt.isPhased() || !dad_branch) && (!mum_gt.isPhased() || !mum_branch))
+        if ((!kid_gt.is_phased() || !kid_branch) && (!dad_gt.is_phased() || !dad_branch) && (!mum_gt.is_phased() || !mum_branch))
         {
             bool is_inheritance_consistent = dad_gt.isMissing() || dad_gt.getGenotype(dad_branch) == kid_gt.getGenotype((kid_branch + 1) % 2);
             is_inheritance_consistent &= mum_gt.isMissing() || mum_gt.getGenotype(mum_branch) == kid_gt.getGenotype(kid_branch);
@@ -181,7 +181,7 @@ int phase_by_transmission(Genotype & kid_gt,Genotype & dad_gt,Genotype & mum_gt)
 
 bool is_mendel_inconsistent(Genotype  kid,Genotype  dad,Genotype  mum)
 {
-    if(kid.isMissing() || !kid.isPhased()) return false;
+    if(kid.isMissing() || !kid.is_phased()) return false;
     int k0=kid.first();
     int k1=kid.second();
     int m_transmitted = k0;
@@ -452,152 +452,3 @@ int pedphase_main(int argc, char **argv)
 }
 
 
-HaplotypeBuffer::HaplotypeBuffer(size_t num_sample,sampleInfo *pedigree) :
-    _num_sample(num_sample),_pedigree(pedigree)
-{
-    _num_variant=0;
-    _index_of_first_child.assign(_num_sample,-1);
-}
-
-void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
-{
-    _kid.push_back(vector<Genotype>());
-    _dad.push_back(vector<Genotype>());
-    _mum.push_back(vector<Genotype>());
-
-    for(int kid_index=0;kid_index<_num_sample;kid_index++)
-    {
-	int dad_index = _pedigree->getDadIndex(kid_index);
-	int mum_index = _pedigree->getMumIndex(kid_index);
-	_kid.back().emplace_back(kid_index, gt_array, ps_array);
-	_dad.back().emplace_back(dad_index, gt_array, ps_array);
-	_mum.back().emplace_back(mum_index, gt_array, ps_array);
-
-	if(dad_index!=-1)
-	    if(_index_of_first_child[dad_index]==-1)
-		_index_of_first_child[dad_index] = kid_index;
-	if(mum_index!=-1)
-	    if(_index_of_first_child[mum_index]==-1)
-		_index_of_first_child[mum_index] = kid_index;	
-    }
-    _num_variant++;
-    assert(_kid.size()==_num_variant);
-    assert(_mum.size()==_num_variant);
-    assert(_dad.size()==_num_variant);
-}
-
-Genotype HaplotypeBuffer::get_genotype(size_t variant_index,size_t sample_index)
-{
-    assert(variant_index<_num_variant);
-    assert(sample_index<_num_sample);
-    return(_kid[variant_index][sample_index]);
-}
-
-bool HaplotypeBuffer::is_mendel_consistent(int linenum)
-{
-    assert(linenum>=0 && linenum<_num_variant);
-    return _line_is_mendel_consistent[linenum];
-}
-
-void HaplotypeBuffer::phase()
-{
-    _line_is_mendel_consistent.assign(_num_variant,true);
-    for(int variant_index=0;variant_index<_num_variant;variant_index++)
-    {
-	for(int sample_index=0;sample_index<_num_sample;sample_index++)
-	{
-	    int status = phase_by_transmission(_kid[variant_index][sample_index],_dad[variant_index][sample_index],_mum[variant_index][sample_index]);
-	    if(status==-1) _line_is_mendel_consistent[variant_index]=false;
-	}
-	for(int sample_index=0;sample_index<_num_sample;sample_index++)
-	{
-	    int dad_index = _pedigree->getDadIndex(sample_index);
-	    int mum_index = _pedigree->getMumIndex(sample_index);
-	    if(dad_index==-1&&mum_index==-1&&_index_of_first_child[sample_index]!=-1)
-	    {
-		int kid_index = _index_of_first_child[sample_index];
-		if(sample_index== _pedigree->getMumIndex(kid_index))
-		    _kid[variant_index][sample_index]=_mum[variant_index][kid_index];
-		else if(sample_index== _pedigree->getDadIndex(kid_index))
-		    _kid[variant_index][sample_index]=_dad[variant_index][kid_index];
-		else
-		    die("invalid pedigree");
-	    }   
-	}	
-    }
-}
-
-void HaplotypeBuffer::swap(int variant,int sample) { _kid[variant][sample].swap(); } 
-
-void HaplotypeBuffer::setPhase(int variant,int sample,bool phase) { _kid[variant][sample].setPhase(phase);}
-
-void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
-{
-    assert(haps_to_align.get_num_sample() == get_num_sample());
-    assert(haps_to_align.get_num_variant() == get_num_variant());
-    bool stable=false;
-    while(!stable)
-    {
-	stable=true;
-	_phase_set_vote.clear();
-	for(int sample_index=0;sample_index<_num_sample;sample_index++)
-	{
-	    for(int variant_index=0;variant_index<_num_variant;variant_index++)
-	    {
-		Genotype g = haps_to_align.get_genotype(variant_index,sample_index);
-		if(g.isPhased() && g.isHet() && _kid[variant_index][sample_index].isPhased())
-		{
-		    assert(g.ps()!=bcf_int32_missing);
-		    pair<int,int> key(sample_index,g.ps());
-		    if(!_phase_set_vote.count(key))
-			_phase_set_vote[key] = pair<int,int>(0,0);
-		    _phase_set_vote[key].second++;
-		    if(g.first() != _kid[variant_index][sample_index].first())	
-			_phase_set_vote[key].first++;
-		}
-	    }	
-	    for(int variant_index=0;variant_index<_num_variant;variant_index++)
-	    {
-		int ps = haps_to_align.get_genotype(variant_index,sample_index).ps();
-		if(ps!=bcf_int32_missing)
-		{
-		    pair<int,int> key(sample_index,ps);
-		    bool flip=_phase_set_vote[key].first > _phase_set_vote[key].second/2;
-		    if(_phase_set_vote[key].second>0)
-		    {
-			if(flip)
-			{
-			    haps_to_align.swap(variant_index,sample_index);
-			    haps_to_align.setPhase(variant_index,sample_index,true);
-			    stable=false;
-			}
-		    }
-		    _kid[variant_index][sample_index] = haps_to_align.get_genotype(variant_index,sample_index);
-		}
-	    }
-	}
-    }
-}
-
-void HaplotypeBuffer::update_bcf1_genotypes(int linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array)
-{
-    assert(linenum>=0 && linenum<_num_variant);
-    for(int i=0;i<_num_sample;i++)
-    {
-	ps_array[i]=rps_array[i]=bcf_int32_missing;
-	if(_kid[linenum][i].ps()!=bcf_int32_missing)
-	{
-	    pair<int,int> key(i,_kid[linenum][i].ps());
-	    bool is_aligned_with_pedigree =  _phase_set_vote[key].second>0;
-	    is_aligned_with_pedigree &= _phase_set_vote[key].first==_phase_set_vote[key].second || _phase_set_vote[key].first==0;
-	    if(is_aligned_with_pedigree)
-		_kid[linenum][i].update_bcf_gt_array(gt_array,i,rps_array);
-	    else
-		_kid[linenum][i].update_bcf_gt_array(gt_array,i,ps_array);
-	}
-	else
-	{
-	    _kid[linenum][i].update_bcf_gt_array(gt_array,i,nullptr);	    
-	}
-    }
-}

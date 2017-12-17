@@ -45,7 +45,7 @@ version.h:
 	echo '#define AKT_VERSION "$(VERSION)"' > $@
 	echo '#define BCFTOOLS_VERSION "$(BCFTOOLS_VERSION)"' >> $@
 
-OBJS= utils.o pedphase.o family.o reader.o vcfpca.o relatives.o kin.o pedigree.o  unrelated.o cluster.o
+OBJS= utils.o pedphase.o family.o reader.o vcfpca.o relatives.o kin.o pedigree.o unrelated.o cluster.o HaplotypeBuffer.o
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(IFLAGS) -c -o $@ $<
 .c.o:
@@ -60,8 +60,9 @@ vcfpca.o: vcfpca.cpp RandomSVD.hpp
 kin.o: kin.cpp 
 pedigree.o: pedigree.cpp pedigree.h
 reader.o: reader.cpp 
-pedphase.o: pedphase.cpp pedphase.h utils.h
+pedphase.o: pedphase.cpp pedphase.h utils.h HaplotypeBuffer.o
 utils.o: utils.cpp utils.h
+HaplotypeBuffer.o: HaplotypeBuffer.cpp HaplotypeBuffer.h
 akt: akt.cpp version.h $(OBJS) $(HTSLIB)
 	$(CXX) $(CXXFLAGS)   -o akt akt.cpp $(OBJS) $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
