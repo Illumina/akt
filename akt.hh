@@ -5,8 +5,6 @@
 
 #include "version.hh"
 #include <stdint.h>
-
-#include "htslib/hts.h"
 #include <vector>
 #include <string>
 #include <getopt.h>
@@ -25,6 +23,12 @@
 #include <set>
 #include <stdexcept>
 #include <assert.h>
+
+extern "C" {
+#include "htslib/synced_bcf_reader.h"
+#include "htslib/hts.h"    
+}
+
 #include "samples.hh"
 #include "utils.hh"
 
@@ -42,9 +46,6 @@ static int inline omp_get_num_threads() {
 static void inline omp_set_num_threads(int nthreads) {} 
 #endif
 
-extern "C" {
-#include "htslib/synced_bcf_reader.h"
-}
 
 template <typename T> string to_string( T x ){ 
 	return static_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str(); 
