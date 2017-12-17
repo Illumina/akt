@@ -104,6 +104,7 @@ Genotype::Genotype(int idx,int *gt_array,int *ps_array)
 	_g1=-1;
 	_is_haploid=false;
 	_is_phased=false;
+	_ps=bcf_int32_missing;
     }
     else
     {

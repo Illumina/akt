@@ -17,7 +17,7 @@ Genotype HaplotypeBuffer::get_genotype(size_t variant_index,size_t sample_index)
     return(_kid[variant_index][sample_index]);
 }
 
-bool HaplotypeBuffer::is_mendel_consistent(int linenum)
+bool HaplotypeBuffer::is_mendel_consistent(size_t linenum)
 {
     assert(linenum>=0 && linenum<_num_variant);
     return _line_is_mendel_consistent[linenum];
@@ -29,7 +29,7 @@ void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
     _dad.push_back(vector<Genotype>());
     _mum.push_back(vector<Genotype>());
     _is_aligned_with_pedigree.push_back(vector<bool>(_num_sample,true));
-    for(int kid_index=0;kid_index<_num_sample;kid_index++)
+    for(size_t kid_index=0;kid_index<_num_sample;kid_index++)
     {
 	int dad_index = _pedigree->getDadIndex(kid_index);
 	int mum_index = _pedigree->getMumIndex(kid_index);
@@ -53,9 +53,9 @@ void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
 
 void HaplotypeBuffer::copy_from_parents()
 {
-    for(int variant_index=0;variant_index<_num_variant;variant_index++)
+    for(size_t variant_index=0;variant_index<_num_variant;variant_index++)
     {    
-	for(int dst_index=0;dst_index<_num_sample;dst_index++)
+	for(size_t dst_index=0;dst_index<_num_sample;dst_index++)
 	{
 	    int src_index = _index_of_first_child[dst_index];	    
 	    int dad_index = _pedigree->getDadIndex(dst_index);
@@ -70,7 +70,6 @@ void HaplotypeBuffer::copy_from_parents()
 		    die("invalid pedigree");
 		
 		_is_aligned_with_pedigree[variant_index][dst_index]=_is_aligned_with_pedigree[variant_index][src_index];
-		
 	    }   
 	}	
     }    
@@ -79,9 +78,9 @@ void HaplotypeBuffer::copy_from_parents()
 void HaplotypeBuffer::phase()
 {
     _line_is_mendel_consistent.assign(_num_variant,true);
-    for(int variant_index=0;variant_index<_num_variant;variant_index++)
+    for(size_t variant_index=0;variant_index<_num_variant;variant_index++)
     {
-	for(int sample_index=0;sample_index<_num_sample;sample_index++)
+	for(size_t sample_index=0;sample_index<_num_sample;sample_index++)
 	{
 	    int status = phase_by_transmission(_kid[variant_index][sample_index],_dad[variant_index][sample_index],_mum[variant_index][sample_index]);
 	    if(status==-1) _line_is_mendel_consistent[variant_index]=false;
@@ -94,25 +93,37 @@ void HaplotypeBuffer::swap(int variant,int sample) { _kid[variant][sample].swap(
 
 void HaplotypeBuffer::setPhase(int variant,int sample,bool phase) { _kid[variant][sample].setPhase(phase);}
 
-void HaplotypeBuffer::align_sample(vector< vector< Genotype > > & dst,vector< vector< Genotype > > & src,
+void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
+{
+    assert(haps_to_align.get_num_sample() == get_num_sample());
+    assert(haps_to_align.get_num_variant() == get_num_variant());
+    align_sample(kid(),haps_to_align.kid(),_kid_vote);
+    align_sample(mum(),haps_to_align.mum(),_mum_vote);
+    align_sample(dad(),haps_to_align.dad(),_dad_vote);
+    check_pedigree_aligned();
+    copy_from_parents();    
+}
+
+void HaplotypeBuffer::align_sample(vector< vector< Genotype > > & dst,
+				   vector< vector< Genotype > > & src,
 				   vector< map<int,pair<int,int> > >  & phase_set_vote)
 {
-    for(int sample_index=0;sample_index<_num_sample;sample_index++)
+    for(size_t sample_index=0;sample_index<_num_sample;sample_index++)
     {
-	for(int variant_index=0;variant_index<_num_variant;variant_index++)
+	for(size_t variant_index=0;variant_index<_num_variant;variant_index++)
 	{
 	    Genotype g = src[variant_index][sample_index];
-	    if(g.is_phased() && g.isHet() && dst[variant_index][sample_index].is_phased())
+	    if(g.ps()!=bcf_int32_missing && g.is_phased() && g.isHet() && dst[variant_index][sample_index].is_phased())
 	    {
 		assert(g.ps()!=bcf_int32_missing);
 		if(!phase_set_vote[sample_index].count(g.ps()))
 		    phase_set_vote[sample_index][g.ps()] = pair<int,int>(0,0);
-		phase_set_vote[sample_index][sample_index].second++;
+		phase_set_vote[sample_index][g.ps()].second++;
 		if(g.first() != dst[variant_index][sample_index].first())	
 		    phase_set_vote[sample_index][g.ps()].first++;
 	    }
-	}	
-	for(int variant_index=0;variant_index<_num_variant;variant_index++)
+	}      
+	for(size_t variant_index=0;variant_index<_num_variant;variant_index++)
 	{
 	    Genotype g = src[variant_index][sample_index];	    
 	    if(g.ps()!=bcf_int32_missing)
@@ -132,27 +143,18 @@ void HaplotypeBuffer::align_sample(vector< vector< Genotype > > & dst,vector< ve
     }    
 }
 
-void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
-{
-    assert(haps_to_align.get_num_sample() == get_num_sample());
-    assert(haps_to_align.get_num_variant() == get_num_variant());
-    align_sample(kid(),haps_to_align.kid(),_kid_vote);
-    align_sample(mum(),haps_to_align.mum(),_mum_vote);
-    align_sample(dad(),haps_to_align.dad(),_dad_vote);
-    check_pedigree_aligned();
-    copy_from_parents();    
-}
-
 bool HaplotypeBuffer::is_sample_phased(int variant,int sample,
 				       vector< vector< Genotype > > & genotypes,
 				       vector< map<int,pair<int,int> > >  & phase_set_vote)
 {
     bool phased = genotypes[variant][sample].is_phased();
     int ps = genotypes[variant][sample].ps();
-    if(phase_set_vote[sample].count(ps))
+    if(ps!=bcf_int32_missing)
     {
 	int a=phase_set_vote[sample][ps].first;
 	int b=phase_set_vote[sample][ps].second;
+//	std::cerr<<sample<<" "<<ps<<" "<<a<<","<<b<<std::endl;
+	phased &= b>0;
 	phased &= a==0 || a==b;
     }
     return(phased);
@@ -160,33 +162,45 @@ bool HaplotypeBuffer::is_sample_phased(int variant,int sample,
     
 void HaplotypeBuffer::check_pedigree_aligned()
 {
-    for(int variant_index=0;variant_index<_num_variant;variant_index++)
+    for(size_t variant_index=0;variant_index<_num_variant;variant_index++)
     {
-	for(int sample_index=0;sample_index<_num_sample;sample_index++)
+	for(size_t sample_index=0;sample_index<_num_sample;sample_index++)
 	{
-	    bool consistent = _kid[variant_index][sample_index].first() != _mum[variant_index][sample_index].first();
+	    bool consistent = _kid[variant_index][sample_index].first() == _mum[variant_index][sample_index].first();
 	    bool phased = is_sample_phased(variant_index,sample_index,_kid,_kid_vote);
 	    phased &= is_sample_phased(variant_index,sample_index,_mum,_mum_vote);
-	    _is_aligned_with_pedigree[variant_index][sample_index]=phased && consistent;
-	    
-	    consistent = _kid[variant_index][sample_index].second() != _dad[variant_index][sample_index].first();
+	    _is_aligned_with_pedigree[variant_index][sample_index]= !phased || consistent;
+//	    std::cerr<<consistent<<" "<<phased<<std::endl;
+	    consistent = _kid[variant_index][sample_index].second() == _dad[variant_index][sample_index].first();
 	    phased = is_sample_phased(variant_index,sample_index,_kid,_kid_vote);
 	    phased &= is_sample_phased(variant_index,sample_index,_dad,_dad_vote);
-	    _is_aligned_with_pedigree[variant_index][sample_index]=phased && consistent;	    
+	    _is_aligned_with_pedigree[variant_index][sample_index] = _is_aligned_with_pedigree[variant_index][sample_index] && (!phased || consistent);
+	    // std::cerr<<consistent<<" "<<phased<<std::endl;
+	    // std::cerr<<variant_index<<" "<<sample_index<<" "<<_is_aligned_with_pedigree[variant_index][sample_index]<<std::endl;
 	}
     }
 }
 
+bool HaplotypeBuffer::is_phase_set_aligned_with_pedigree(int sample,int phaseset)
+{
+    assert(phaseset!=bcf_int32_missing);
+    bool ret = _kid_vote[sample][phaseset].second>0;
+    ret &= _kid_vote[sample][phaseset].first==0 || _kid_vote[sample][phaseset].first==_kid_vote[sample][phaseset].second;
+    for(size_t variant_index=0;variant_index<_num_variant;variant_index++)
+	if(_kid[variant_index][sample].ps()==phaseset)
+	    ret &= _is_aligned_with_pedigree[variant_index][sample];
+    return(ret);
+}
 
-void HaplotypeBuffer::update_bcf1_genotypes(int linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array)
+void HaplotypeBuffer::update_bcf1_genotypes(size_t linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array)
 {
     assert(linenum>=0 && linenum<_num_variant);
-    for(int i=0;i<_num_sample;i++)
+    for(size_t i=0;i<_num_sample;i++)
     {
 	ps_array[i]=rps_array[i]=bcf_int32_missing;
 	if(_kid[linenum][i].ps()!=bcf_int32_missing)
 	{
-	    if(is_aligned_with_pedigree(linenum,i))
+	    if(is_phase_set_aligned_with_pedigree(i,_kid[linenum][i].ps()))
 		_kid[linenum][i].update_bcf_gt_array(gt_array,i,rps_array);
 	    else
 		_kid[linenum][i].update_bcf_gt_array(gt_array,i,ps_array);

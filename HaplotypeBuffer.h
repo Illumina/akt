@@ -22,14 +22,14 @@ public:
     Genotype get_genotype(size_t variant_index,size_t sample_index);
     int get_num_variant() {return _num_variant;};
     int get_num_sample() {return _num_sample;};    
-    void update_bcf1_genotypes(int linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array);
-    bool is_mendel_consistent(int linenum);
+    void update_bcf1_genotypes(size_t linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array);
+    bool is_mendel_consistent(size_t linenum);
     void swap(int variant,int sample);
     void setPhase(int variant,int sample,bool phase);
     void copy_from_parents();
     void align_sample(vector< vector< Genotype > > & dst,vector< vector< Genotype > > & src,vector< map<int,pair<int,int> > >  & phase_set_vote    );
 				   
-    bool is_aligned_with_pedigree(int linenum,int sample) { _is_aligned_with_pedigree[linenum][sample]; }
+    bool is_phase_set_aligned_with_pedigree(int sample,int phaseset);
     vector< vector< Genotype > > & kid() {return _kid;};
     vector< vector< Genotype > > & dad() {return _dad;};
     vector< vector< Genotype > > & mum() {return _mum;};

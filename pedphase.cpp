@@ -373,6 +373,7 @@ PedPhaser::~PedPhaser()
     free(_gt_array_dup);
     bcf_sr_destroy(_bcf_reader);
     bcf_hdr_destroy(_out_header);
+    if(_rps_array) free(_rps_array);
 }
 
 int pedphase_main(int argc, char **argv)
