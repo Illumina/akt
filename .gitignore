@@ -32,5 +32,4 @@ akt
 *.out
 *.app
 
-version.h
-
+version.hh
