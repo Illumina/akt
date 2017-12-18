@@ -98,7 +98,7 @@ void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
     assert(haps_to_align.get_num_sample() == get_num_sample());
     assert(haps_to_align.get_num_variant() == get_num_variant());
     align_sample(kid(),haps_to_align.kid(),_kid_vote);
-    align_sample(mum(),haps_to_align.mum(),_mum_vote);
+    align_sample(mum(),haps_to_align.mum(),_mum_vote); 
     align_sample(dad(),haps_to_align.dad(),_dad_vote);
     check_pedigree_aligned();
     copy_from_parents();    

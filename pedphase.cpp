@@ -118,8 +118,8 @@ void PedPhaser::main()
 		    if(distance_from_last_phase_set>min_distance_to_flush)
 		    {
 			flush_buffer();
+			std::fill(last_phase_set.begin(),last_phase_set.end(),bcf_int32_missing);			
 		    }
-		    std::fill(last_phase_set.begin(),last_phase_set.end(),bcf_int32_missing);
 		}
 		else
 		{
@@ -277,6 +277,7 @@ int *diplofy(int *gt,int num_sample)
 
 int PedPhaser::flush_buffer()
 {
+//    std::cerr<<"flushing buffer "<<_line_buffer.size()<<std::endl;//debug
     if (_line_buffer.empty()) return(0); 
     int _num_gt=0,_num_ps=0;
     HaplotypeBuffer hap_transmission(_num_sample,_pedigree);//stores the transmission phased haplotypes

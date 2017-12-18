@@ -15,7 +15,7 @@ done
 # for i in pedphase/test*.vcf.gz;
 # do
 #     echo Testing $i
-#     ../akt pedphase $i -p pedphase/pedigree.fam -o - 2> /dev/null  | grep -A1000 CHROM > ${i%vcf.gz}expected
+#     ../akt pedphase $i -o - 2> /dev/null  | grep -A1000 CHROM > ${i%vcf.gz}expected
 # done
 
 
