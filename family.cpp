@@ -2,7 +2,7 @@
 // Created by O'Connell, Jared on 7/24/17.
 //
 
-#include "family.hpp"
+#include "family.hh"
 
 using namespace std;
 

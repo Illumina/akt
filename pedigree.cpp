@@ -1,5 +1,5 @@
 #include <assert.h>
-#include "pedigree.h"
+#include "pedigree.hh"
 
 //#define DEBUG_PEDIGREE
 
@@ -18,7 +18,6 @@ string get_pedigree_id(string &line, const string &member)
 sampleInfo::sampleInfo(bcf_hdr_t *hdr)
 {
     kstring_t str = {0, 0, 0};
-    ks_tokaux_t aux;
     bcf_hdr_format(hdr, 0, &str);
     stringstream ss;
     ss << str.s;

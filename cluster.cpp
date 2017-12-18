@@ -1,7 +1,7 @@
 #include <Eigen/Dense>
-#include "akt.hpp"
-#include "cluster.hpp"
-#include "reader.hpp"
+#include "akt.hh"
+#include "cluster.hh"
+#include "reader.hh"
 
 using namespace std;
 using namespace Eigen;
