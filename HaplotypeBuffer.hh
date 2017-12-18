@@ -1,6 +1,8 @@
 #ifndef AKT_HAPLOTYPEBUFFER_H
 #define AKT_HAPLOTYPEBUFFER_H
 
+#include <unordered_map>
+
 #include "akt.hh"
 #include "pedigree.hh"
 #include "pedphase.hh"
@@ -28,24 +30,24 @@ public:
     void swap(int variant,int sample);
     void setPhase(int variant,int sample,bool phase);
     void copy_from_parents();
-    void align_sample(vector< vector< Genotype > > & dst,vector< vector< Genotype > > & src,vector< map<int,pair<int,int> > >  & phase_set_vote    );
+    void align_sample(std::vector< std::vector< Genotype > > & dst,std::vector< std::vector< Genotype > > & src,std::vector< std::unordered_map<int,pair<int,int> > >  & phase_set_vote    );
 				   
     bool is_phase_set_aligned_with_pedigree(int sample,int phaseset);
-    vector< vector< Genotype > > & kid() {return _kid;};
-    vector< vector< Genotype > > & dad() {return _dad;};
-    vector< vector< Genotype > > & mum() {return _mum;};
-    bool is_sample_phased(int variant,int sample,vector< vector< Genotype > > & genotypes,vector< map<int,pair<int,int> > >  & phase_set_vote);    
+    std::vector< std::vector< Genotype > > & kid() {return _kid;};
+    std::vector< std::vector< Genotype > > & dad() {return _dad;};
+    std::vector< std::vector< Genotype > > & mum() {return _mum;};
+    bool is_sample_phased(int variant,int sample,std::vector< std::vector< Genotype > > & genotypes,std::vector< std::unordered_map<int,pair<int,int> > >  & phase_set_vote);    
 private:
     
     void check_pedigree_aligned();    
     size_t _num_sample,_num_variant;
-    vector< vector< Genotype > > _kid,_dad,_mum;
+    std::vector< std::vector< Genotype > > _kid,_dad,_mum;
     sampleInfo *_pedigree;
-    vector<int> _index_of_first_child;
-    vector< vector<bool> >_sample_was_mendel_phased;
-    vector<bool> _line_is_mendel_consistent;
-    vector< vector<bool> > _is_aligned_with_pedigree;
-    vector< map<int,pair<int,int> > > _kid_vote,_dad_vote,_mum_vote;
+    std::vector<int> _index_of_first_child;
+    std::vector< std::vector<bool> >_sample_was_mendel_phased;
+    std::vector<bool> _line_is_mendel_consistent;
+    std::vector< std::vector<bool> > _is_aligned_with_pedigree;
+    std::vector< std::unordered_map<int,pair<int,int> > > _kid_vote,_dad_vote,_mum_vote;
 };
 
 #endif //

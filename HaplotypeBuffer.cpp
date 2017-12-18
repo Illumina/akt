@@ -25,10 +25,10 @@ bool HaplotypeBuffer::is_mendel_consistent(size_t linenum)
 
 void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
 {
-    _kid.push_back(vector<Genotype>());
-    _dad.push_back(vector<Genotype>());
-    _mum.push_back(vector<Genotype>());
-    _is_aligned_with_pedigree.push_back(vector<bool>(_num_sample,true));
+    _kid.push_back(std::vector<Genotype>());
+    _dad.push_back(std::vector<Genotype>());
+    _mum.push_back(std::vector<Genotype>());
+    _is_aligned_with_pedigree.push_back(std::vector<bool>(_num_sample,true));
     for(size_t kid_index=0;kid_index<_num_sample;kid_index++)
     {
 	int dad_index = _pedigree->getDadIndex(kid_index);
@@ -104,9 +104,9 @@ void HaplotypeBuffer::align(HaplotypeBuffer & haps_to_align)
     copy_from_parents();    
 }
 
-void HaplotypeBuffer::align_sample(vector< vector< Genotype > > & dst,
-				   vector< vector< Genotype > > & src,
-				   vector< map<int,pair<int,int> > >  & phase_set_vote)
+void HaplotypeBuffer::align_sample(std::vector< std::vector< Genotype > > & dst,
+				   std::vector< std::vector< Genotype > > & src,
+				   std::vector< std::unordered_map<int,pair<int,int> > >  & phase_set_vote)
 {
     for(size_t sample_index=0;sample_index<_num_sample;sample_index++)
     {
@@ -144,8 +144,8 @@ void HaplotypeBuffer::align_sample(vector< vector< Genotype > > & dst,
 }
 
 bool HaplotypeBuffer::is_sample_phased(int variant,int sample,
-				       vector< vector< Genotype > > & genotypes,
-				       vector< map<int,pair<int,int> > >  & phase_set_vote)
+				       std::vector< std::vector< Genotype > > & genotypes,
+				       std::vector< std::unordered_map<int,pair<int,int> > >  & phase_set_vote)
 {
     bool phased = genotypes[variant][sample].is_phased();
     int ps = genotypes[variant][sample].ps();
