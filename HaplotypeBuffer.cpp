@@ -170,13 +170,10 @@ void HaplotypeBuffer::check_pedigree_aligned()
 	    bool phased = is_sample_phased(variant_index,sample_index,_kid,_kid_vote);
 	    phased &= is_sample_phased(variant_index,sample_index,_mum,_mum_vote);
 	    _is_aligned_with_pedigree[variant_index][sample_index]= !phased || consistent;
-//	    std::cerr<<consistent<<" "<<phased<<std::endl;
 	    consistent = _kid[variant_index][sample_index].second() == _dad[variant_index][sample_index].first();
 	    phased = is_sample_phased(variant_index,sample_index,_kid,_kid_vote);
 	    phased &= is_sample_phased(variant_index,sample_index,_dad,_dad_vote);
 	    _is_aligned_with_pedigree[variant_index][sample_index] = _is_aligned_with_pedigree[variant_index][sample_index] && (!phased || consistent);
-	    // std::cerr<<consistent<<" "<<phased<<std::endl;
-	    // std::cerr<<variant_index<<" "<<sample_index<<" "<<_is_aligned_with_pedigree[variant_index][sample_index]<<std::endl;
 	}
     }
 }

@@ -265,7 +265,6 @@ int kin_main(int argc, char* argv[])
     bool regions_is_file = false;
     string targets = "";
     bool targets_is_file = false;
-    bool norm = true;
     float min_kin = 0; 
     bool tk = false;
     int thin = 1;
