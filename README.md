@@ -35,22 +35,17 @@ akt uses the syntax
 
 To see a list of available functionality use:
 ```
-Program:	akt (Ancestry and Kinship Tools)
-Version:	a963bf1
+Program:        akt (Ancestry and Kinship Tools)
+Version:        v0.3.9-33-g2f4bfea
 Copyright (c) 2017, Illumina, Inc. All rights reserved. See LICENSE for further details.
 
-Usage:	akt <command> [options]
+Usage:  akt <command> [options]
 
-	pca                      principal component analysis
-	kin                      detect average IBD sharing
-	relatives                discover pedigrees
-	mendel                   profile Mendelian inhertiance and inconsistencies in known pedigrees
-	cluster                  perform cluster analyses
-	LDplot                   output correlation matrix
-	stats                    calculate AF and LD metrics
-	prune                    performs LD pruning of variants
-	tag                      selects a set of K tagging variants
-	metafreq                 examine two files for AF differences
+        pca                      principal component analysis
+        kin                      calculate kinship coefficients
+        relatives                discover pedigrees
+        unrelated                generate a list of unrelated individuals
+        pedphase                 Mendelian transmission phasing for duos/trios
 ```
 
 Some useful routine analyses (assumes you are in the akt directory):
