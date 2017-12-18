@@ -48,7 +48,6 @@ int unrelated_main(int argc, char* argv[])
     float relmin = 0.025;
     int uits = 10;
     string prefix="out.";
-    bool gout = false;
 
     while ((c = getopt_long(argc, argv, "k:i:?",loptions,NULL)) >= 0) {
         switch (c)

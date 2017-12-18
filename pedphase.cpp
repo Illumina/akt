@@ -44,13 +44,11 @@ PedPhaser::PedPhaser(args &a)
     cerr << "Reading input from " << a.inputfile << endl;    
     _num_sample = bcf_hdr_nsamples(_out_header);
     _parental_genotypes.assign(2*_num_sample,pair<int,int>(bcf_gt_missing,bcf_gt_missing));
-    _gt_array = nullptr;
-    _ps_array = nullptr;
-    _rps_array = nullptr;
-    _gt_array = nullptr;
-    _gt_array_dup = nullptr;
-    _num_gt=0;
-    _num_ps=0;
+    _num_gt=_num_sample*2;    
+    _gt_array = (int *)malloc(sizeof(int)*_num_gt);
+    _ps_array = (int32_t *)malloc(sizeof(int32_t)*_num_sample);
+    _rps_array = (int32_t *)malloc(sizeof(int32_t)*_num_sample);
+    _num_rps=_num_ps=_num_sample;
     if (!a.exclude_chromosomes.empty())
     {
         cerr << "Will not phase chromosomes: " << a.exclude_chromosomes << " (--exclude-chromosomes)" << endl;
@@ -78,12 +76,16 @@ PedPhaser::PedPhaser(args &a)
 
 void PedPhaser::main()
 {
+    int min_distance_to_flush=10000;
+    int prev_rid = -1;
     bcf1_t *line;
-    vector<int> gt(_num_sample);
-    vector<int32_t> phase_set(_num_sample, bcf_int32_missing); //stores the current phase set for each sample
+    vector<int32_t> last_phase_set(_num_sample, bcf_int32_missing); //stores the current phase set for each sample
     while (bcf_sr_next_line(_bcf_reader))
     {
         line = bcf_sr_get_line(_bcf_reader, 0);
+	if(line->rid!=prev_rid) flush_buffer();
+	prev_rid = line->rid;
+	
         if (chromosome_is_in_ignore_list(line))
         {
             flush_buffer(); //just in case something was sitting in buffer from previous chromosome
@@ -92,32 +94,44 @@ void PedPhaser::main()
         else
         {
             bcf_unpack(line, BCF_UN_ALL);
-            if (bcf_get_format_int32(_in_header, line, "PS", &_ps_array, &_num_ps) > 0)
-            { // This variant has samples with phase set (PS) set. We need to buffer these.
+	    int ps_status=bcf_get_format_int32(_in_header, line, "PS", &_ps_array, &_num_ps);
+	    if(ps_status == -1)
+	    {
                 bcf1_t *new_line = bcf_dup(line);
                 _line_buffer.push_back(new_line);
-            }
-            else
-            { //No phase set. We flush the deque and then perform standard phase-by-transmission on the current line.
-#ifdef DEBUG
-		cerr << line->pos+1<<endl;
-#endif		
-                flush_buffer();
-                int ret = bcf_get_genotypes(_in_header, line, &_gt_array, &_num_gt);
-                bool diploid = ret > _num_sample; //are there any non-haploid genotypes?
-                if (diploid)
-                {
-		    _sample_has_been_phased.assign(_num_sample,false);		    
-                    for (int i = 0; i <_num_sample ; i++)
-                    {
-			if (mendel_phase(i, _gt_array)==-1)
-			    bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", nullptr, 1);
-                    }
-                }
-                bcf_update_genotypes(_out_header, line, _gt_array, ret);
-                bcf_write(_out_file, _out_header, line);
-            }
-        }
+		flush_buffer();
+	    }
+	    else if(ps_status == -2)
+	    {
+		die("FORMAT/PS had incorrect type");
+	    }
+	    else
+	    {
+		if(ps_status == -3)
+		{
+		    int distance_from_last_phase_set = INT_MAX;
+		    for(size_t i=0;i<_num_sample;i++)
+		    {
+			int d = last_phase_set[i]==bcf_int32_missing ? INT_MAX : (line->pos-last_phase_set[i]);
+			distance_from_last_phase_set = min(d,distance_from_last_phase_set);
+		    }
+		    if(distance_from_last_phase_set>min_distance_to_flush)
+		    {
+			flush_buffer();
+			std::fill(last_phase_set.begin(),last_phase_set.end(),bcf_int32_missing);			
+		    }
+		}
+		else
+		{
+		    for(size_t i=0;i<_num_sample;i++)
+			if(_ps_array[i]!=bcf_int32_missing)
+			    last_phase_set[i] = _ps_array[i];
+		}
+		
+                bcf1_t *new_line = bcf_dup(line);
+                _line_buffer.push_back(new_line);
+	    }
+	}
     }
     flush_buffer();
 }
@@ -248,8 +262,22 @@ bool PedPhaser::chromosome_is_in_ignore_list(bcf1_t *record)
     return false;
 }
 
+//Turns haploid GTs (1) into padded "diploid" ones like (1,bcf_vector32_end).
+int *diplofy(int *gt,int num_sample)
+{
+    std::vector<int> src(gt,gt+num_sample);
+    gt=(int *)realloc(gt,2*num_sample*sizeof(int));//this should be redundant
+    for(int i=0;i<num_sample;i++)
+    {
+	gt[i*2] = src[i];
+	gt[i*2+1] = bcf_int32_vector_end;
+    }
+    return(gt);
+}
+
 int PedPhaser::flush_buffer()
 {
+//    std::cerr<<"flushing buffer "<<_line_buffer.size()<<std::endl;//debug
     if (_line_buffer.empty()) return(0); 
     int _num_gt=0,_num_ps=0;
     HaplotypeBuffer hap_transmission(_num_sample,_pedigree);//stores the transmission phased haplotypes
@@ -257,12 +285,16 @@ int PedPhaser::flush_buffer()
     for (deque<bcf1_t *>::iterator it1 = _line_buffer.begin(); it1 != _line_buffer.end(); it1++)
     {
 	bcf1_t *line = *it1;	
-	assert(bcf_get_genotypes(_out_header, line, &_gt_array, &_num_gt) == 2 * _num_sample);
+	int status = bcf_get_genotypes(_out_header, line, &_gt_array, &_num_gt);
+	assert(status== 2 * _num_sample || status==_num_sample);
+	if(status==_num_sample)//This is a  hack to handle all-haploid VCF rows.
+	    _gt_array=diplofy(_gt_array,_num_sample);
+	
 	hap_transmission.push_back(_gt_array);
-	int status = bcf_get_format_int32(_in_header, line,"PS", &_ps_array, &_num_ps);
+	status = bcf_get_format_int32(_in_header, line,"PS", &_ps_array, &_num_ps);
 	if(status==_num_sample)
 	    hap_phaseset.push_back(_gt_array,_ps_array);
-	else if(_num_sample<=0)
+	else if(status<0)
 	    hap_phaseset.push_back(_gt_array,nullptr);
 	else
 	    die(("Invalid PS length: "+std::to_string(status)).c_str());
@@ -271,14 +303,13 @@ int PedPhaser::flush_buffer()
     hap_transmission.align(hap_phaseset);
     
     int count=0;
-    _rps_array = (int32_t *)realloc(_rps_array,_num_sample*sizeof(int32_t));
     //Finally, flush the buffer to the output file.
     while (!_line_buffer.empty()) 
     {
         bcf1_t *line = _line_buffer.front();
         _line_buffer.pop_front();
 	hap_transmission.update_bcf1_genotypes(count,_gt_array,_ps_array,_rps_array);
-	bcf_update_genotypes(_out_header, line, _gt_array, _num_gt);
+	bcf_update_genotypes(_out_header, line, _gt_array, 2*_num_sample);
 	if(bcf_int32_count_missing(_ps_array,_num_sample)==_num_sample)
 	    bcf_update_format_int32(_out_header, line, "PS", nullptr,0);
 	else
@@ -370,7 +401,6 @@ PedPhaser::~PedPhaser()
     hts_close(_out_file);
     free(_ps_array);
     free(_gt_array);
-    free(_gt_array_dup);
     bcf_sr_destroy(_bcf_reader);
     bcf_hdr_destroy(_out_header);
     if(_rps_array) free(_rps_array);
