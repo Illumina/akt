@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     }
     else if (((string) argv[1]) == "mendel")
     {
-	die("mendel command is deprecated. See pedphase for equivalent functionality.");
+	die("mendel command is deprecated. See the bcftools +mendelian plugin for equivalent functionality.");
         //mendel_main(argc, argv);
     } else if (((string) argv[1]) == "LDplot")
     {

@@ -93,8 +93,8 @@ void umessage(const char type)
         case 'S':
             std::cerr << "\t -S --samples-file:		list of samples, file" << endl;
             break;
-        case 'n':
-            std::cerr << "\t -n --nthreads: 		num threads" << endl;
+        case '@':
+            std::cerr << "\t -@ --threads: 		        num threads" << endl;
             break;
         case 'a':
             std::cerr << "\t -a --aftag:			allele frequency tag (default AF)" << endl;

@@ -88,7 +88,7 @@ static void usage()
     cerr << "\t -F --freq-file:                a file containing population allele frequencies to use in kinship calculation"<<endl;
     cerr << "\t -M --method:			type of estimator. 0:plink (default) 1:king-robust 2:genetic-relationship-matrix" << endl;
     umessage('a');
-    umessage('n');
+    umessage('@');
     cerr << "\nSite filtering options:"<<endl;  
     umessage('R');
     umessage('r');
@@ -253,7 +253,7 @@ int kin_main(int argc, char* argv[])
 	{"method",1,0,'M'},
 	{"freq-file",1,0,'F'},	
 	{"minkin",1,0,'k'},
-	{"nthreads",1,0,'n'},
+	{"threads",1,0,'@'},
 	{"aftag",1,0,'a'},
 	{"samples",1,0,'s'},
 	{"samples-file",1,0,'S'},
@@ -292,7 +292,7 @@ int kin_main(int argc, char* argv[])
 	case 'F': frq_file=optarg;break;
 	case 'M': method=atoi(optarg);break;
 	case 'k': tk = true; min_kin = atof(optarg); break;
-	case 'n': nthreads = atoi(optarg); break;
+	case '@': nthreads = atoi(optarg); break;
 	case FORCE: force = true; break;
 	case 'a': af_tag = string(optarg); break;
 	case 's': sargs.sample_names = (optarg); sargs.subsample = true; break;
