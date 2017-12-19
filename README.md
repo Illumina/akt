@@ -2,7 +2,7 @@
 
 Copyright (c) 2017, Illumina, Inc. All rights reserved. This software is not commercially supported.
 
-Ancestry and Kinship Tools (AKT) provides a number of useful statistical genetics routines using the [htslib](http://www.htslib.org/) API for input/output. This means it can seamlessly read BCF/VCF files and play nicely with [bcftools](http://samtools.github.io/bcftools/bcftools.html).
+Ancestry and Kinship Tools (AKT) provides a handful of useful statistical genetics routines using the [htslib](http://www.htslib.org/) API for input/output. This means it can seamlessly read BCF/VCF files and play nicely with [bcftools](http://samtools.github.io/bcftools/bcftools.html).
 
 Please cite the [AKT pre-print](http://biorxiv.org/content/early/2017/04/10/047829) if you find this software useful.
 

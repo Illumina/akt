@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><title>akt</title><link rel="stylesheet" type="text/css" href="docbook-xsl.css" /><meta name="generator" content="DocBook XSL Stylesheets V1.79.1" /></head><body><div xml:lang="en" class="refentry" lang="en"><a id="idm46383483901264"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>akt — ancestry and kinship toolkit</p></div><div class="refsynopsisdiv"><a id="_synopsis"></a><h2>Synopsis</h2><p><span class="strong"><strong>akt</strong></span> [<span class="emphasis"><em>COMMAND</em></span>] [<span class="emphasis"><em>OPTIONS</em></span>]</p></div><div class="refsect1"><a id="_description"></a><h2>DESCRIPTION</h2><p>Ancestry and Kinship Tools (AKT) provides a handful of useful statistical genetics routines using the <a class="ulink" href="http://www.htslib.org/" target="_top">htslib</a> API for input/output. This means it can seamlessly read BCF/VCF files and play nicely with <a class="ulink" href="http://samtools.github.io/bcftools/bcftools.html" target="_top">BCFtools</a>. Many command line arguments and parts of this manpage were also borrowed/stolen from BCFtools!</p><p>Copyright (c) 2017, Illumina, Inc. All rights reserved. This software is not commercially supported.</p><p>AKT is freely available under the <a class="ulink" href="https://github.com/Illumina/agg/blob/master/LICENSE/" target="_top">GPL3 license</a>. AKT relies on HTSlib and Eigen. <a class="ulink" href="http://eigen.tuxfamily.org/index.php?title=Main_Page/" target="_top">Eigen</a> is a header-only library for matrix algebra released under the <a class="ulink" href="https://www.mozilla.org/en-US/MPL/2.0/" target="_top">MPL2</a>. <a class="ulink" href="http://www.htslib.org/" target="_top">HTSlib</a> is a released under the <a class="ulink" href="http://choosealicense.com/licenses/mit/" target="_top">MIT/Expat License</a>. Both libraries are included with AKT.</p></div><div class="refsect1"><a id="_list_of_commands"></a><h2>LIST OF COMMANDS</h2><p>For a full list of available commands, run <span class="strong"><strong>akt</strong></span> without arguments. For a full list of available options, run <span class="strong"><strong>akt</strong></span> <span class="emphasis"><em>COMMAND</em></span> without arguments.</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+<span class="strong"><strong><a class="link" href="#pca" title="akt pca [OPTIONS] FILE">pca</a></strong></span>   .. principal component analysis
+</li><li class="listitem">
+<span class="strong"><strong><a class="link" href="#kin" title="akt kin [OPTIONS] FILE">kin</a></strong></span>   .. kinship coefficient calculation
+</li><li class="listitem">
+<span class="strong"><strong><a class="link" href="#relatives" title="akt relatives [OPTIONS] FILE">relatives</a></strong></span>   .. find pedigrees using the output from <a class="link" href="#kin" title="akt kin [OPTIONS] FILE">kin</a>
+</li><li class="listitem">
+<span class="strong"><strong><a class="link" href="#unrelated" title="akt unrelated [OPTIONS] FILE">unrelated</a></strong></span>   .. generate a list of unrelated individuals using the output from <a class="link" href="#kin" title="akt kin [OPTIONS] FILE">kin</a>
+</li><li class="listitem">
+<span class="strong"><strong><a class="link" href="#pedphase" title="akt pedphase [OPTIONS] FILE">pedphase</a></strong></span>   .. perform simple Mendelian phasing for duos/trios
+</li></ul></div></div><div class="refsect1"><a id="common_options"></a><h2>COMMON OPTIONS</h2><p>There are a number of options that are shared by multiple akt subcommands which we list here. We have tried to keep these consistent with <a class="ulink" href="http://samtools.github.io/bcftools/bcftools.html/" target="_top">BCFtools</a> where possible.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<span class="strong"><strong>-R, --regions-file</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+     a file (tabixed VCF or bed) containing the markers to perform analysis on. <span class="strong"><strong>-R</strong></span> uses tabix jumping for fast look up
+</dd><dt><span class="term">
+<span class="strong"><strong>-r, --regions</strong></span> <span class="emphasis"><em>chr</em></span>|<span class="emphasis"><em>chr:pos</em></span>|<span class="emphasis"><em>chr:from-to</em></span>|<span class="emphasis"><em>chr:from-</em></span>[,…]
+</span></dt><dd>
+      same as <span class="strong"><strong>-R</strong></span> but a string containing the region eg. "chr1:1000000-2000000"
+</dd><dt><span class="term">
+<span class="strong"><strong>-T, --targets-file</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+     same as <span class="strong"><strong>-R</strong></span> but streams rather than tabix jumps ie. is slow
+</dd><dt><span class="term">
+<span class="strong"><strong>-t, --targets</strong></span> <span class="emphasis"><em>chr</em></span>|<span class="emphasis"><em>chr:pos</em></span>|<span class="emphasis"><em>chr:from-to</em></span>|<span class="emphasis"><em>chr:from-</em></span>[,…]
+</span></dt><dd>
+     same as <span class="strong"><strong>-r</strong></span> but streams rather than tabix jumps ie. is slow
+</dd><dt><span class="term">
+<span class="strong"><strong>-S, --samples-file</strong></span>  <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+     File of sample names to include or exclude if prefixed with "^"
+</dd><dt><span class="term">
+<span class="strong"><strong>-s, --samples</strong></span> <span class="emphasis"><em>samples</em></span>
+</span></dt><dd>
+     Comma-separated list of samples to include or exclude if prefixed with "^"
+</dd><dt><span class="term">
+<span class="strong"><strong>-@, --threads</strong></span> <span class="emphasis"><em>INT</em></span>
+</span></dt><dd>
+     Number of threads to use.
+</dd><dt><span class="term">
+<span class="strong"><strong>-o, --output-file</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+     Output file name
+</dd><dt><span class="term">
+<span class="strong"><strong>-O, --output-type</strong></span> <span class="emphasis"><em>b</em></span>|<span class="emphasis"><em>u</em></span>|<span class="emphasis"><em>z</em></span>|<span class="emphasis"><em>v</em></span>
+</span></dt><dd>
+     Output format of vcf b=compressed bcf, z=compressed vcf, u=uncompressed bcf, v=uncompressed vcf
+</dd></dl></div></div><div class="refsect1"><a id="_commands"></a><h2>COMMANDS</h2><div class="refsect2"><a id="pca"></a><h3>akt pca <span class="emphasis"><em>[OPTIONS]</em></span> <span class="emphasis"><em>FILE</em></span></h3><p>Performs principal component analysis on a BCF/VCF. Can also be used to project samples onto pre-calculated principal components from another cohort. Uses a randomised SVD by default for very fast computation. WGS data is far denser than required for a meaningful PCA, it is recommended you provide a thinned set of sites via the <code class="literal">-R</code> command.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<span class="strong"><strong>-o, --output</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+    see <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-O, --output-type</strong></span> <span class="emphasis"><em>b</em></span>|<span class="emphasis"><em>u</em></span>|<span class="emphasis"><em>z</em></span>|<span class="emphasis"><em>v</em></span>
+</span></dt><dd>
+    see <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-r, --regions</strong></span> <span class="emphasis"><em>chr</em></span>|<span class="emphasis"><em>chr:pos</em></span>|<span class="emphasis"><em>chr:from-to</em></span>|<span class="emphasis"><em>chr:from-</em></span>[,…]
+</span></dt><dd>
+    see <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-R, --regions-file</strong></span> <span class="emphasis"><em>file</em></span>
+</span></dt><dd>
+    see <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-s, --samples</strong></span> [^]<span class="emphasis"><em>LIST</em></span>
+</span></dt><dd>
+    subset of samples to annotate, see also <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-S, --samples-file</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+    subset of samples to annotate. If the samples are named differently in the
+    target VCF and the <span class="strong"><strong>-a, --annotations</strong></span> VCF, the name mapping can be
+    given as "src_name dst_name\n", separated by whitespaces, each pair on a
+    separate line.
+</dd><dt><span class="term">
+<span class="strong"><strong>-W, --weights</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+     Use precalculated principle components.
+</dd><dt><span class="term">
+<span class="strong"><strong>-N, --npca</strong></span> <span class="emphasis"><em>VALUE</em></span>
+</span></dt><dd>
+     Number of principle components to calculate.
+</dd><dt><span class="term">
+<span class="strong"><strong>-a, --alg</strong></span>
+</span></dt><dd>
+     Use JacobiSVD PCA algorithm, which is exact to float precision but very slow.
+</dd><dt><span class="term">
+<span class="strong"><strong>-e, --extra</strong></span>:: <span class="emphasis"><em>VALUE</em></span>
+</span></dt><dd>
+     Default PCA calculation is the inexact <code class="literal">RedSVD</code> algorithm, which requires this parameter. The higher the number the more accurate principle components will be obtained.
+</dd><dt><span class="term">
+<span class="strong"><strong>-F, --svfile</strong></span>
+</span></dt><dd>
+     File to output the singular values.
+</dd><dt><span class="term">
+<span class="strong"><strong>-C, --covdef</strong></span>
+</span></dt><dd>
+     Which matrix to take the PCA of. 0 uses mean subtracted genotype matrix; 1 uses mean subtracted and normalized genotype matrix; 2 uses normalized covariance matrix with bias term subtracted from diagonal elements.
+</dd></dl></div><p><span class="strong"><strong>Examples:</strong></span></p><pre class="screen">./akt pca multisample.bcf -R data/wgs.grch37.vcf.gz -O b -o pca.bcf &gt; pca.txt</pre><p>The file <code class="literal">pca.txt</code> contains</p><pre class="screen">SAMPLE_ID0 P0 P1 P2 P3 P4
+SAMPLE_ID1 P0 P1 P2 P3 P4
+...</pre><p>The bcf file <code class="literal">pca.bcf</code> contains</p><pre class="screen">bcftools query -f "%INFO/WEIGHT\n" pca.bcf
+pc00 pc01 pc02 pc03 pc04
+pc10 pc11 pc12 pc13 pc14
+...</pre><p>First index is the site index and second which is the coefficient (loading) that can be used to project other samples onto these principal components. For example we could project a new set of samples onto these same PCs via:</p><pre class="screen">./akt pca new_multisample.bcf -W pca.bcf &gt; projections</pre></div><div class="refsect2"><a id="kin"></a><h3>akt kin <span class="emphasis"><em>[OPTIONS]</em></span> <span class="emphasis"><em>FILE</em></span></h3><p>Calculates kinship coefficients (and other related metrics) from multi-sample VCF/BCFs. Can be used to detect (closely) related or duplicated samples.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<span class="strong"><strong>-k, --minkin</strong></span> <span class="emphasis"><em>VALUE</em></span>
+</span></dt><dd>
+     Only output pairs with kinship coefficient greater than <span class="emphasis"><em>VALUE</em></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-F, --freq-file</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+     a file containing population allele frequencies to use in kinship calculation
+<span class="strong"><strong>-M, --method</strong></span> '0/1/2`
+     type of estimator.  0:<a class="ulink" href="https://www.cog-genomics.org/plink2/ibd" target="_top">[plink (default)</a> 1:<a class="ulink" href="http://bioinformatics.oxfordjournals.org/content/26/22/2867.full" target="_top">king-robust</a> 2:<a class="ulink" href="http://cnsgenomics.com/software/gcta/estimate_grm.html" target="_top">genetic-relationship-matrix</a>
+</dd><dt><span class="term">
+<span class="strong"><strong>-a  --aftag</strong></span>
+</span></dt><dd>
+<span class="emphasis"><em>VALUE</em></span>
+     allele frequency tag (default AF)
+</dd><dt><span class="term">
+<span class="strong"><strong>-@, --threads</strong></span> <span class="emphasis"><em>INT</em></span>
+</span></dt><dd>
+    see <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-r, --regions</strong></span> <span class="emphasis"><em>chr</em></span>|<span class="emphasis"><em>chr:pos</em></span>|<span class="emphasis"><em>chr:from-to</em></span>|<span class="emphasis"><em>chr:from-</em></span>[,…]
+</span></dt><dd>
+    see <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-R, --regions-file</strong></span> <span class="emphasis"><em>file</em></span>
+</span></dt><dd>
+    see <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-s, --samples</strong></span> [^]<span class="emphasis"><em>LIST</em></span>
+</span></dt><dd>
+    subset of samples to annotate, see also <span class="strong"><strong><a class="link" href="#common_options" title="COMMON OPTIONS">Common Options</a></strong></span>
+</dd><dt><span class="term">
+<span class="strong"><strong>-S, --samples-file</strong></span> <span class="emphasis"><em>FILE</em></span>
+</span></dt><dd>
+    subset of samples to annotate. If the samples are named differently in the
+    target VCF and the <span class="strong"><strong>-a, --annotations</strong></span> VCF, the name mapping can be
+    given as "src_name dst_name\n", separated by whitespaces, each pair on a
+    separate line.
+</dd></dl></div><p>Run the kinship calculation by giving akt a multi-sample vcf/bcf file:</p><p>Example usage:</p><pre class="screen">$ akt kin multisample.bcf -R data/wgs.grch37.vcf.gz -n 32 &gt; kin.txt</pre><p>This outputs the following seven column format:</p><pre class="screen">ID1 ID2 IBD0 IBD1 IBD2 KINSHIP NSNP</pre><div class="refsect3"><a id="_choice_of_estimator"></a><h4>Choice of estimator:</h4><p>The default algorithm (<code class="literal">-M 0</code>) used to calculate IBD is taken from <a class="ulink" href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1950838/" target="_top">PLINK</a> with some minor changes.</p><p>As with PLINK, we set KINSHIP = 0.5 * IBD2 + 0.25 * IBD1. Our IBD values may slighly differ to PLINK’s (by design) due to the following differences:</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem">
+No <span class="emphasis"><em>bias correction</em></span> since allele frequencies are assumed to be accurate
+</li><li class="listitem"><p class="simpara">
+Normalization as follows:
+</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: circle; "><li class="listitem">
+if IBD0 &gt; 1: IBD0 = 1, IBD1 = 0, IBD2 = 0
+</li><li class="listitem">
+if IBD1 &lt; 0: IBD1 = 0
+</li><li class="listitem">
+if IBD2 &lt; 0: IBD2 = 0
+</li><li class="listitem">
+norm = IBD0 + IBD1 + IBD2
+</li><li class="listitem">
+IBD0 /= norm, IBD1 /= norm; IBD2 /= norm;
+</li></ul></div></li><li class="listitem">
+We do <span class="strong"><strong>not</strong></span> follow PLINK which forces IBD to obey consistency conditions - this affects the clustering that is required for the <code class="literal">relatives</code> code.
+</li></ul></div><p>The second method (<code class="literal">-M1</code>) uses the robust kinship coefficent estimate describing in the <a class="ulink" href="http://bioinformatics.oxfordjournals.org/content/26/22/2867.full" target="_top">KING paper</a>. This may be preferable when your cohort has large amounts of population structure. Note that while the kinship coefficient differs for <code class="literal">-M0</code>, the IBD estimates and output format are the same as for <code class="literal">-M0</code>.</p></div></div><div class="refsect2"><a id="relatives"></a><h3>akt relatives <span class="emphasis"><em>[OPTIONS]</em></span> <span class="emphasis"><em>FILE</em></span></h3><p>Takes the output from <code class="literal">akt kin</code> and detects/reconstructs pedigrees from the information. Can also flag duplicated samples and create lists of unrelated samples.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<span class="strong"><strong>-k, --kmin</strong></span> <span class="emphasis"><em>VALUE</em></span>
+</span></dt><dd>
+     Only keep links with kinship above this threshold (searches in this set for duplicate, parent-child and sibling links).
+</dd><dt><span class="term">
+<span class="strong"><strong>-i, --its</strong></span> <span class="emphasis"><em>VALUE</em></span>
+</span></dt><dd>
+     Iteration parameter for unrelated set output.
+</dd><dt><span class="term">
+<span class="strong"><strong>-g, --graphout</strong></span>
+</span></dt><dd>
+     If present output graphviz files. These can be visualised using e.g. <code class="literal">neato -Tpng -O out.allgraph</code> or for family pedigrees <code class="literal">dot -Tpng -O out.Fam0.graph</code>.
+</dd><dt><span class="term">
+<span class="strong"><strong>-p, --prefis</strong></span> <span class="emphasis"><em>PREFIX</em></span>
+</span></dt><dd>
+     Prefix for output files.
+</dd></dl></div><pre class="screen">./akt relatives allibd -g &gt; allrelatives</pre><p>The output contains duplicates, families and relationship types.</p><pre class="screen">grep ^Dup allrelatives
+Dup0 Sample0
+Dup0 Sample1
+...
+grep ^Fam allrelatives
+Fam0 Sample2
+Fam0 Sample3
+...
+...
+grep ^Type allrelatives
+Type Fam0 Sample2 Sample3 Parent/Child
+...
+grep ^Unrel allrelatives
+Sample0
+Sample2
+...</pre><p>The file <code class="literal">out.allgraph</code> can be viewed with gviz e.g. <code class="literal">fdp out.allgraph -Tpng -O</code> and the families can be viewed using
+e.g. <code class="literal">dot out.Fam0.graph -Tpng -O</code>. The parent child relations are also recorded in PLINK fam format in <code class="literal">out.fam</code>. If
+e.g. a sibling pair, is found the samples will appear in <code class="literal">out.fam</code> without parents. If the direction of the relationship
+can’t be determined e.g. for parent/child duos a random sample is assigned to be the parent in <code class="literal">out.fam</code>. The final column
+in the <code class="literal">.fam</code> file specifies how many potential parents the sample had.</p><p>Note that <code class="literal">relatives</code> is quite a aggressive in its pedigree search, and can make errors when founders
+are missing (for example a mother and two children). We can remove false pedigrees via a simple Mendel consistency check:</p><pre class="screen">akt kin --force -M 1 test.bcf &gt; kinship.txt
+akt relatives kinship.txt
+akt mendel -p out.fam test.bcf &gt; mendel.txt
+python ~/workspace/akt/scripts/check_pedigree.py -fam out.fam -m mendel.txt &gt; corrected.fam</pre></div><div class="refsect2"><a id="unrelated"></a><h3>akt unrelated  <span class="emphasis"><em>[OPTIONS]</em></span> <span class="emphasis"><em>FILE</em></span></h3><p>This takes the output from <code class="literal">akt kin</code> and creates a list of nominally unrelated individuals.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">
+<span class="strong"><strong>-k, --kmin</strong></span> <span class="emphasis"><em>VALUE</em></span>
+</span></dt><dd>
+     individuals with kinship coefficient &gt; <span class="strong"><strong>value</strong></span> are considered related (default 0.025)
+</dd><dt><span class="term">
+<span class="strong"><strong>-i, --its</strong></span> <span class="emphasis"><em>VALUE</em></span>
+</span></dt><dd>
+     setting <span class="strong"><strong>value</strong></span>&gt;0 enables stochastic approach (default 0)
+</dd></dl></div><p>The algorithm has two options:</p><div class="orderedlist"><p class="title"><strong>Simple greedy algorithm</strong></p><ol class="orderedlist" type="1"><li class="listitem">
+Select individual with smallest number of relatives (defined as kinship coefficient &gt; k) and remove all their relatives.
+</li><li class="listitem">
+Repeat 1. until remaining individuals are unrelated.
+</li></ol></div><div class="orderedlist"><p class="title"><strong>Stochastic approach - for each sub-graph:</strong></p><ol class="orderedlist" type="1"><li class="listitem">
+Randomly select individuals within each sub-graph and remove their relatives
+</li><li class="listitem">
+Repeat 1. until all individuals are unrelated
+</li></ol></div><p>Repeat this <span class="strong"><strong>i</strong></span> times, storing the largest unconnected set found. If the stochastic approach yields a larger unconnected set than the greedy approach then that is returned, else the greedy result is returned.</p><p>Note this <a class="ulink" href="https://en.wikipedia.org/wiki/Maximal_independent_set" target="_top">maximal independent set problem</a> is NP-hard.</p></div><div class="refsect2"><a id="pedphase"></a><h3>akt pedphase  <span class="emphasis"><em>[OPTIONS]</em></span> <span class="emphasis"><em>FILE</em></span></h3><p>This performs simple Mendelian phase-by-transmission, with the novelty that <code class="literal">FORMAT/PS</code> will be handled sensibly.</p><p><span class="strong"><strong>Note:</strong></span> this does not do anything clever with complex pedigrees, parental haplotypes are inferred as the transmitted/untransmitted haplotypes of the first listed child. For clever complex pedigree phasing, use <a class="ulink" href="http://csg.sph.umich.edu/abecasis/merlin/tour/haplotyping.html" target="_top">Merlin</a>, <a class="ulink" href="http://hapi.csail.mit.edu/" target="_top">HAPI</a> or <a class="ulink" href="https://mathgen.stats.ox.ac.uk/genetics_software/duohmm/duohmm.html" target="_top">duohmm</a> (which one depends on your use case).</p></div></div><div class="refsect1"><a id="_authors"></a><h2>AUTHORS</h2><p>Rudy Arthur and Jared O’Connell</p></div></div></body></html>
