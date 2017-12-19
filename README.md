@@ -71,5 +71,6 @@ akt relatives kinship.txt -p pedigree
 akt unrelated kinship.txt > unrelated.ids
 
 ```
-Full documentation is available in [docs/usage.md](docs/usage.md) along with a large set of example use cases in [docs/examples.md](docs/examples.md)
+Full documentation is available at [http://illumina.github.io/akt](http://illumina.github.io/akt).
 
+ 
