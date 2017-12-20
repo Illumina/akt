@@ -2,9 +2,9 @@ reg=../data/wgs.grch37.vcf.gz
 data=ALL.cgi_multi_sample.20130725.pruned.snps.bcf
 
 ##calculate kinship coefficients
-time ../akt kin -M 0 -n 4 -R $reg $data > kinship0.txt
-time ../akt kin -M 1 -n 4 -R $reg $data > kinship1.txt
-time ../akt kin -n 4 -F $reg $data > kinship.txt
+time ../akt kin -M 0 -@ 4 -R $reg $data > kinship0.txt
+time ../akt kin -M 1 -@ 4 -R $reg $data > kinship1.txt
+time ../akt kin -@ 4 -F $reg $data > kinship.txt
 
 # check for unrelated
 ../akt unrelated kinship1.txt | sort > unrelated.out

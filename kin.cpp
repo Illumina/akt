@@ -281,7 +281,7 @@ int kin_main(int argc, char* argv[])
     bool used_T = false;
 
     string frq_file="";  
-    while ((c = getopt_long(argc, argv, "T:t:R:r:M:F:k:h:n:m:a:s:S:f",loptions,NULL)) >= 0) 
+    while ((c = getopt_long(argc, argv, "T:t:R:r:M:F:k:h:@:m:a:s:S:f",loptions,NULL)) >= 0) 
     {  
 	switch (c)
 	{
