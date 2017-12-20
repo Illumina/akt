@@ -13,13 +13,13 @@ HTSLIB = $(HTSDIR)/libhts.a
 IFLAGS = -I$(HTSDIR)  -I./
 LFLAGS = -lz -lm  -lpthread
 
-no_omp: CXXFLAGS += -O2 
-no_omp: CFLAGS = -O2 
-no_omp: all
-
 default: CXXFLAGS += -O2  $(OMP) -mpopcnt
 default: CFLAGS = -O2  $(OMP) -mpopcnt
 default: all
+
+no_omp: CXXFLAGS += -O2 
+no_omp: CFLAGS = -O2 
+no_omp: all
 
 release: CXXFLAGS += -O2  $(OMP) -mpopcnt
 release: CFLAGS = -O2  $(OMP) -mpopcnt
