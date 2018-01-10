@@ -138,6 +138,7 @@ void PedPhaser::main()
 
 //performs simple duo/trio phasing using mendelian inheritance.
 //returns
+//-2: not a child in a duo/trio
 //-1: mendelian inconsistent
 //0:  unphaseable
 //1:  phased
@@ -145,7 +146,7 @@ int phase_by_transmission(Genotype & kid_gt,Genotype & dad_gt,Genotype & mum_gt)
 {
     const int NUM_LEAVES= 8;//maximum number of leaves on the binary tree(we are only doing duos/trios so it never gets this big)    
     int pedigree_size = 3; //we might make this dynamic later
-    if ((dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing())  return (0); //unphaseable due to missingness
+    if ((dad_gt.isMissing() && mum_gt.isMissing()) || kid_gt.isMissing())  return (-2); //unphaseable due to missingness
 
     //phasetree is perfect binary tree (stored as array) that enumerates every genotype configuration in the pedigree
     //the leaf of each tree is 0 if the genotype configuration is inconsistent with inheritance and 1 otherwise.
@@ -319,8 +320,10 @@ int PedPhaser::flush_buffer()
 	else
 	    bcf_update_format_int32(_out_header, line, "RPS", _rps_array, _num_sample);
 
+//	if(!hap_transmission.is_mendel_consistent(count)) bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", nullptr, 1);
 	if(!hap_transmission.is_mendel_consistent(count))
-	    bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", nullptr, 1);
+	    bcf_update_format_int32(_out_header, line, "MENDELCONFLICT", hap_transmission.get_mendel_conflict(count), _num_sample);
+	
 	bcf_write(_out_file, _out_header, line);	
         bcf_destroy(line);
 	count++;
@@ -390,7 +393,7 @@ void PedPhaser::setup_output(args &a)
     bcf_hdr_remove(_out_header, BCF_HL_FMT, "PS"); //remove the old PS descripion
     bcf_hdr_append(_out_header, "##FORMAT=<ID=PS,Number=1,Type=Integer,Description=\"Read-backed phase set. If missing from a phased genotype then it indicates the genotype was pedigree-phased such that children are phased as 'maternal allele | paternal allele' and parents are phased as 'allele transmitted to first child | untransmitted allele'\">");
     bcf_hdr_append(_out_header, "##FORMAT=<ID=RPS,Number=1,Type=Integer,Description=\"Read-backed phase set. The phase set (PS) value before this phased genotype was incorporated into the pedigree phase set\">");
-    bcf_hdr_append(_out_header, "##INFO=<ID=MENDELCONFLICT,Number=0,Type=Flag,Description=\"This variant has at least one duo/trio with genotypes that are inconsistent with Mendelian inheritance\">");
+    bcf_hdr_append(_out_header, "##FORMAT=<ID=MENDELCONFLICT,Number=1,Type=Integer,Description=\"Mendelian conflict. A value of 1 indicates that this sample is a child within a duo/trio with genotypes that are inconsistent with Mendelian inheritance. Mendelian consistent duos/trios are indicated by 0. Missing values indicate that this individual is not a child within a duo/trio.\">");
     bcf_hdr_append(_out_header, ("##akt_pedphase_version=" + (string)AKT_VERSION).c_str());
     bcf_hdr_write(_out_file, _out_header);
 }
