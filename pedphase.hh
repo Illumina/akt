@@ -61,6 +61,8 @@ private:
     vector<bool> _sample_has_been_phased;
     vector< pair<int,int> >  _parental_genotypes;
     void main();
+    //stores FORMAT/IM tags
+    const char **_mendel_conflict;
 };
 
 #endif //AKT_PEDPHASE_H
