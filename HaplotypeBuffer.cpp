@@ -95,7 +95,7 @@ void HaplotypeBuffer::phase()
 		_line_is_mendel_consistent[variant_index]=false;
 		_mendel_conflict[variant_index][sample_index] = 1;
 	    }
-	    if(status>=0)
+	    if(status>=0 && !_dad[variant_index][sample_index].isMissing() && !_mum[variant_index][sample_index].isMissing() )
 	    {
 		_mendel_conflict[variant_index][sample_index] = 0;
 	    }	    
