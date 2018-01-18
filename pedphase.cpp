@@ -322,19 +322,8 @@ int PedPhaser::flush_buffer()
 	else
 	    bcf_update_format_int32(_out_header, line, "RPS", _rps_array, _num_sample);
 
-    if(bcf_update_format_int32(_out_header, line, "MC", hap_transmission.get_mendel_conflict(count), _num_sample)!=0) die("problem writing FORMAT/MC");
-//	if(!hap_transmission.is_mendel_consistent(count)) bcf_update_info_flag(_out_header, line, "MENDELCONFLICT", nullptr, 1);
-//	if(!hap_transmission.is_mendel_consistent(count)) bcf_update_format_int32(_out_header, line, "MENDELCONFLICT", hap_transmission.get_mendel_conflict(count), _num_sample);
-	// if(!hap_transmission.is_mendel_consistent(count))
-	// {
-	//     for(int i=0;i<_num_sample;i++){
-	// 	if(hap_transmission.get_mendel_conflict(count)[i]==1)
-	// 	    _mendel_conflict[i] = (char *)"MC";
-	// 	else
-	// 	    _mendel_conflict[i] = (char *)".";
-	//     }
-	//     bcf_update_format_string(_out_header,line,"IM",_mendel_conflict,_num_sample);
-	// }
+	if(bcf_update_format_int32(_out_header, line, "ME", hap_transmission.get_mendel_conflict(count), _num_sample)!=0)
+	    die("problem writing FORMAT/ME");
 	
 	bcf_write(_out_file, _out_header, line);	
         bcf_destroy(line);
@@ -405,7 +394,7 @@ void PedPhaser::setup_output(args &a)
     bcf_hdr_remove(_out_header, BCF_HL_FMT, "PS"); //remove the old PS descripion
     bcf_hdr_append(_out_header, "##FORMAT=<ID=PS,Number=1,Type=Integer,Description=\"Read-backed phase set. If missing from a phased genotype then it indicates the genotype was pedigree-phased such that children are phased as 'maternal allele | paternal allele' and parents are phased as 'allele transmitted to first child | untransmitted allele'\">");
     bcf_hdr_append(_out_header, "##FORMAT=<ID=RPS,Number=1,Type=Integer,Description=\"Read-backed phase set. The phase set (PS) value before this phased genotype was incorporated into the pedigree phase set\">");
-    bcf_hdr_append(_out_header, "##FORMAT=<ID=MC,Number=1,Type=Integer,Description=\"Mendelian Conflict. A value of MC=1 indicates that this sample is a child in a duo/trio with a Mendelian Conflict. The value is 0 if the child is in a trio that is Mendel consistent with no missing genotypes. The value is missing otherwise.\">");
+    bcf_hdr_append(_out_header, "##FORMAT=<ID=ME,Number=1,Type=Integer,Description=\"Mendel error. A value of ME=1 indicates that this sample is a child in a duo/trio with genotypes that are inconsistent with Mendelian inheritance. The value is 0 if the child is in a trio that is Mendel consistent and has no missing genotypes. The value is missing otherwise.\">");
     bcf_hdr_append(_out_header, ("##akt_pedphase_version=" + (string)AKT_VERSION).c_str());
     bcf_hdr_write(_out_file, _out_header);
 }
