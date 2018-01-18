@@ -27,6 +27,7 @@ public:
     int get_num_sample() {return _num_sample;};    
     void update_bcf1_genotypes(size_t linenum,int32_t *gt_array, int32_t *ps_array,int32_t *rps_array);
     bool is_mendel_consistent(size_t linenum);
+    int32_t *get_mendel_conflict(size_t linenum);
     void swap(int variant,int sample);
     void setPhase(int variant,int sample,bool phase);
     void copy_from_parents();
@@ -48,6 +49,7 @@ private:
     std::vector<bool> _line_is_mendel_consistent;
     std::vector< std::vector<bool> > _is_aligned_with_pedigree;
     std::vector< std::unordered_map<int,pair<int,int> > > _kid_vote,_dad_vote,_mum_vote;
+    std::vector< std::vector<int32_t> > _mendel_conflict;
 };
 
-#endif //
+#endif

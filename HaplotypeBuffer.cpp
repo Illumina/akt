@@ -23,6 +23,12 @@ bool HaplotypeBuffer::is_mendel_consistent(size_t linenum)
     return _line_is_mendel_consistent[linenum];
 }
 
+int32_t *HaplotypeBuffer::get_mendel_conflict(size_t linenum)
+{
+    assert(linenum>=0 && linenum<_num_variant);
+    return _mendel_conflict[linenum].data();
+}
+
 void HaplotypeBuffer::push_back(int32_t *gt_array, int32_t *ps_array)
 {
     _kid.push_back(std::vector<Genotype>());
@@ -77,13 +83,22 @@ void HaplotypeBuffer::copy_from_parents()
 
 void HaplotypeBuffer::phase()
 {
+    _mendel_conflict.assign(_num_variant,std::vector<int32_t>(_num_sample,bcf_int32_missing));
     _line_is_mendel_consistent.assign(_num_variant,true);
     for(size_t variant_index=0;variant_index<_num_variant;variant_index++)
     {
 	for(size_t sample_index=0;sample_index<_num_sample;sample_index++)
 	{
 	    int status = phase_by_transmission(_kid[variant_index][sample_index],_dad[variant_index][sample_index],_mum[variant_index][sample_index]);
-	    if(status==-1) _line_is_mendel_consistent[variant_index]=false;
+	    if(status==-1)
+	    {
+		_line_is_mendel_consistent[variant_index]=false;
+		_mendel_conflict[variant_index][sample_index] = 1;
+	    }
+	    if(status>=0 && !_dad[variant_index][sample_index].isMissing() && !_mum[variant_index][sample_index].isMissing() )
+	    {
+		_mendel_conflict[variant_index][sample_index] = 0;
+	    }	    
 	}
     }
     copy_from_parents();
