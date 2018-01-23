@@ -1,6 +1,6 @@
 # akt - ancestry and kinship toolkit
 
-Copyright (c) 2017, Illumina, Inc. All rights reserved. This software is not commercially supported.
+Copyright (c) 2018, Illumina, Inc. All rights reserved. This software is not commercially supported.
 
 Ancestry and Kinship Tools (AKT) provides a handful of useful statistical genetics routines using the [htslib](http://www.htslib.org/) API for input/output. This means it can seamlessly read BCF/VCF files and play nicely with [bcftools](http://samtools.github.io/bcftools/bcftools.html).
 
