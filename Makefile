@@ -5,6 +5,7 @@ OMP=-fopenmp
 
 CXXFLAGS =  -std=c++11
 
+.PHONY: all
 all: akt
 
 HTSDIR=htslib-1.6
@@ -13,23 +14,28 @@ HTSLIB = $(HTSDIR)/libhts.a
 IFLAGS = -I$(HTSDIR)  -I./
 LFLAGS = -lz -lm  -lpthread
 
+.PHONY: default
 default: CXXFLAGS += -O2  $(OMP) -mpopcnt
 default: CFLAGS = -O2  $(OMP) -mpopcnt
 default: all
 
+.PHONY: no_omp
 no_omp: CXXFLAGS += -O2 
 no_omp: CFLAGS = -O2 
 no_omp: all
 
+.PHONY: release
 release: CXXFLAGS += -O2  $(OMP) -mpopcnt
 release: CFLAGS = -O2  $(OMP) -mpopcnt
 release: LFLAGS +=  -static
 release: all
 
+.PHONY: debug
 debug: CXXFLAGS += -g -O1 -Wall
 debug: CFLAGS = -g -O1  -lz -lm -lpthread
 debug: all
 
+.PHONY: profile
 profile: CXXFLAGS = -pg -O2 $(OMP)
 profile: CFLAGS =  -pg -O2 $(OMP)
 profile: all
@@ -65,7 +71,11 @@ utils.o: utils.cpp utils.hh
 HaplotypeBuffer.o: HaplotypeBuffer.cpp HaplotypeBuffer.hh
 akt: akt.cpp version.hh $(OBJS) $(HTSLIB)
 	$(CXX) $(CXXFLAGS)   -o akt akt.cpp $(OBJS) $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
+
+.PHONY: clean
 clean:
 	rm -f *.o akt version.hh
+
+.PHONY: test
 test: akt
 	cd test/;bash -e test.sh
