@@ -66,6 +66,6 @@ HaplotypeBuffer.o: HaplotypeBuffer.cpp HaplotypeBuffer.hh
 akt: akt.cpp version.hh $(OBJS) $(HTSLIB)
 	$(CXX) $(CXXFLAGS)   -o akt akt.cpp $(OBJS) $(IFLAGS) $(HTSLIB) $(LFLAGS) $(CXXFLAGS)
 clean:
-	rm *.o akt version.hh
+	rm -f *.o akt version.hh
 test: akt
 	cd test/;bash -e test.sh
