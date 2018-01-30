@@ -166,7 +166,9 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs,bool ass
 		{
 		    if(bcf_sr_has_line(sr,0) && gt_arr[i]!=bcf_gt_missing && gt_arr[i+1]!=bcf_gt_missing)
 		    {
-			gs[i/2] = (float)(bcf_gt_allele(gt_arr[i]) + bcf_gt_allele(gt_arr[i+1]));
+			gs[i/2] = (float)bcf_gt_allele(gt_arr[i]);
+			if(gt_arr[i+1]!=bcf_int32_vector_end) //this is a hack to handle "hemizygous" variants
+			    gs[i/2] += (float)bcf_gt_allele(gt_arr[i+1]);
 		    }
 		    else
 		    {
@@ -181,6 +183,11 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs,bool ass
 		    }
 		}
 	    }
+	    else
+	    {
+		std::cerr<<"WARNING: skipped a haploid site at "<<bcf_hdr_id2name(sr->readers[0].header,line0->rid) <<":"<<line0->pos+1<<":"<<line0->d.allele[0]<<":"<<line0->d.allele[1]<<std::endl;
+		std::fill(gs.begin(),gs.end(),2*af);
+	    }
 		
 	    if(ret!=1)
 	    {
@@ -193,7 +200,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs,bool ass
 		    
 		    if(!(gs[n]>=0 && gs[n]<=2))
 		    {
-			cerr << "ERROR at " << bcf_hdr_id2name(sr->readers[0].header,line0->rid) <<":"<<line0->pos+1 <<" g = "<<gs[n]<<" af="<<af<<endl;
+			cerr << "ERROR at " << bcf_hdr_id2name(sr->readers[0].header,line0->rid) <<":"<<line0->pos+1<<":"<<line0->d.allele[0]<<":"<<line0->d.allele[1] <<" g = "<<gs[n]<<" af="<<af<<endl;
 			exit(1);
 		    }
 		    //read PCA loadings
@@ -266,7 +273,7 @@ void pca(string vcf1,string vcf2, bool don, int maxn, sample_args sargs,bool ass
     {
 	cerr << "No intersecting SNPs found.  Check chromosome prefix matches on sites and input file." << endl; exit(1);
     }
-    ///print projections to stdout
+///print projections to stdout
     for(int n=0; n<Nsamples; ++n)
     {
 	cout << names[n] << "\t";
@@ -822,8 +829,6 @@ int pca_main(int argc,char **argv)
 	cerr << "MAF lower bound: " << m << "\nThin: "<< thin <<" \nNumber principle components: "<<n<<endl;
 	calcpca(input,o,outf,out_filename,m,thin,a,n,e,targets,regions,regions_is_file,sargs, covn, svfilename,niteration);
     }
-
-
     return(0);
 }
 
