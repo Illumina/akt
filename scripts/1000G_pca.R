@@ -7,7 +7,7 @@ script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initia
 script.basename <- dirname(script.name)
 ogp <- read.table(paste(script.basename,"/../data/","integrated_call_samples_v3.20130502.ALL.panel",sep=""),header=T,colClasses='character')
 print(head(ogp))
-ogp.pc <- read.table(paste(script.basename,"/../data/1000G.phase3.pca",sep=""),col.names=head(cn,21))
+ogp.pc <- read.table(paste(script.basename,"/../data/wgs.1000G.phase3.pca",sep=""),col.names=head(cn,21))
 names(cols) <- unique(ogp$super_pop)
     
 fname <- commandArgs(TRUE)[1]
