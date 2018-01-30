@@ -21,14 +21,14 @@ There is one vcf where chromosomes have the chr prefix (hg19/hg38) and one vcf w
 
 The INFO also contains the PCA coefficients for 1000G Phase3 which allows new samples to be easily projected onto the 1000G principal components. This is only applicable for the grch37/hg19 site lists, since 1000G is not available in b38.
 
-The file `1000G.phase3.pca` contains the first twenty principal components calculated on the 2504 samples in the 1000G Phase 3 release using these SNPs (hg19/grch37).
+The files `wgs.1000G.phase3.pca` and `wes.1000G.phase3.pca` contain the first twenty principal components calculated on the 2504 samples in the 1000G Phase 3 release using these SNPs.
 
-You can generate a simple plot in R of the 1000G PCs via:
+You can generate a simple plot in R of the 1000G WGS PCs via:
 
 ```
 mycol <- c("#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00")
 ogp.sample <- read.table("integrated_call_samples_v3.20130502.ALL.panel",header=T,as.is=T)
-ogp.pc <- read.table("1000G.phase3.pca",as.is=TRUE)
+ogp.pc <- read.table("wgs.1000G.phase3.pca",as.is=TRUE)
 ogp.pc$pop <- ogp.sample$super_pop[match(ogp.sample[,1],ogp.pc[,1])]
 names(mycol) <- unique(ogp.sample$super_pop)
 
