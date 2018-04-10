@@ -1,5 +1,8 @@
 ## Changelog
 
+## 2018.01.30
+* better handling of hemizygous genotypes in the pca routine
+
 ## 2017.12.20
 * added the pedphase command
 * documentation improvements
