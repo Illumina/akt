@@ -17,7 +17,7 @@ using namespace Eigen;
  *
  */
 static void usage() {
-    cerr << "Print a list of unrelated individuals taking the output from akt kin as input." << endl;
+    cerr << "Derive a set of pedigrees from the akt kin output." << endl;
     cerr << "Usage:" << endl;
     cerr << "./akt unrelated ibdfile" << endl;
     cerr << "\t -k --kmin:			threshold for relatedness (0.05)" << endl;

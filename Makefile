@@ -3,7 +3,8 @@ CXX=g++
 
 OMP=-fopenmp
 
-CXXFLAGS =  -std=c++11
+CXXFLAGS = -std=c++11 -O2  $(OMP) -mpopcnt
+CFLAGS = -O2  $(OMP) -mpopcnt
 
 .PHONY: all
 all: akt
@@ -14,24 +15,19 @@ HTSLIB = $(HTSDIR)/libhts.a
 IFLAGS = -I$(HTSDIR)  -I./
 LFLAGS = -lz -lm  -lpthread
 
-.PHONY: default
-default: CXXFLAGS += -O2  $(OMP) -mpopcnt
-default: CFLAGS = -O2  $(OMP) -mpopcnt
-default: all
-
 .PHONY: no_omp
-no_omp: CXXFLAGS += -O2 
+no_omp: CXXFLAGS = -std=c++11 -O2 
 no_omp: CFLAGS = -O2 
 no_omp: all
 
 .PHONY: release
-release: CXXFLAGS += -O2  $(OMP) -mpopcnt
+release: CXXFLAGS = -std=c++11 -O2  $(OMP) -mpopcnt
 release: CFLAGS = -O2  $(OMP) -mpopcnt
 release: LFLAGS +=  -static
 release: all
 
 .PHONY: debug
-debug: CXXFLAGS += -g -O1 -Wall
+debug: CXXFLAGS = -std=c++11 -g -O1 -Wall
 debug: CFLAGS = -g -O1  -lz -lm -lpthread
 debug: all
 

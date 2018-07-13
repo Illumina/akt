@@ -1,4 +1,7 @@
 ## Changelog
+## 2018.07.13
+* fixed a typo in akt relatives output
+* fixed a makefile bug, default was not building with optimisations 
 
 ## 2018.01.30
 * better handling of hemizygous genotypes in the pca routine
