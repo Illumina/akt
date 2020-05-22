@@ -321,18 +321,8 @@ int kin_main(int argc, char* argv[])
     assert(min_freq>=0 && min_freq<=1);
     if((!targets.empty() && !regions.empty()) )  
     {
-	cerr<<"ERROR: -r/-R and -r/-R are incompatible"<<endl;
+	cerr<<"ERROR: -t/-T and -r/-R are incompatible"<<endl;
 	exit(1);
-    }
-    if(!frq_file.empty() && !regions.empty()) 
-    {
-	cerr<<"ERROR: -F and -R/-r are incompatible!"<<endl;
-	exit(1);
-    } 
-    if(!frq_file.empty() && regions.empty())
-    {
-	regions=frq_file;
-	regions_is_file=true;
     }
     if(frq_file.empty())  
     {
