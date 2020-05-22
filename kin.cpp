@@ -324,16 +324,6 @@ int kin_main(int argc, char* argv[])
 	cerr<<"ERROR: -t/-T and -r/-R are incompatible"<<endl;
 	exit(1);
     }
-    if(!frq_file.empty() && !regions.empty()) 
-    {
-	cerr<<"ERROR: -F and -R/-r are incompatible!"<<endl;
-	exit(1);
-    } 
-    if(!frq_file.empty() && regions.empty())
-    {
-	regions=frq_file;
-	regions_is_file=true;
-    }
     if(frq_file.empty())  
     {
 	cerr<<"No frequency VCF provided (-F). Allele frequencies will be estimated from the data."<<endl;
