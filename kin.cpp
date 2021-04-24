@@ -197,9 +197,10 @@ void Kinship::estimateKinship(int j1, int j2, float &ibd0, float &ibd1, float &i
 		int Nhet_1 = 0, Nhet_2 = 0, Nhet_12 = 0;
 		for (size_t i = 0; i < _bits[j1].size(); ++i)
 		{
-			Nhet_1 += _bits[j1][i][1].count();						//NAa^i
-			Nhet_2 += _bits[j2][i][1].count();						//NAa^j
-			Nhet_12 += (_bits[j1][i][1] & _bits[j2][i][1]).count(); //NAa,Aa
+			auto mask = (_bits[j1][i][3] | _bits[j2][i][3]).flip();
+			Nhet_1 += (mask & _bits[j1][i][1]).count();						//NAa^i
+			Nhet_2 += (mask & _bits[j2][i][1]).count();						//NAa^j
+			Nhet_12 += (_bits[j1][i][1] & _bits[j2][i][1]).count(); //NAa,Aa - no mask needed here
 		}
 		int minhet = min(Nhet_1, Nhet_2);
 		ks = (Nhet_12 - 2 * ibd0) / (2 * minhet) + 0.5 - 0.25 * (Nhet_1 + Nhet_2) / minhet;
@@ -587,7 +588,7 @@ int kin_main(int argc, char *argv[])
 				{
 					string id1 = hdr->samples[j1];
 					string id2 = hdr->samples[j2];
-					cout << id1 << "\t" << id2 << "\t" << left << " " << setprecision(5) << fixed << ibd0 << left << " " << setprecision(5) << fixed << ibd1 << left << " " << setprecision(5) << fixed << ibd2 << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) << ibd3 << "\n";
+					cout << id1 << " " << id2 << " " << left << " " << setprecision(5) << fixed << ibd0 << left << " " << setprecision(5) << fixed << ibd1 << left << " " << setprecision(5) << fixed << ibd2 << left << " " << setprecision(5) << fixed << ks << " " << setprecision(0) << ibd3 << "\n";
 				}
 			}
 		}
