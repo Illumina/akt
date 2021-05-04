@@ -39,7 +39,7 @@ profile: all
 ##generates a version
 GIT_HASH := $(shell git describe --abbrev=4 --always )
 BCFTOOLS_VERSION=1.6
-VERSION = 0.3.2
+VERSION = 0.3.3
 ifneq "$(wildcard .git)" ""
 VERSION = $(shell git describe --always)
 endif
