@@ -112,7 +112,7 @@ void Kinship::addGenotypes(int *gt_arr, float p)
 	_n11 += 2 * p * q;					 ///2ppq + 2qqp = 2pq(p+q) = 2pq == Hij
 	_n10 += 4 * p * q * (p * p + q * q); ///4pppq + 4qqqp = 4pq(pp + qq)
 
-	_n20 += p * p * p * p + q * q * q * q + 4 * q * q * p * p; ///pppp + qqqq + 4ppqq
+	_n20 += p * p * p * p + q * q * q + 2 * p * q; ///  p^4 + q^4 + 4p^2q^2 = p^4 + q^4 + 2pq^2 + 2qp^2 = p^4 + q^4 + 2pq(p+q) = p^4 + q^4 + 2pq
 	_n21 += p * p + q * q;									   ///ppp + qqq + ppq + pqq = pp(p+q) + qq(q+p) = pp + qq
 	_n22 += 1;
 	_af.push_back(p);
